@@ -1,0 +1,345 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BASE_WORKDIR: /home/runner/work/ci-${{ github.run_id }}
+  REGISTRY: ghcr.io
+  IMAGE_BACKEND: ghcr.io/${{ github.repository_owner }}/univerein-backend
+  IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/univerein-frontend
+
+jobs:
+  # ─────────────────────────────────────────────
+  # BACKEND TESTS
+  # ─────────────────────────────────────────────
+  backend-test:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        working-directory: backend
+        run: dotnet restore UniVerein.sln
+
+      - name: Build
+        working-directory: backend
+        run: dotnet build UniVerein.sln --no-restore --configuration Release
+
+      - name: Run unit tests
+        working-directory: backend
+        run: |
+          dotnet test UniVerein.sln \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: backend-test-results
+          path: backend/TestResults
+
+  # ─────────────────────────────────────────────
+  # FRONTEND TESTS
+  # ─────────────────────────────────────────────
+  frontend-test:
+    name: Frontend Playwright Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
+      - name: Start Stack
+        env:
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
+          HMAC_KEY: ${{ secrets.HMAC_KEY }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: docker compose up -d --build
+
+      - name: Wait for stack (Healthcheck)
+        run: |
+          for i in $(seq 1 30); do
+            UNHEALTHY=$(docker compose ps --format json 2>/dev/null \
+              | grep -c '"Health":"unhealthy"' || true)
+            STARTING=$(docker compose ps --format json 2>/dev/null \
+              | grep -c '"Health":"starting"' || true)
+            if [ "$UNHEALTHY" -eq 0 ] && [ "$STARTING" -eq 0 ]; then
+              echo "All container ready."
+              break
+            fi
+            echo "Noch nicht bereit... ($i/30) – unhealthy: $UNHEALTHY, starting: $STARTING"
+            sleep 5
+          done
+
+      - name: Wait for frontend HTTP
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:80 && echo "Frontend antwortet." && break
+            echo "Warte auf HTTP... ($i/30)"
+            sleep 5
+          done
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Playwright tests
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/frontend:/work \
+            -w /work \
+            -e CI=true \
+            mcr.microsoft.com/playwright:v1.58.2-noble \
+            npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+
+      - name: Stop Stack
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────────
+  # TRIVY – BACKEND
+  # ─────────────────────────────────────────────
+  trivy-backend:
+    name: Trivy Scan Backend
+    runs-on: ubuntu-latest
+    needs: backend-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Trivy filesystem scan Backend
+        run: |
+          trivy fs backend \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Build backend image
+        run: |
+          docker build -t backend-scan:ci-${{ github.run_id }} backend
+
+      - name: Trivy image scan Backend
+        run: |
+          trivy image backend-scan:ci-${{ github.run_id }} \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Cleanup
+        if: always()
+        run: docker rmi backend-scan:ci-${{ github.run_id }} 2>/dev/null || true
+
+  # ─────────────────────────────────────────────
+  # TRIVY – FRONTEND
+  # ─────────────────────────────────────────────
+  trivy-frontend:
+    name: Trivy Scan Frontend
+    runs-on: ubuntu-latest
+    needs: frontend-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Trivy filesystem scan Frontend
+        run: |
+          trivy fs frontend \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Build frontend image
+        run: |
+          docker build -t frontend-scan:ci-${{ github.run_id }} frontend
+
+      - name: Trivy image scan Frontend
+        run: |
+          trivy image frontend-scan:ci-${{ github.run_id }} \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Cleanup
+        if: always()
+        run: docker rmi frontend-scan:ci-${{ github.run_id }} 2>/dev/null || true
+
+  # ─────────────────────────────────────────────
+  # PUBLISH – BACKEND
+  # ─────────────────────────────────────────────
+  publish-backend:
+    name: Publish Backend Image
+    runs-on: ubuntu-latest
+    needs: [ trivy-backend, trivy-frontend ]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine image tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_BACKEND }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=ref,event=branch
+            type=sha,format=short,prefix=
+          labels: |
+            org.opencontainers.image.title=UniVerein Backend
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ─────────────────────────────────────────────
+  # PUBLISH – FRONTEND
+  # ─────────────────────────────────────────────
+  publish-frontend:
+    name: Publish Frontend Image
+    runs-on: ubuntu-latest
+    needs: [ trivy-backend, trivy-frontend ]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine image tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_FRONTEND }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=ref,event=branch
+            type=sha,format=short,prefix=
+          labels: |
+            org.opencontainers.image.title=UniVerein Frontend
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

@@ -1,0 +1,108 @@
+name: Update Third-Party Notices
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**/*.csproj'
+      - 'backend/**/packages.lock.json'
+      - 'frontend/**/package.json'
+      - 'frontend/**/package-lock.json'
+      - '.github/workflows/update-notices.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-backend-notices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            10.0.x
+            7.0.x
+
+      - name: Install license tool
+        run: dotnet tool install --global dotnet-project-licenses
+
+      - name: Generate backend notices
+        env:
+          DOTNET_ROLL_FORWARD: LatestMajor
+        run: |
+          dotnet-project-licenses -i ./backend/UniVerein.sln \
+            --json \
+            --outfile licenses-temp.json \
+            --output-directory . \
+            --include-transitive \
+            --unique
+
+      - name: Convert backend notices to Markdown
+        working-directory: backend
+        run: |
+          echo "# Third-Party Notices (Backend)" > THIRD-PARTY-NOTICES.md
+          echo "" >> THIRD-PARTY-NOTICES.md
+          echo "Generated automatically on $(date +%Y-%m-%d)" >> THIRD-PARTY-NOTICES.md
+          echo "" >> THIRD-PARTY-NOTICES.md
+          echo "| Package | Version | License |" >> THIRD-PARTY-NOTICES.md
+          echo "|---------|---------|---------|" >> THIRD-PARTY-NOTICES.md
+          jq -r '
+            sort_by(.PackageName) | unique_by(.PackageName) | .[] |
+            "| \(.PackageName) | \(.PackageVersion) | \(.LicenseType // .License // "-") |"
+          ' ../licenses-temp.json >> THIRD-PARTY-NOTICES.md
+          rm ../licenses-temp.json
+
+      - name: Commit backend changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend/THIRD-PARTY-NOTICES.md
+          git diff --staged --quiet || git commit -m "chore: update backend third-party notices [automated]"
+          git pull --rebase
+          git push
+
+  update-frontend-notices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Generate frontend notices
+        working-directory: frontend
+        run: |
+          license-checker --json --out licenses-temp.json
+
+      - name: Convert frontend notices to Markdown
+        working-directory: frontend
+        run: |
+          echo "# Third-Party Notices (Frontend)" > THIRD-PARTY-NOTICES.md
+          echo "" >> THIRD-PARTY-NOTICES.md
+          echo "Generated automatically on $(date +%Y-%m-%d)" >> THIRD-PARTY-NOTICES.md
+          echo "" >> THIRD-PARTY-NOTICES.md
+          echo "| Package | Version | License |" >> THIRD-PARTY-NOTICES.md
+          echo "|---------|---------|---------|" >> THIRD-PARTY-NOTICES.md
+          jq -r 'to_entries[] | "| \(.key) | \(.value.version // "-") | \(.value.licenses // "-") |"' licenses-temp.json >> THIRD-PARTY-NOTICES.md
+          rm licenses-temp.json
+
+      - name: Commit frontend changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add frontend/THIRD-PARTY-NOTICES.md
+          git diff --staged --quiet || git commit -m "chore: update frontend third-party notices [automated]"
+          git pull --rebase
+          git push

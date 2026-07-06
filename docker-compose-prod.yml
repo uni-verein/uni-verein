@@ -1,0 +1,89 @@
+version: "3.9"
+services:
+  db:
+    image: mariadb:11
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  db-backup:
+    image: mariadb:11
+    command: >
+      sh -c 'while true; do
+        BACKUP_FILE="/backup/$$(date +%Y-%m-%d_%H-%M-%S)_uni_verein_db.sql"
+        echo "Creating backup: $$BACKUP_FILE"
+        mariadb-dump -h db -u root -p$$MYSQL_ROOT_PASSWORD --single-transaction --routines --triggers --all-databases > $$BACKUP_FILE 2>/tmp/err.log
+        if [ $$? -ne 0 ]; then
+          echo "ERROR: Backup failed!"
+          cat /tmp/err.log
+          rm -f $$BACKUP_FILE
+        else
+          gzip $$BACKUP_FILE
+          echo "Backup completed: $$BACKUP_FILE.gz"
+        fi
+        find /backup -type f -name "*.sql.gz" -mtime +30 -delete
+        sleep 86400
+      done'
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - /mnt/backup:/backup
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      ConnectionStrings__Default: server=db;database=${DB_NAME};user=${DB_USER};password=${DB_PASSWORD}
+      ConnectionStrings__Database: ${DB_NAME}
+      ConnectionStrings__MysqlUser: ${DB_USER}
+      ConnectionStrings__MysqlPassword: ${DB_PASSWORD}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      CRYPTO_KEY: ${CRYPTO_KEY}
+      HMAC_KEY: ${HMAC_KEY}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_APP_VERSION=${VERSION}
+        - VITE_APP_DEMO=${DEMO}
+    restart: always
+    depends_on:
+      - backend
+
+  proxy:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  db_data:

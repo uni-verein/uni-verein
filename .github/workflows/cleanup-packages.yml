@@ -1,0 +1,39 @@
+name: Cleanup old branch images
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  cleanup-backend:
+    name: Cleanup Backend Branch Images
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete untagged / branch backend images older than 2 days
+        uses: snok/container-retention-policy@v3.0.1
+        with:
+          account: user
+          token: ${{ secrets.PAT_PACKAGES }}
+          image-names: univerein-backend
+          cut-off: 2d
+          tag-selection: untagged
+          keep-n-most-recent: 0
+
+  cleanup-frontend:
+    name: Cleanup Frontend Branch Images
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete untagged / branch frontend images older than 2 days
+        uses: snok/container-retention-policy@v3.0.1
+        with:
+          account: user
+          token: ${{ secrets.PAT_PACKAGES }}
+          image-names: univerein-frontend
+          cut-off: 2d
+          tag-selection: untagged
+          keep-n-most-recent: 0

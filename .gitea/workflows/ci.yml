@@ -1,0 +1,261 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+
+concurrency:
+  group: ci-${{ gitea.ref }}
+  cancel-in-progress: true
+
+env:
+  BASE_WORKDIR: /root/workspace/ci-${{ gitea.run_id }}
+  DOTNET_CLI: dotnet10
+
+jobs:
+  # ─────────────────────────────────────────────
+  # BACKEND TESTS
+  # ─────────────────────────────────────────────
+  backend-test:
+    name: Backend Unit Tests
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        run: |
+          mkdir -p ${{ env.BASE_WORKDIR }}
+          git clone --depth 1 \
+            http://rene:${{ secrets.GIT_TOKEN }}@192.168.100.5:3000/${{ gitea.repository }}.git \
+            ${{ env.BASE_WORKDIR }}/backend-src
+          cd ${{ env.BASE_WORKDIR }}/backend-src
+          # Fetch & checkout exakten Commit
+          git fetch --depth 1 origin ${{ gitea.sha }}
+          git checkout ${{ gitea.sha }}
+
+      - name: Restore dependencies
+        working-directory: ${{ env.BASE_WORKDIR }}/backend-src/backend
+        run: ${{ env.DOTNET_CLI }} restore UniVerein.sln
+
+      - name: Build
+        working-directory: ${{ env.BASE_WORKDIR }}/backend-src/backend
+        run: ${{ env.DOTNET_CLI }} build UniVerein.sln --no-restore --configuration Release
+
+      - name: Run unit tests
+        working-directory: ${{ env.BASE_WORKDIR }}/backend-src/backend
+        run: |
+          ${{ env.DOTNET_CLI }} test UniVerein.sln \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory ./TestResults
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf ${{ env.BASE_WORKDIR }}/backend-src
+
+  # ─────────────────────────────────────────────
+  # FRONTEND TESTS
+  # ─────────────────────────────────────────────
+  frontend-test:
+    name: Frontend Playwright Tests
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        run: |
+          mkdir -p ${{ env.BASE_WORKDIR }}
+          git clone --depth 1 \
+            http://rene:${{ secrets.GIT_TOKEN }}@192.168.100.5:3000/${{ gitea.repository }}.git \
+            ${{ env.BASE_WORKDIR }}/frontend-src
+          cd ${{ env.BASE_WORKDIR }}/frontend-src
+          git fetch --depth 1 origin ${{ gitea.sha }}
+          git checkout ${{ gitea.sha }}
+
+      - name: Start Stack
+        working-directory: ${{ env.BASE_WORKDIR }}/frontend-src
+        env:
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
+          HMAC_KEY: ${{ secrets.HMAC_KEY }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: docker compose up -d --build
+
+      - name: Wait for stack (Healthcheck)
+        run: |
+          echo "Wait for healthy Container..."
+          for i in $(seq 1 30); do
+            UNHEALTHY=$(docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml \
+              ps --format json 2>/dev/null \
+              | grep -c '"Health":"unhealthy"' || true)
+            STARTING=$(docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml \
+              ps --format json 2>/dev/null \
+              | grep -c '"Health":"starting"' || true)
+            if [ "$UNHEALTHY" -eq 0 ] && [ "$STARTING" -eq 0 ]; then
+              echo "All container are ready."
+              break
+            fi
+            echo "Not ready... ($i/30) – unhealthy: $UNHEALTHY, starting: $STARTING"
+            sleep 5
+          done
+
+      - name: Wait for frontend HTTP
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:80 && echo "Frontend reachable." && break
+            echo "Wait for HTTP... ($i/30)"
+            sleep 5
+          done
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('**/frontend/package-lock.json') }}
+          restore-keys: playwright-
+
+      - name: Install dependencies
+        working-directory: ${{ env.BASE_WORKDIR }}/frontend-src/frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ${{ env.BASE_WORKDIR }}/frontend-src/frontend
+        # Only install if cache are missing
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: ${{ env.BASE_WORKDIR }}/frontend-src/frontend
+        run: npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: always()
+        run: |
+          REPORT_DIR=/root/workspace/playwright-report-${{ gitea.run_id }}
+          mkdir -p "$REPORT_DIR"
+          cp -r ${{ env.BASE_WORKDIR }}/frontend-src/frontend/playwright-report/* "$REPORT_DIR/" 2>/dev/null || true
+          echo "Playwright report gespeichert unter: $REPORT_DIR"
+
+      - name: Stop Stack
+        if: always()
+        working-directory: ${{ env.BASE_WORKDIR }}/frontend-src
+        run: docker compose down -v
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf ${{ env.BASE_WORKDIR }}/frontend-src
+
+  # ─────────────────────────────────────────────
+  # TRIVY – BACKEND
+  # ─────────────────────────────────────────────
+  trivy-backend:
+    name: Trivy Scan Backend
+    runs-on: self-hosted
+    needs: backend-test
+    steps:
+      - name: Checkout
+        run: |
+          mkdir -p ${{ env.BASE_WORKDIR }}
+          git clone --depth 1 \
+            http://rene:${{ secrets.GIT_TOKEN }}@192.168.100.5:3000/${{ gitea.repository }}.git \
+            ${{ env.BASE_WORKDIR }}/trivy-backend-src
+          cd ${{ env.BASE_WORKDIR }}/trivy-backend-src
+          git fetch --depth 1 origin ${{ gitea.sha }}
+          git checkout ${{ gitea.sha }}
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ gitea.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Trivy filesystem scan Backend
+        run: |
+          trivy fs ${{ env.BASE_WORKDIR }}/trivy-backend-src/backend \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Build backend image
+        run: |
+          docker build \
+            -t backend-scan:ci-${{ gitea.run_id }} \
+            ${{ env.BASE_WORKDIR }}/trivy-backend-src/backend
+
+      - name: Trivy image scan Backend
+        run: |
+          trivy image backend-scan:ci-${{ gitea.run_id }} \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ env.BASE_WORKDIR }}/trivy-backend-src
+          docker rmi backend-scan:ci-${{ gitea.run_id }} 2>/dev/null || true
+
+  # ─────────────────────────────────────────────
+  # TRIVY – FRONTEND
+  # ─────────────────────────────────────────────
+  trivy-frontend:
+    name: Trivy Scan Frontend
+    runs-on: self-hosted
+    needs: frontend-test
+    steps:
+      - name: Checkout
+        run: |
+          mkdir -p ${{ env.BASE_WORKDIR }}
+          git clone --depth 1 \
+            http://rene:${{ secrets.GIT_TOKEN }}@192.168.100.5:3000/${{ gitea.repository }}.git \
+            ${{ env.BASE_WORKDIR }}/trivy-frontend-src
+          cd ${{ env.BASE_WORKDIR }}/trivy-frontend-src
+          git fetch --depth 1 origin ${{ gitea.sha }}
+          git checkout ${{ gitea.sha }}
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ gitea.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Trivy filesystem scan Frontend
+        run: |
+          trivy fs ${{ env.BASE_WORKDIR }}/trivy-frontend-src/frontend \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            -t frontend-scan:ci-${{ gitea.run_id }} \
+            ${{ env.BASE_WORKDIR }}/trivy-frontend-src/frontend
+
+      - name: Trivy image scan Frontend
+        run: |
+          trivy image frontend-scan:ci-${{ gitea.run_id }} \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ env.BASE_WORKDIR }}/trivy-frontend-src
+          docker rmi frontend-scan:ci-${{ gitea.run_id }} 2>/dev/null || true

@@ -1,0 +1,931 @@
+{
+  "components": {
+    "taskWithinTheClubOptions": {
+      "unknownTask": "Unknown Task",
+      "member": "Member",
+      "chairman": "Chairman",
+      "secondChairman": "Second chairman",
+      "juniorBoardMember": "Junior board member",
+      "ChiefFinanceOfficer": "Chief finance officer",
+      "websiteManager": "Website manager",
+      "alumniOfficer": "Alumni officer",
+      "studentCouncilRepresentative": "Student council representative"
+    },
+    "confirmDialog": {
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "iconPickerDialog": {
+      "selectIcon": "Select Icon",
+      "searchIcon": "Search icon...",
+      "foundIcons": "Icons found",
+      "loadingIcons": "Loading icons...",
+      "buttons": {
+        "cancel": "Cancel",
+        "accept": "Apply"
+      }
+    },
+    "memberForm": {
+      "title": {
+        "edit": "Edit Member",
+        "view": "View Member",
+        "new": "Create new member"
+      },
+      "subtitle": "Please enter the master data of the club member here.",
+      "fields": {
+        "memberNumber": "Member Number",
+        "gender": "Gender",
+        "genderOptions": {
+          "male": "Male",
+          "female": "Female",
+          "diverse": "Diverse"
+        },
+        "firstName": "First name",
+        "middleName": "Middle name",
+        "lastName": "Last name",
+        "birthday": "Date of birth",
+        "street": "Street & House No.",
+        "postalCode": "Postal code",
+        "city": "City",
+        "countryCode": "Country code",
+        "email": "E-Mail",
+        "phone": "Phone No.",
+        "bulkMail": "Bulk email",
+        "bulkMailOptions": {
+          "allowed": "Allowed",
+          "notAllowed": "Not allowed"
+        },
+        "startOfStudies": "Start of studies",
+        "endOfStudies": "End of studies",
+        "academicDegree": "Academic degree",
+        "courseOfStudy": "Course of study",
+        "taskWithinTheClub": "Task within the club",
+        "memberCategory": "Member category",
+        "memberCategoryOptions": {
+          "STUDENT": "Student",
+          "ALUMNI": "Alumni",
+          "OTHER": "Other",
+          "BOARD_OF_DIRECTORS": "Club committee"
+        },
+        "entryDate": "Entry Date",
+        "exitDate": "Exit Date",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "sepaConsent": "SEPA Consent",
+        "contributionPlan": "Contribution Plan",
+        "noContribution": "No contribution plan"
+      },
+      "validation": {
+        "genderRequired": "Gender must not be empty.",
+        "firstNameRequired": "First name must not be empty.",
+        "firstNameMaxLength": "First name must not exceed 100 characters.",
+        "middleNameMaxLength": "Middle name must not exceed 100 characters.",
+        "lastNameRequired": "Last name must not be empty.",
+        "lastNameMaxLength": "Last name must not exceed 100 characters.",
+        "birthdayRequired": "Date of birth must be set.",
+        "birthdayPast": "Date of birth must be in the past.",
+        "streetRequired": "Street & House No. must not be empty.",
+        "streetMaxLength": "Street & House No. must not exceed 100 characters.",
+        "postalCodeRequired": "Postal code must not be empty.",
+        "postalCodeMaxLength": "Postal code must not exceed 10 characters.",
+        "cityRequired": "City must not be empty.",
+        "cityMaxLength": "City must not exceed 100 characters.",
+        "emailRequired": "E-Mail must not be empty.",
+        "emailMaxLength": "E-Mail must not exceed 50 characters.",
+        "startOfStudiesRequired": "The start date of the studies must be set.",
+        "startOfStudiesInvalid": "The start of studies must be in the past.",
+        "endOfStudiesInvalid": "The end of studies must be later than the start of studies.",
+        "courseOfStudyMaxLength": "The course of study must not exceed 100 characters.",
+        "memberCategoryRequired": "Member category must be established.",
+        "entryDateRequired": "Entry date must be set.",
+        "entryDateInvalid": "Entry date must be in the past.",
+        "exitDateInvalid": "The exit date must be later than the entry date.",
+        "ibanInvalid": "IBAN invalid",
+        "ibanError": "IBAN is incorrect.",
+        "bicInvalid": "BIC invalid",
+        "bicError": "BIC is incorrect."
+      },
+      "alerts": {
+        "invalidInputs": "Invalid inputs",
+        "saveFailed": "Saving failed. Please try again.",
+        "duplicateIbanOrEmail": "Saving failed. A member with the same IBAN or E-Mail already exists.",
+        "duplicateIbanOrEmailShort": "A member with the same IBAN or E-Mail already exists."
+      },
+      "snackbar": {
+        "createSuccess": "User successfully created.",
+        "updateSuccess": "User changes successfully saved."
+      },
+      "buttons": {
+        "close": "Close",
+        "cancel": "Cancel",
+        "save": "Save"
+      }
+    }
+  },
+  "pages": {
+    "audit": {
+      "title": "Audit Log",
+      "dataLabel": "Data",
+      "tableHeaders": {
+        "time": "Time",
+        "user": "User",
+        "action": "Action",
+        "entity": "Entity",
+        "data": "Data"
+      },
+      "noEntries": "No entries available",
+      "errorLoading": "Error while loading",
+      "rowsPerPage": "Rows per page:"
+    },
+    "backup": {
+      "title": "Backup & Data management",
+      "subtitle": "Back up your club data or import existing records.",
+      "alert": {
+        "title": "Data security",
+        "message": "It is recommended to perform a manual database backup before every import."
+      },
+      "systemBackup": {
+        "heading": "System backup",
+        "description": "Creates a full backup of the database. All members, contributions and settings are saved in a .bak file.",
+        "button": "Download backup now"
+      },
+      "systemRestore": {
+        "heading": "Restore system",
+        "description": "Select a backup file to restore the system to a previous state.",
+        "button": "Choose backup file",
+        "confirmMessage": "WARNING: The current database will be completely overwritten! Continue?",
+        "confirmButton": "Restore system"
+      },
+      "csvImport": {
+        "heading": "Import members via CSV",
+        "description": "Upload a .csv file to create multiple members at once.",
+        "button": "Upload CSV file",
+        "confirmMessage": "Really import members?",
+        "confirmButton": "Import",
+        "importErrors": {
+          "title": "Import error",
+          "description": "The imported file contains the following errors:",
+          "closeButton": "Close"
+        },
+        "validator": {
+          "import": {
+            "invalid": "Line {{0}}: Processing error. Line cannot be processed."
+          },
+          "memberNumber": {
+            "required": "Line {{0}}: 'Member number' is a required field.",
+            "invalid": "Line {{0}}: 'Member number' must be a positive number. (Value: {{1}})."
+          },
+          "name": {
+            "required": "Line {{0}}: 'Name' is a required field."
+          },
+          "firstName": {
+            "required": "Line {{0}}: 'First name' is a required field."
+          },
+          "birthday": {
+            "required": "Line {{0}}: 'Birthday' is a required field.",
+            "invalid": "Line {{0}}: 'Birthday' must not be in the future. (Value: {{1}})."
+          },
+          "city": {
+            "required": "Line {{0}}: 'City' is a required field."
+          },
+          "zip": {
+            "required": "Line {{0}}: 'ZIP code'is a required field."
+          },
+          "streetAndNumber": {
+            "required": "Line {{0}}: 'Street and number' is a required field."
+          },
+          "entryDate": {
+            "required": "Line {{0}}: 'Entry date' is a required field."
+          },
+          "gender": {
+            "required": "Line {{0}}: 'Gender' is a required field.",
+            "invalid": "Line {{0}}: 'Gender' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "bulkMail": {
+            "required": "Line {{0}}: 'Bulk mail' is a required field.",
+            "invalid": "Line {{0}}: 'Bulk mail' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "mail": {
+            "required": "Line {{0}}: 'Mail' is a required field.",
+            "invalid": "Line {{0}}: 'Mail' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "academicDegree": {
+            "invalid": "Line {{0}}: 'Academic degree' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "taskWithinTheClub": {
+            "invalid": "Line {{0}}: 'Task within the club' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "memberCategory": {
+            "invalid": "Line {{0}}: 'Member category' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "studyStart": {
+            "required": "Line {{0}}: 'Study end' is set, but 'Study start' is missing."
+          },
+          "studyEnd": {
+            "invalid": "Line {{0}}: 'Study end' ({{1}}) must not be before 'Study start' ({{2}})."
+          },
+          "entryExitDate": {
+            "invalid": "Line {{0}}: 'Exit date' ({{1}}) must not be before 'Entry date' ({{2}})."
+          },
+          "iban": {
+            "invalid": "Line {{0}}: 'IBAN' has an invalid format (Value: '{{1}}')."
+          },
+          "bic": {
+            "invalid": "Line {{0}}: 'BIC' has an invalid format (Value: '{{1}}')."
+          },
+          "contributionAmount": {
+            "invalid": "Line {{0}}: 'Contribution amount' must not be negative (Value: {{1}})."
+          }
+        }
+      },
+      "csvExample": {
+        "button": "Download sample-CSV-file"
+      },
+      "csvExport": {
+        "heading": "Member Export",
+        "button": "Export all members as CSV-file"
+      },
+      "snackbar": {
+        "downloadSuccess": "Download successful.",
+        "downloadError": "Export failed.",
+        "restoreSuccess": "System successfully restored.",
+        "restoreError": "Import failed.",
+        "importSuccess": "Members successfully imported.",
+        "importError": "Member import failed.",
+        "exportSuccess": "Members successfully exported.",
+        "exportError": "Export failed.",
+        "exampleError": "Example creation failed."
+      }
+    },
+    "contributionPlanConfig": {
+      "title": "Contribution Plan Management",
+      "newButton": "New Contribution Plan",
+      "table": {
+        "name": "Name",
+        "amount": "Amount",
+        "interval": "Interval",
+        "actions": "Actions"
+      },
+      "tooltip": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "dialog": {
+        "titleEdit": "Edit Contribution Plan",
+        "titleCreate": "New Contribution Plan",
+        "nameLabel": "Name",
+        "amountLabel": "Amount (€)",
+        "intervalLabel": "Interval",
+        "intervalYearly": "Yearly",
+        "intervalMonthly": "Monthly",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "validation": {
+        "nameEmpty": "Name must not be empty.",
+        "nameTooLong": "Name must not exceed 50 characters.",
+        "amountEmpty": "Contribution must not be empty.",
+        "amountInvalid": "Contribution must be greater than 0.",
+        "intervalEmpty": "An interval must be selected.",
+        "amountFormat": "Invalid amount (max. 2 decimal places)"
+      },
+      "snackbar": {
+        "updateSuccess": "Contribution plan changes saved successfully.",
+        "updateExists": "Contribution plan already exists.",
+        "createSuccess": "Contribution plan created successfully.",
+        "createExists": "Contribution plan already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteSuccess": "Contribution plan deleted successfully.",
+        "deleteFailed": "Deletion failed. Please try again.",
+        "deleteFailedMember": "The contribution plan cannot be deleted because it is assigned to a member."
+      },
+      "apiError": {
+        "updateExists": "Saving failed. Contribution plan already exists.",
+        "createExists": "Contribution plan could not be created. Contribution plan already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Deletion failed. Please try again.",
+        "deleteFailedMember": "The contribution plan cannot be deleted because it is assigned to a member."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete this contribution plan?",
+        "deleteButton": "Delete"
+      }
+    },
+    "memberCategoryConfig": {
+      "title": "Configure member categories",
+      "newButton": "New member category",
+      "table": {
+        "name": "Name",
+        "category": "Category",
+        "actions": "Actions"
+      },
+      "tooltip": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "dialog": {
+        "titleEdit": "Edit Member Category",
+        "titleCreate": "New Member Category",
+        "nameLabel": "Name",
+        "categoryLabel": "Category",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "validation": {
+        "nameEmpty": "Name must not be empty.",
+        "nameTooLong": "Name must not exceed 50 characters.",
+        "categoryEmpty": "Category must not be empty.",
+        "categoryTooLong": "Category must not exceed 50 characters."
+      },
+      "snackbar": {
+        "updateSuccess": "Member category changes saved successfully.",
+        "updateExists": "Member category already exists.",
+        "createSuccess": "Member category created successfully.",
+        "createExists": "Member category already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteSuccess": "Member category deleted successfully.",
+        "deleteFailed": "Deletion failed. Please try again.",
+        "deleteFailedMember": "The member category cannot be deleted because it is assigned to a member."
+      },
+      "apiError": {
+        "updateExists": "Saving failed. Member category already exists.",
+        "createExists": "Member category could not be created. Member category already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Deletion failed. Please try again.",
+        "deleteFailedMember": "The Member category cannot be deleted because it is assigned to a member."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete this member category?",
+        "deleteButton": "Delete"
+      }
+    },
+    "Membership fees": {
+      "title": "Membership fees",
+      "description": "Overview of all fee demands and their payment status.",
+      "openDemands": "Open Demands ({{count}} items)",
+      "filter": {
+        "searchName": "Name search",
+        "status": "Membership fee status",
+        "all": "All",
+        "unpaid": "Open",
+        "paid": "Paid",
+        "resetFilter": "Reset filters"
+      },
+      "table": {
+        "member": "Member",
+        "amount": "Amount",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "action": "Action",
+        "rowsPerPage": "Rows per page:"
+      },
+      "status": {
+        "paid": "Paid",
+        "open": "Open"
+      },
+      "button": {
+        "markAsPaid": "Payment received",
+        "markAsUnPaid": "Payment open"
+      }
+    },
+    "creditorConfig": {
+      "title": "Bank account configuration",
+      "description": "Manage the bank account details here.",
+      "sectionTitle": "SEPA bank settings",
+      "fields": {
+        "name": {
+          "label": "Association Name",
+          "placeholder": "Association e.V."
+        },
+        "iban": {
+          "label": "IBAN",
+          "placeholder": "DE00 0000 0000 0000 0000 00"
+        },
+        "bic": {
+          "label": "BIC",
+          "placeholder": "AAAA DE BB 123"
+        },
+        "creditorId": {
+          "label": "SEPA Creditor ID",
+          "placeholder": "DE98ZZZ09999999999"
+        },
+        "streetNameAndNumber": {
+          "label": "Street and House Number"
+        },
+        "postCode": {
+          "label": "Postal Code"
+        },
+        "cityName": {
+          "label": "City"
+        },
+        "countryCode": {
+          "label": "Country Code"
+        }
+      },
+      "buttons": {
+        "save": "Save Configuration",
+        "saving": "Saving...",
+        "delete": "Delete"
+      },
+      "validation": {
+        "nameRequired": "Association name must not be empty.",
+        "nameMaxLength": "Association name must not exceed 100 characters.",
+        "ibanRequired": "IBAN must not be empty.",
+        "ibanInvalid": "IBAN invalid",
+        "bicRequired": "BIC must not be empty.",
+        "bicInvalid": "BIC invalid",
+        "creditorIdRequired": "Creditor ID must not be empty.",
+        "creditorIdMaxLength": "Creditor ID must not exceed 50 characters.",
+        "streetMaxLength": "Street & house number must not exceed 50 characters.",
+        "postCodeRequired": "Postal code must not be empty.",
+        "postCodeMaxLength": "Postal code must not exceed 10 characters.",
+        "cityRequired": "City must not be empty.",
+        "cityMaxLength": "City must not exceed 50 characters.",
+        "countryCodeRequired": "Country code must be selected."
+      },
+      "snackbar": {
+        "saveSuccess": "Saved successfully.",
+        "saveError": "Saving failed. Please try again.",
+        "deleteSuccess": "Deleted successfully.",
+        "deleteError": "Settings could not be deleted. Please try again."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete SEPA bank settings?",
+        "deleteButton": "Delete"
+      },
+      "apiError": {
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Settings could not be deleted. Please try again."
+      }
+    },
+    "linkConfig": {
+      "title": "Configure external links",
+      "description": "Add various links here that should be displayed in the menu.",
+      "sectionTitle": "External links",
+      "loading": "Loading...",
+      "newButton": "Add link",
+      "fields": {
+        "link": {
+          "label": "Link address",
+          "placeholder": "www.dropbox.com"
+        },
+        "name": {
+          "label": "Display name",
+          "placeholder": "e.g. Dropbox"
+        },
+        "icon": {
+          "label": "Icon"
+        }
+      },
+      "validation": {
+        "linkEmpty": "Link must not be empty.",
+        "linkTooLong": "Link must not exceed 100 characters.",
+        "nameEmpty": "Name must not be empty.",
+        "nameTooLong": "Name must not exceed 20 characters."
+      },
+      "buttons": {
+        "save": "Save link",
+        "saving": "Saving...",
+        "delete": "Delete",
+        "add": "Add link"
+      },
+      "table": {
+        "link": "Link",
+        "name": "Name",
+        "icon": "Icon",
+        "actions": "Actions",
+        "empty": "No links found."
+      },
+      "tooltip": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "dialog": {
+        "titleEdit": "Edit link",
+        "titleCreate": "Add link",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "snackbar": {
+        "saveSuccess": "Saved successfully.",
+        "saveError": "Saving failed. Please try again.",
+        "createSuccess": "Link added successfully.",
+        "deleteSuccess": "Deleted successfully.",
+        "deleteError": "Link could not be deleted. Please try again."
+      },
+      "confirm": {
+        "deleteMessage": "Are you sure you want to delete this link?",
+        "deleteButton": "Delete"
+      },
+      "apiError": {
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Link could not be deleted. Please try again."
+      }
+    },
+    "emailConfig": {
+      "title": "Email Configuration",
+      "description": "Manage the SMTP credentials for sending newsletters here.",
+      "sectionSmtp": "SMTP Server Settings",
+      "sectionImap": "IMAP Server Settings",
+      "sectionAuth": "Authentication & Sender",
+      "fields": {
+        "smtpServer": {
+          "label": "SMTP Host / Server",
+          "placeholder": "smtp.your-provider.com"
+        },
+        "port": {
+          "label": "SMTP-Port"
+        },
+        "imapServer": {
+          "label": "IMAP Host / Server",
+          "placeholder": "imap.your-provider.com"
+        },
+        "imapPort": {
+          "label": "IMAP-Port"
+        },
+        "username": {
+          "label": "Username / Email"
+        },
+        "fromMail": {
+          "label": "Sender Email (From)",
+          "placeholder": "board@your-club.com",
+          "helperText": "This address will be shown to recipients as the sender."
+        },
+        "password": {
+          "label": "Password",
+          "labelKeep": "Password (leave empty to keep current)"
+        }
+      },
+      "validation": {
+        "smtpServerEmpty": "SMTP Host / Server must not be empty.",
+        "smtpServerTooLong": "SMTP Host / Server must not exceed 50 characters.",
+        "portTooSmall": "SMTP Port must not be less than 1.",
+        "imapServerEmpty": "IMAP Host / Server must not be empty.",
+        "imapServerTooLong": "IMAP Host / Server must not exceed 50 characters.",
+        "imapPortTooSmall": "IMAP Port must not be less than 1.",
+        "usernameEmpty": "Username must not be empty.",
+        "usernameTooLong": "Username must not exceed 50 characters.",
+        "passwordEmpty": "Password must not be empty.",
+        "passwordTooLong": "Password must not exceed 50 characters.",
+        "fromMailEmpty": "Sender email must not be empty.",
+        "fromMailTooLong": "Sender email must not exceed 50 characters.",
+        "testEmailEmpty": "Test email must not be empty."
+      },
+      "buttons": {
+        "save": "Save Configuration",
+        "saving": "Saving...",
+        "delete": "Delete"
+      },
+      "snackbar": {
+        "saveSuccess": "Saved successfully.",
+        "saveError": "Saving failed. Please try again.",
+        "deleteSuccess": "Deleted successfully.",
+        "deleteError": "Settings could not be deleted. Please try again.",
+        "testSuccess": "Test email sent successfully",
+        "testError": "The test email could not be sent. Please check your entries."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete mail server settings?",
+        "deleteButton": "Delete"
+      },
+      "apiError": {
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Settings could not be deleted. Please try again.",
+        "testSendFailed": "Sending of test mail failed. Please try again."
+      },
+      "testMode": {
+        "title": "Test mode",
+        "recipientEmail": {
+          "label": "Recipient email",
+          "placeholder": "test@example.com",
+          "error": "Test email must not be empty."
+        },
+        "sendTest": "Send test E-Mail",
+        "sending": "Will be send..."
+      }
+    },
+    "generalConfig": {
+      "title": "Website settings",
+      "sectionTitle": "Club name",
+      "fields": {
+        "pageName": {
+          "label": "Club name",
+          "placeholder": "Club e.V."
+        }
+      },
+      "validation": {
+        "pageNameEmpty": "Club name must not be empty.",
+        "pageNameTooLong": "Club name must not exceed 30 characters."
+      },
+      "buttons": {
+        "save": "Save Configuration",
+        "saving": "Saving...",
+        "delete": "Delete",
+        "uploadLogo": "Upload club logo",
+        "changeLogo": "Upload new club logo",
+        "deleteLogo": "Remove logo"
+      },
+      "snackbar": {
+        "saveSuccess": "Saved successfully.",
+        "saveError": "Saving failed. Please try again.",
+        "deleteSuccess": "Deleted successfully.",
+        "deleteError": "Settings could not be deleted. Please try again."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete website-settings?",
+        "deleteButton": "Delete"
+      },
+      "apiError": {
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Settings could not be deleted. Please try again."
+      }
+    },
+    "login": {
+      "login": "Login",
+      "loading": "Being logged in...",
+      "clubManagement": "Club administration",
+      "loginHint": "Please log in to continue.",
+      "username": "User name",
+      "password": "Password",
+      "loginError": "Login failed. Please check your details.",
+      "toManyLoginError": "Too many failed login attempts. Wait {{seconds}} seconds to try again.",
+      "demo": {
+        "header": "Demo version",
+        "caption": "This is a demo version. All data will be deleted every night. Please do not enter any personal data!",
+        "login": "Demo credentials",
+        "admin": "Admin: Admin / admin12345678",
+        "user": "User: User / user12345678",
+        "finance": "Finance director: Finance / finance1234"
+      }
+    },
+    "mail": {
+      "title": "Send Circular Email",
+      "description": "Create a message here that will be sent to {{category}} members.",
+      "infoBanner": {
+        "recipients": "Recipients: To {{category}} club members ({{count}} persons)"
+      },
+      "signalR": {
+        "connected": "Connected",
+        "disconnected": "Not connected"
+      },
+      "memberCategory": {
+        "ALL": "All",
+        "STUDENT": "Students",
+        "ALUMNI": "Alumni",
+        "OTHER": "Other",
+        "BOARD_OF_DIRECTORS": "Club committee",
+        "otherLabel": "all others",
+        "custom": "Custom",
+        "customLabel": "custom"
+      },
+      "tabLabel": {
+        "editor": "✏\uFE0F Editor",
+        "recipient": "\uD83D\uDC65 Recipient",
+        "sending": "⏳ Status",
+        "done": "✅ Status",
+        "idle": "\uD83D\uDCCA Status"
+      },
+      "signalNotConnected": "No mail service connection! Please reload the page.",
+      "noRecipient": "No recipient selected!",
+      "sendingFailed": "Send failed",
+      "editorPage": {
+        "editorDefaultContent": "<p>Hello {firstname},</p><p>this is a message for you...</p>",
+        "subjectMissing": "Please enter a subject!",
+        "bodyMissing": "Please enter an email body!",
+        "subjectLabel": "Subject",
+        "subjectPlaceholder": "Email subject...",
+        "info": "Attention: You´ve selected more than 150 recipients. Please remove the personalized greeting ({fullname} / {firstname}). Personalized greetings are only available for up to 150 recipients.",
+        "toolbar": {
+          "bold": "Bold",
+          "italic": "Italic",
+          "underline": "Underline",
+          "heading1": "Heading 1",
+          "heading2": "Heading 2",
+          "bulletList": "Bullet list",
+          "orderedList": "Numbered list",
+          "alignLeft": "Align left",
+          "alignCenter": "Align center",
+          "alignRight": "Align right",
+          "embedImage": "Embed image in text",
+          "attachFile": "Attach file",
+          "textColor": "Text color"
+        },
+        "attachments": {
+          "sectionTitle": "Attachments & embedded images:",
+          "inline": "Embedded",
+          "attachment": "Attachment"
+        },
+        "recipients": {
+          "selected": "{{count}} recipient(s) selected",
+          "tip": "Tip: Enter {fullname} for a personalized greeting with first and last name, and {firstname} for first name only."
+        },
+        "send": {
+          "sending": "Sending…",
+          "button": "Send to {{count}} recipient(s)"
+        }
+      },
+      "recipientPage": {
+        "memberCategoryLabel": "Member category",
+        "recipientList": "Recipient list",
+        "rowsPerPage": "Rows per page:",
+        "noRecipientFound": "No recipient found."
+      },
+      "sendProgressPage": {
+        "idle": {
+          "title": "No active sending",
+          "subtitle": "Go to the editor and click \"Send\""
+        },
+        "header": {
+          "done": "Sending complete",
+          "sending": "Sending emails…"
+        },
+        "progress": {
+          "label": "Progress"
+        },
+        "statCard": {
+          "total": "Total",
+          "successful": "Successful",
+          "failed": "Failed"
+        },
+        "failedAlert": {
+          "title": "Failed emails ({{count}})"
+        },
+        "log": {
+          "title": "Live Log",
+          "waiting": "Waiting for entries…"
+        },
+        "resetButton": "Create new email"
+      }
+    },
+    "dashboard": {
+      "logout": "Logout",
+      "clubManagement": "Club administration",
+      "settings": {
+        "name": "Settings",
+        "userManagement": "User management",
+        "emailConfig": "Configure email",
+        "linkConfig": "Configure external links",
+        "contributionPlanConfig": "Contribution plan administration",
+        "memberCategoryConfig": "Configure member categories",
+        "creditorConfig": "Configure bank details",
+        "generalConfig": "Website settings",
+        "profileSettings": "Profile settings"
+      },
+      "pageNames": {
+        "members": "Member management",
+        "broadcastEmail": "Broadcast email",
+        "sepa": "SEPA export",
+        "contributions": "Membership fees",
+        "audit": "Audit",
+        "backup": "Backup"
+      }
+    },
+    "members": {
+      "title": "Member Management",
+      "refresh": "Refresh",
+      "addMember": "Add member",
+      "unknownTask": "Unknown task",
+      "confirmDialog": {
+        "deleteQuestion": "Are you sure you want to delete this member?",
+        "delete": "Delete",
+        "restoreQuestion": "Are you sure you want to restore this member?",
+        "restore": "Restore"
+      },
+      "responseMessages": {
+        "deleted": "Member successfully deleted.",
+        "deleteError": "Error deleting member.",
+        "restored": "Member successfully restored.",
+        "restoreError": "Error restoring member."
+      },
+      "filter": {
+        "searchName": "Search name",
+        "taskInClub": "Task in club",
+        "allTasks": "All tasks",
+        "memberCategory": "Member category",
+        "ALL": "All",
+        "STUDENT": "Student",
+        "ALUMNI": "Alumni",
+        "OTHER": "Other",
+        "BOARD_OF_DIRECTORS": "Club committee",
+        "showDeleted": "Deleted members",
+        "resetFilter": "Reset filters"
+      },
+      "table": {
+        "ariaLabel": "Members table",
+        "colNumber": "No.",
+        "colName": "Name",
+        "colTask": "Task in club",
+        "colEmail": "E-Mail",
+        "colContribution": "Membership fee",
+        "colMemberCategory": "Member category",
+        "colActions": "Actions",
+        "noMembers": "No members found.",
+        "noContribution": "No membership fee configured",
+        "rowsPerPage": "Rows per page:"
+      },
+      "actions": {
+        "restore": "Restore",
+        "view": "View",
+        "edit": "Edit",
+        "delete": "Delete"
+      }
+    },
+    "sepa": {
+      "title": "SEPA direct debits",
+      "description": "Generate the XML file for the direct debit collection of membership fees.",
+      "card": {
+        "title": "Create Bulk Direct Debit",
+        "description": "All outstanding membership fees are consolidated and exported as a standardized <strong>pain.008.001.08 XML file</strong>."
+      },
+      "table": {
+        "noSepa": "No exports found",
+        "name": "File name",
+        "amount": "Amount",
+        "exportedDate": "Export date",
+        "exportedCases": "Contribution count",
+        "action": "Action",
+        "rowsPerPage": "Rows per page:"
+      },
+      "buttons": {
+        "download": "Download SEPA XML",
+        "generating": "Generating XML..."
+      },
+      "lastExport": {
+        "label": "Last export:",
+        "noData": "No data available",
+        "time": "Today, {{time}}",
+        "dateTime": "{{date}}, {{time}}"
+      },
+      "warning": {
+        "title": "Important Notice",
+        "message": "Make sure all members have valid IBAN data before starting the export. Erroneous records will be marked in the log."
+      },
+      "apiError": {
+        "notConfigured": "Export could not be created. Bank details not configured.",
+        "serverError": "Export could not be created. Server error."
+      }
+    },
+    "userManagement": {
+      "title": "User Management",
+      "buttons": {
+        "newUser": "New User",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "table": {
+        "username": "Username",
+        "email": "Mail",
+        "role": "Role",
+        "actions": "Actions"
+      },
+      "tooltip": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "dialog": {
+        "titleCreate": "New user",
+        "titleEdit": "Edit user",
+        "fields": {
+          "username": "Username",
+          "passwordCreate": "Password",
+          "passwordEdit": "Password (leave empty to keep)",
+          "email": "Mail",
+          "role": "Role"
+        },
+        "roles": {
+          "user": "User",
+          "admin": "Admin",
+          "financialManager": "Financial manager"
+        }
+      },
+      "validation": {
+        "usernameEmpty": "Username is required.",
+        "usernameTooLong": "Username cannot exceed 50 characters.",
+        "passwordEmpty": "Password must not be empty.",
+        "passwordTooShort": "Password must be at least 11 characters long.",
+        "passwordTooLong": "Password cannot not exceed 50 characters.",
+        "emailTooLong": "Mail must not exceed 50 characters."
+      },
+      "snackbar": {
+        "updateSuccess": "User changes saved successfully.",
+        "createSuccess": "User created successfully.",
+        "deleteSuccess": "User deleted successfully.",
+        "usernameDuplicate": "Username already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Deletion failed. Please try again."
+      },
+      "apiError": {
+        "loadFailed": "Users could not be loaded.",
+        "updateDuplicate": "Saving failed. Username already exists.",
+        "createDuplicate": "User could not be created. Username already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "User could not be deleted."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete user?",
+        "deleteButton": "Delete"
+      }
+    }
+  }
+}

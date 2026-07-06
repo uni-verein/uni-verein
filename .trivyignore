@@ -1,0 +1,6 @@
+# .trivyignore
+# Hier können bekannte False Positives oder akzeptierte CVEs eingetragen werden.
+# Format: CVE-ID [# Kommentar]
+#
+# Beispiel:
+# CVE-2023-12345  # Nicht betroffen, da Feature X nicht genutzt wird

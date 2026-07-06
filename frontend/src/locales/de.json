@@ -1,0 +1,931 @@
+{
+  "components": {
+    "taskWithinTheClubOptions": {
+      "unknownTask": "Unbekannte Aufgabe",
+      "member": "Mitglied",
+      "chairman": "1. Vorstand",
+      "secondChairman": "2. Vorstand",
+      "juniorBoardMember": "Junior-Vorstand",
+      "ChiefFinanceOfficer": "Finanzvorstand",
+      "websiteManager": "Webseiten-Beauftragter",
+      "alumniOfficer": "Alumni-Beauftragter",
+      "studentCouncilRepresentative": "Fachschafts-Beauftragter"
+    },
+    "confirmDialog": {
+      "confirm": "Bestätigung",
+      "cancel": "Abbrechen",
+      "delete": "Löschen"
+    },
+    "iconPickerDialog": {
+      "selectIcon": "Symbol auswählen",
+      "searchIcon": "Symbol suchen...",
+      "foundIcons": "Symbol gefunden",
+      "loadingIcons": "Symbol werden geladen...",
+      "buttons": {
+        "cancel": "Abbrechen",
+        "accept": "Übernehmen"
+      }
+    },
+    "memberForm": {
+      "title": {
+        "edit": "Mitglied bearbeiten",
+        "view": "Mitglied ansehen",
+        "new": "Neues Mitglied anlegen"
+      },
+      "subtitle": "Geben Sie hier die Stammdaten des Vereinsmitglieds ein.",
+      "fields": {
+        "memberNumber": "Mitgliedsnummer",
+        "gender": "Geschlecht",
+        "genderOptions": {
+          "male": "Mann",
+          "female": "Frau",
+          "diverse": "Diverse"
+        },
+        "firstName": "Vorname",
+        "middleName": "Zweitname",
+        "lastName": "Nachname",
+        "birthday": "Geburtsdatum",
+        "street": "Straße & Haus-Nr.",
+        "postalCode": "PLZ",
+        "city": "Stadt",
+        "countryCode": "Ländercode",
+        "email": "E-Mail",
+        "phone": "Telefon-Nr.",
+        "bulkMail": "Rundmail",
+        "bulkMailOptions": {
+          "allowed": "Erlaubt",
+          "notAllowed": "Nicht erlaubt"
+        },
+        "startOfStudies": "Studienbeginn",
+        "endOfStudies": "Studienende",
+        "academicDegree": "Akademischer Grad",
+        "courseOfStudy": "Studiengang",
+        "taskWithinTheClub": "Aufgabe im Verein",
+        "memberCategory": "Mitgliederkategorie",
+        "memberCategoryOptions": {
+          "STUDENT": "Studierende",
+          "ALUMNI": "Alumni",
+          "OTHER": "Anderes",
+          "BOARD_OF_DIRECTORS": "Vorstand"
+        },
+        "entryDate": "Eintrittsdatum",
+        "exitDate": "Austrittsdatum",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "sepaConsent": "SEPA-Zustimmung",
+        "contributionPlan": "Beitragstarif",
+        "noContribution": "Keinen Beitrag"
+      },
+      "validation": {
+        "genderRequired": "Geschlecht darf nicht leer sein.",
+        "firstNameRequired": "Vorname darf nicht leer sein.",
+        "firstNameMaxLength": "Vorname darf maximal 100 Zeichen lang sein.",
+        "middleNameMaxLength": "Zweitnahme darf maximal 100 Zeichen lang sein.",
+        "lastNameRequired": "Nachname darf nicht leer sein.",
+        "lastNameMaxLength": "Nachname darf maximal 100 Zeichen lang sein.",
+        "birthdayRequired": "Geburtsdatum muss gesetzt werden",
+        "birthdayPast": "Geburtsdatum muss in der vergangenheit liegen",
+        "streetRequired": "Straße & Haus Nr. darf nicht leer sein.",
+        "streetMaxLength": "Straße & Haus Nr. darf maximal 100 Zeichen lang sein.",
+        "postalCodeRequired": "PLZ darf nicht leer sein.",
+        "postalCodeMaxLength": "PLZ darf maximal 10 Zeichen lang sein.",
+        "cityRequired": "Stadt darf nicht leer sein.",
+        "cityMaxLength": "Stadt darf maximal 100 Zeichen lang sein.",
+        "emailRequired": "E-Mail darf nicht leer sein.",
+        "emailMaxLength": "E-Mail darf maximal 50 Zeichen lang sein.",
+        "startOfStudiesRequired": "Studienbeginn muss gesetzt werden.",
+        "startOfStudiesInvalid": "Studienbeginn muss in der Vergangenheit liegen.",
+        "endOfStudiesInvalid": "Studienende muss später als Studienbeginn sein.",
+        "courseOfStudyMaxLength": "Studiengang darf maximal 100 Zeichen lang sein.",
+        "memberCategoryRequired": "Mitgliederkategorie muss gesetzt werden.",
+        "entryDateRequired": "Eintrittsdatum muss gesetzt werden.",
+        "entryDateInvalid": "Eintrittsdatum muss in der Vergangenheit liegen.",
+        "exitDateInvalid": "Austrittsdatum muss später als Eintrittsdatum sein.",
+        "ibanInvalid": "IBAN ungültig",
+        "ibanError": "IBAN ist fehlerhaft.",
+        "bicInvalid": "BIC ungültig",
+        "bicError": "BIC ist fehlerhaft."
+      },
+      "alerts": {
+        "invalidInputs": "Fehlerhafte Eingaben",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "duplicateIbanOrEmail": "Speichern fehlgeschlagen. Mitglied mit gleicher IBAN oder E-Mail existiert bereits.",
+        "duplicateIbanOrEmailShort": "Mitglied mit gleicher IBAN oder E-Mail existiert bereits."
+      },
+      "snackbar": {
+        "createSuccess": "Nutzer erfolgreich erstellt.",
+        "updateSuccess": "Nutzeränderungen erfolgreich gespeichert."
+      },
+      "buttons": {
+        "close": "Schließen",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      }
+    }
+  },
+  "pages": {
+    "audit": {
+      "title": "Audit Log",
+      "dataLabel": "Daten",
+      "tableHeaders": {
+        "time": "Zeit",
+        "user": "Nutzer",
+        "action": "Aktion",
+        "entity": "Eintrag",
+        "data": "Daten"
+      },
+      "noEntries": "Keine Einträge vorhanden",
+      "errorLoading": "Fehler beim Laden",
+      "rowsPerPage": "Zeilen pro Seite:"
+    },
+    "backup": {
+      "title": "Backup & Datenmanagement",
+      "subtitle": "Sichern Sie Ihre Vereinsdaten oder importieren Sie bestehende Datensätze.",
+      "alert": {
+        "title": "Datensicherheit",
+        "message": "Es wird empfohlen, vor jedem Import eine manuelle Sicherung der Datenbank durchzuführen."
+      },
+      "systemBackup": {
+        "heading": "System-Backup",
+        "description": "Erstellt eine vollständige Sicherung der Datenbank. Alle Mitglieder, Beiträge und Einstellungen werden in einer .bak Datei gespeichert.",
+        "button": "Sicherung jetzt herunterladen"
+      },
+      "systemRestore": {
+        "heading": "System wiederherstellen",
+        "description": "Wählen Sie eine Backup-Datei aus, um das System auf einen früheren Stand zurückzusetzen.",
+        "button": "Backup-Datei wählen",
+        "confirmMessage": "ACHTUNG: Die aktuelle Datenbank wird komplett überschrieben! Fortfahren?",
+        "confirmButton": "System wiederherstellen"
+      },
+      "csvImport": {
+        "heading": "Mitglieder via CSV importieren",
+        "description": "Laden Sie eine Liste im Format .csv hoch, um mehrere Mitglieder gleichzeitig anzulegen.",
+        "button": "CSV Datei hochladen",
+        "confirmMessage": "Mitglieder wirklich importieren?",
+        "confirmButton": "Importieren",
+        "importErrors": {
+          "title": "Importfehler",
+          "description": "Die eingelesene Datei weist folgende Fehler auf:",
+          "closeButton": "Schließen"
+        },
+        "validator": {
+          "import": {
+            "invalid": "Zeile {{0}}: Verarbeitungsfehler. Zeile kann nicht verarbeitet werden."
+          },
+          "memberNumber": {
+            "required": "Zeile {{0}}: 'Member number' ist ein Pflichtfeld.",
+            "invalid": "Zeile {{0}}: 'Member number' muss eine positive Zahl sein (Wert: {{1}})."
+          },
+          "name": {
+            "required": "Zeile {{0}}: 'Name' ist ein Pflichtfeld."
+          },
+          "firstName": {
+            "required": "Zeile {{0}}: 'First name' ist ein Pflichtfeld."
+          },
+          "birthday": {
+            "required": "Zeile {{0}}: 'Birthday' ist ein Pflichtfeld.",
+            "invalid": "Zeile {{0}}: 'Birthday' darf nicht in der Zukunft liegen (Wert: {{1}})."
+          },
+          "city": {
+            "required": "Zeile {{0}}: 'City' ist ein Pflichtfeld."
+          },
+          "zip": {
+            "required": "Zeile {{0}}: 'ZIP code' ist ein Pflichtfeld."
+          },
+          "streetAndNumber": {
+            "required": "Zeile {{0}}: 'Street and number' ist ein Pflichtfeld."
+          },
+          "entryDate": {
+            "required": "Zeile {{0}}: 'Entry date' ist ein Pflichtfeld."
+          },
+          "gender": {
+            "required": "Zeile {{0}}: 'Gender' ist ein Pflichtfeld.",
+            "invalid": "Zeile {{0}}: 'Gender' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
+          },
+          "bulkMail": {
+            "required": "Zeile {{0}}: 'Bulk mail' ist ein Pflichtfeld.",
+            "invalid": "Zeile {{0}}: 'Bulk mail' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
+          },
+          "mail": {
+            "required": "Zeile {{0}}: 'Mail' ist ein Pflichtfeld.",
+            "invalid": "Zeile {{0}}: 'Mail' hat ein ungültiges Format (Wert: '{{1}}')."
+          },
+          "academicDegree": {
+            "invalid": "Zeile {{0}}: 'Academic degree' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
+          },
+          "taskWithinTheClub": {
+            "invalid": "Zeile {{0}}: 'Task within the club' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
+          },
+          "memberCategory": {
+            "invalid": "Zeile {{0}}: 'Mitgliederkategorie' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
+          },
+          "studyStart": {
+            "required": "Zeile {{0}}: 'Study end' ist gesetzt, aber 'Study start' fehlt."
+          },
+          "studyEnd": {
+            "invalid": "Zeile {{0}}: 'Study end' ({{1}}) darf nicht vor 'Study start' ({{2}}) liegen."
+          },
+          "entryExitDate": {
+            "invalid": "Zeile {{0}}: 'Exit date' ({{1}}) darf nicht vor 'Entry date' ({{2}}) liegen."
+          },
+          "iban": {
+            "invalid": "Zeile {{0}}: 'IBAN' hat ein ungültiges Format (Wert: '{{1}}')."
+          },
+          "bic": {
+            "invalid": "Zeile {{0}}: 'BIC' hat ein ungültiges Format (Wert: '{{1}}')."
+          },
+          "contributionAmount": {
+            "invalid": "Zeile {{0}}: 'Contribution amount' darf nicht negativ sein (Wert: {{1}})."
+          }
+        }
+      },
+      "csvExample": {
+        "button": "Beispiel-CSV-Datei herunterladen"
+      },
+      "csvExport": {
+        "heading": "Mitglieder-Export",
+        "button": "Exportiere alle Mitglieder als CSV-Datei"
+      },
+      "snackbar": {
+        "downloadSuccess": "Download erfolgreich.",
+        "downloadError": "Export fehlgeschlagen.",
+        "restoreSuccess": "System erfolgreich wiederhergestellt.",
+        "restoreError": "Import fehlgeschlagen.",
+        "importSuccess": "Mitglieder erfolgreich importiert.",
+        "importError": "Mitgliederimport fehlgeschlagen.",
+        "exportSuccess": "Mitglieder erfolgreich exportiert.",
+        "exportError": "Export fehlgeschlagen.",
+        "exampleError": "Beispielerstellung fehlgeschlagen."
+      }
+    },
+    "contributionPlanConfig": {
+      "title": "Beitragstarifverwaltung",
+      "newButton": "Neuer Beitragstarif",
+      "table": {
+        "name": "Name",
+        "amount": "Betrag",
+        "interval": "Intervall",
+        "actions": "Aktionen"
+      },
+      "tooltip": {
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      },
+      "dialog": {
+        "titleEdit": "Beitragstarif bearbeiten",
+        "titleCreate": "Neuer Beitragstarif",
+        "nameLabel": "Name",
+        "amountLabel": "Betrag (€)",
+        "intervalLabel": "Intervall",
+        "intervalYearly": "Jährlich",
+        "intervalMonthly": "Monatlich",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      },
+      "validation": {
+        "nameEmpty": "Name darf nicht leer sein.",
+        "nameTooLong": "Name darf maximal 50 Zeichen lang sein.",
+        "amountEmpty": "Beitrag darf nicht leer sein.",
+        "amountInvalid": "Beitrag muss größer als 0 sein.",
+        "intervalEmpty": "Intervall muss ausgewählt werden.",
+        "amountFormat": "Ungültiger Betrag (max. 2 Nachkommastellen)"
+      },
+      "snackbar": {
+        "updateSuccess": "Beitragsplanänderungen erfolgreich gespeichert.",
+        "updateExists": "Beitragsplan existiert bereits.",
+        "createSuccess": "Beitragsplan erfolgreich erstellt.",
+        "createExists": "Beitragsplan existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Beitragsplan erfolgreich gelöscht.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedMember": "Beitragsplan kann nicht gelöscht werden, da er einem Mitglied zugewiesen ist."
+      },
+      "apiError": {
+        "updateExists": "Speichern fehlgeschlagen. Beitragsplan existiert bereits.",
+        "createExists": "Beitragsplan kann nicht erstellt werden. Beitragsplan existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedMember": "Beitragsplan kann nicht gelöscht werden, da er einen Mitglied zugewiesen ist."
+      },
+      "confirm": {
+        "deleteMessage": "Beitragstarif wirklich löschen?",
+        "deleteButton": "Löschen"
+      }
+    },
+    "memberCategoryConfig": {
+      "title": "Mitgliederkategorien verwalten",
+      "newButton": "Neue Mitgliederkategorie",
+      "table": {
+        "name": "Name",
+        "category": "Kategorie",
+        "actions": "Aktionen"
+      },
+      "tooltip": {
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      },
+      "dialog": {
+        "titleEdit": "Mitgliederkategorie bearbeiten",
+        "titleCreate": "Neue Mitgliederkategorie",
+        "nameLabel": "Name",
+        "categoryLabel": "Kategorie",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      },
+      "validation": {
+        "nameEmpty": "Name darf nicht leer sein.",
+        "nameTooLong": "Name darf maximal 50 Zeichen lang sein.",
+        "categoryEmpty": "Category darf nicht leer sein.",
+        "categoryTooLong": "Name darf maximal 50 Zeichen lang sein."
+      },
+      "snackbar": {
+        "updateSuccess": "Mitgliederkategorie änderungen erfolgreich gespeichert.",
+        "updateExists": "Mitgliederkategorie existiert bereits.",
+        "createSuccess": "Mitgliederkategorie erfolgreich erstellt.",
+        "createExists": "Mitgliederkategorie existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Mitgliederkategorie erfolgreich gelöscht.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedMember": "Mitgliederkategorie kann nicht gelöscht werden, da er einen Mitglied zugewiesen ist."
+      },
+      "apiError": {
+        "updateExists": "Speichern fehlgeschlagen. Mitgliederkategorie existiert bereits.",
+        "createExists": "Mitgliederkategorie kann nicht erstellt werden. Mitgliederkategorie existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedMember": "Mitgliederkategorie kann nicht gelöscht werden, da er einen Mitglied zugewiesen ist."
+      },
+      "confirm": {
+        "deleteMessage": "Mitgliederkategorie wirklich löschen?",
+        "deleteButton": "Löschen"
+      }
+    },
+    "contributions": {
+      "title": "Mitgliedsbeiträge",
+      "description": "Übersicht aller Beitragsforderungen und deren Zahlungsstatus.",
+      "openDemands": "Offene Forderungen ({{count}} Posten)",
+      "filter": {
+        "searchName": "Name suchen",
+        "status": "Beitragsstatus",
+        "all": "Alle",
+        "unpaid": "Offen",
+        "paid": "Bezahlt",
+        "resetFilter": "Filter zurücksetzen"
+      },
+      "table": {
+        "member": "Mitglied",
+        "amount": "Betrag",
+        "dueDate": "Fällig am",
+        "status": "Status",
+        "action": "Aktion",
+        "rowsPerPage": "Zeilen pro Seite:"
+      },
+      "status": {
+        "paid": "Bezahlt",
+        "open": "Offen"
+      },
+      "button": {
+        "markAsPaid": "Zahlung erhalten",
+        "markAsUnPaid": "Zahlung offen"
+      }
+    },
+    "creditorConfig": {
+      "title": "Bankverbindung konfigurieren",
+      "description": "Verwalten Sie hier die Bankverbindung.",
+      "sectionTitle": "SEPA-Bank-Einstellungen",
+      "fields": {
+        "name": {
+          "label": "Vereinsname",
+          "placeholder": "Verein e.V."
+        },
+        "iban": {
+          "label": "IBAN",
+          "placeholder": "DE00 0000 0000 0000 0000 00"
+        },
+        "bic": {
+          "label": "BIC",
+          "placeholder": "AAAA DE BB 123"
+        },
+        "creditorId": {
+          "label": "SEPA-Gläubiger-ID",
+          "placeholder": "DE98ZZZ09999999999"
+        },
+        "streetNameAndNumber": {
+          "label": "Straße und Hausnummer"
+        },
+        "postCode": {
+          "label": "PLZ"
+        },
+        "cityName": {
+          "label": "Stadt"
+        },
+        "countryCode": {
+          "label": "Ländercode"
+        }
+      },
+      "buttons": {
+        "save": "Konfiguration speichern",
+        "saving": "Wird gespeichert...",
+        "delete": "Löschen"
+      },
+      "validation": {
+        "nameRequired": "Vereinsname darf nicht leer sein.",
+        "nameMaxLength": "Vereinsname darf maximal 100 Zeichen lang sein.",
+        "ibanRequired": "IBAN darf nicht leer sein.",
+        "ibanInvalid": "IBAN ungültig",
+        "bicRequired": "BIC darf nicht leer sein.",
+        "bicInvalid": "BIC ungültig",
+        "creditorIdRequired": "Gläubiger-ID darf nicht leer sein.",
+        "creditorIdMaxLength": "Gläubiger-ID darf maximal 50 Zeichen lang sein.",
+        "streetMaxLength": "Straße & Hausnummer darf maximal 50 Zeichen lang sein.",
+        "postCodeRequired": "PLZ darf nicht leer sein.",
+        "postCodeMaxLength": "PLZ darf maximal 10 Zeichen lang sein.",
+        "cityRequired": "Stadt darf nicht leer sein.",
+        "cityMaxLength": "Stadt darf maximal 50 Zeichen lang sein.",
+        "countryCodeRequired": "Ländercode muss ausgewählt sein."
+      },
+      "snackbar": {
+        "saveSuccess": "Speichern erfolgreich.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Löschen erfolgreich.",
+        "deleteError": "Einstellungen konnte nicht gelöscht werden. Bitte erneut versuchen."
+      },
+      "confirm": {
+        "deleteMessage": "SEPA-Bank-Einstellungen wirklich löschen?",
+        "deleteButton": "Löschen"
+      },
+      "apiError": {
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Einstellungen konnten nicht gelöscht werden. Bitte erneut versuchen."
+      }
+    },
+    "linkConfig": {
+      "title": "Externe Links konfigurieren",
+      "description": "Fügen Sie hier verschiedene Links hinzu, die im Menü angezeigt werden sollen.",
+      "sectionTitle": "Externe Links",
+      "loading": "Wird geladen...",
+      "newButton": "Link hinzufügen",
+      "fields": {
+        "link": {
+          "label": "Linkadresse",
+          "placeholder": "www.dropbox.com"
+        },
+        "name": {
+          "label": "Anzeigename",
+          "placeholder": "z. B. Dropbox"
+        },
+        "icon": {
+          "label": "Symbol"
+        }
+      },
+      "validation": {
+        "linkEmpty": "Link darf nicht leer sein.",
+        "linkTooLong": "Link darf maximal 100 Zeichen lang sein.",
+        "nameEmpty": "Name darf nicht leer sein.",
+        "nameTooLong": "Name darf maximal 20 Zeichen lang sein."
+      },
+      "buttons": {
+        "save": "Link speichern",
+        "saving": "Wird gespeichert...",
+        "delete": "Löschen",
+        "add": "Link hinzufügen"
+      },
+      "table": {
+        "link": "Link",
+        "name": "Name",
+        "icon": "Symbol",
+        "actions": "Aktionen",
+        "empty": "Keine Links gefunden."
+      },
+      "tooltip": {
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      },
+      "dialog": {
+        "titleEdit": "Link bearbeiten",
+        "titleCreate": "Link hinzufügen",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      },
+      "snackbar": {
+        "saveSuccess": "Speichern erfolgreich.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "createSuccess": "Link erfolgreich hinzugefügt.",
+        "deleteSuccess": "Löschen erfolgreich.",
+        "deleteError": "Link konnte nicht gelöscht werden. Bitte erneut versuchen."
+      },
+      "confirm": {
+        "deleteMessage": "Link wirklich löschen?",
+        "deleteButton": "Löschen"
+      },
+      "apiError": {
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Link konnte nicht gelöscht werden. Bitte erneut versuchen."
+      }
+    },
+    "emailConfig": {
+      "title": "Email Konfiguration",
+      "description": "Verwalten Sie hier die SMTP-Zugangsdaten für den Versand der Rundmails.",
+      "sectionSmtp": "SMTP Server-Einstellungen",
+      "sectionImap": "IMAP Server-Einstellungen",
+      "sectionAuth": "Authentifizierung & Absender",
+      "fields": {
+        "smtpServer": {
+          "label": "SMTP Host / Server",
+          "placeholder": "smtp.dein-anbieter.de"
+        },
+        "port": {
+          "label": "SMTP-Port"
+        },
+        "imapServer": {
+          "label": "IMAP Host / Server",
+          "placeholder": "imap.dein-anbieter.de"
+        },
+        "imapPort": {
+          "label": "IMAP-Port"
+        },
+        "username": {
+          "label": "Benutzername / Email"
+        },
+        "fromMail": {
+          "label": "Absender Email (From)",
+          "placeholder": "vorstand@dein-verein.de",
+          "helperText": "Diese Adresse wird den Empfängern als Absender angezeigt."
+        },
+        "password": {
+          "label": "Passwort",
+          "labelKeep": "Passwort (leer lassen zum Behalten)"
+        }
+      },
+      "validation": {
+        "smtpServerEmpty": "SMTP Host / Server darf nicht leer sein.",
+        "smtpServerTooLong": "SMTP Host / Server darf maximal 50 Zeichen lang sein.",
+        "portTooSmall": "SMTP Port darf nicht kleiner 1 sein",
+        "imapServerEmpty": "IMAP Host / Server darf nicht leer sein.",
+        "imapServerTooLong": "IMAP Host / Server darf maximal 50 Zeichen lang sein.",
+        "imapPortTooSmall": "IMAP-Port darf nicht kleiner 1 sein",
+        "usernameEmpty": "Nutzername darf nicht leer sein.",
+        "usernameTooLong": "Nutzername darf maximal 50 Zeichen lang sein.",
+        "passwordEmpty": "Passwort darf nicht leer sein.",
+        "passwordTooLong": "Passwort darf maximal 50 Zeichen lang sein.",
+        "fromMailEmpty": "Absender Email darf nicht leer sein.",
+        "fromMailTooLong": "Absender Email darf maximal 50 Zeichen lang sein.",
+        "testEmailEmpty": "Test E-Mail darf nicht leer sein."
+      },
+      "buttons": {
+        "save": "Konfiguration speichern",
+        "saving": "Wird gespeichert...",
+        "delete": "Löschen"
+      },
+      "snackbar": {
+        "saveSuccess": "Speichern erfolgreich.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Löschen erfolgreich.",
+        "deleteError": "Einstellungen konnte nicht gelöscht werden. Bitte erneut versuchen.",
+        "testSuccess": "Testmail erfolgreich versendet",
+        "testError": "Testmail konnte nicht versendet werden. Prüfen Sie die Eingaben."
+      },
+      "confirm": {
+        "deleteMessage": "Mail-Server-Einstellungen wirklich löschen?",
+        "deleteButton": "Löschen"
+      },
+      "apiError": {
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Einstellungen konnten nicht gelöscht werden. Bitte erneut versuchen.",
+        "testSendFailed": "Testmail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
+      "testMode": {
+        "title": "Testmodus",
+        "recipientEmail": {
+          "label": "Empfänger-E-Mail",
+          "placeholder": "test@example.com",
+          "error": "Empfänger-E-Mail darf nicht leer sein"
+        },
+        "sendTest": "Test-E-Mail senden",
+        "sending": "Wird gesendet..."
+      }
+    },
+    "generalConfig": {
+      "title": "Webseiteneinstellungen",
+      "sectionTitle": "Vereinsnamen",
+      "fields": {
+        "pageName": {
+          "label": "Vereinsnamen",
+          "placeholder": "Verein e.V."
+        }
+      },
+      "validation": {
+        "pageNameEmpty": "Vereinsname darf nicht leer sein.",
+        "pageNameTooLong": "Vereinsname darf maximal 30 Zeichen lang sein."
+      },
+      "buttons": {
+        "save": "Konfiguration speichern",
+        "saving": "Wird gespeichert...",
+        "delete": "Löschen",
+        "uploadLogo": "Vereinslogo hochladen",
+        "changeLogo": "Neues Vereinslogo hochladen",
+        "deleteLogo": "Logo entfernen"
+      },
+      "snackbar": {
+        "saveSuccess": "Speichern erfolgreich.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Löschen erfolgreich.",
+        "deleteError": "Einstellungen konnte nicht gelöscht werden. Bitte erneut versuchen."
+      },
+      "confirm": {
+        "deleteMessage": "Webseiteneinstellungen wirklich löschen?",
+        "deleteButton": "Löschen"
+      },
+      "apiError": {
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Einstellungen konnte nicht gelöscht werden. Bitte erneut versuchen."
+      }
+    },
+    "login": {
+      "login": "Anmelden",
+      "loading": "Wird angemeldet...",
+      "clubManagement": "Vereinsverwaltung",
+      "loginHint": "Bitte melden Sie sich an, um fortzufahren.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "loginError": "Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Daten.",
+      "toManyLoginError": "Zu viele fehlerhafte Anmeldeversuche. Warte {{seconds}} Sekunden, um es erneut zu versuchen.",
+      "demo": {
+        "header": "Demoversion",
+        "caption": "Dies ist eine Demoversion. Alle Daten werden jede Nacht gelöscht. Bitte gib keine persönlichen Daten ein!",
+        "login": "Demo-Zugangsdaten",
+        "admin": "Admin: Admin / admin12345678",
+        "user": "Nutzer: User / user12345678",
+        "finance": "Finanzverwalter: Finance / finance1234"
+      }
+    },
+    "mail": {
+      "title": "Rundmail versenden",
+      "description": "Erstellen Sie hier eine Nachricht, die an {{category}} Mitglieder gesendet wird.",
+      "infoBanner": {
+        "recipients": "Empfänger: An {{category}} Vereinsmitglieder ({{count}} Personen)"
+      },
+      "signalR": {
+        "connected": "Verbunden",
+        "disconnected": "Nicht verbunden"
+      },
+      "memberCategory": {
+        "ALL": "Alle",
+        "STUDENT": "Studierende",
+        "ALUMNI": "Alumni",
+        "OTHER": "Andere",
+        "BOARD_OF_DIRECTORS": "Vorstand",
+        "otherLabel": "alle anderen",
+        "custom": "Benutzerdefiniert",
+        "customLabel": "benutzerdefinierte"
+      },
+      "tabLabel": {
+        "editor": "✏\uFE0F Editor",
+        "recipient": "\uD83D\uDC65 Empfänger",
+        "sending": "⏳ Status",
+        "done": "✅ Status",
+        "idle": "\uD83D\uDCCA Status"
+      },
+      "signalNotConnected": "Keine Verbindung zum Mail-Server! Bitte Seite neu laden.",
+      "noRecipient": "Keine Empfänger ausgewählt!",
+      "sendingFailed": "Senden fehlgeschlagen",
+      "editorPage": {
+        "editorDefaultContent": "<p>Hallo {firstname},</p><p>hier ist deine Nachricht...</p>",
+        "subjectMissing": "Bitte Betreff eingeben!",
+        "bodyMissing": "Bitte Email-Text eingeben!",
+        "subjectLabel": "Betreff",
+        "subjectPlaceholder": "Email Betreff...",
+        "info": "Achtung: Es sind mehr als 150 Personen ausgewählt. Bitte entferne die persönliche Anrede ({fullname} / {firstname}). Persönliche Anrede ist nur bis 150 Personen möglich.",
+        "toolbar": {
+          "bold": "Fett",
+          "italic": "Kursiv",
+          "underline": "Unterstrichen",
+          "heading1": "Überschrift 1",
+          "heading2": "Überschrift 2",
+          "bulletList": "Aufzählungsliste",
+          "orderedList": "Nummerierte Liste",
+          "alignLeft": "Linksbündig",
+          "alignCenter": "Zentriert",
+          "alignRight": "Rechtsbündig",
+          "embedImage": "Bild in Text einbetten",
+          "attachFile": "Datei anhängen",
+          "textColor": "Textfarbe"
+        },
+        "attachments": {
+          "sectionTitle": "Anhänge & eingebettete Bilder:",
+          "inline": "Eingebettet",
+          "attachment": "Anhang"
+        },
+        "recipients": {
+          "selected": "{{count}} Empfänger ausgewählt",
+          "tip": "Tipp: Nutze {fullname} für die personalisierte Anrede mit Vor- & Nachnamen und {firstname} für nur den Vornamen."
+        },
+        "send": {
+          "sending": "Wird gesendet…",
+          "button": "An {{count}} Empfänger senden"
+        }
+      },
+      "recipientPage": {
+        "memberCategoryLabel": "Mitgliederkategorie",
+        "recipientList": "Empfängerliste",
+        "rowsPerPage": "Zeilen pro Seite:",
+        "noRecipientFound": "Keine Empfänger vorhanden."
+      },
+      "sendProgressPage": {
+        "idle": {
+          "title": "Kein Versand aktiv",
+          "subtitle": "Gehe zum Editor und klicke auf „Senden“"
+        },
+        "header": {
+          "done": "Versand abgeschlossen",
+          "sending": "Sende E-Mails…"
+        },
+        "progress": {
+          "label": "Fortschritt"
+        },
+        "statCard": {
+          "total": "Gesamt",
+          "successful": "Erfolgreich",
+          "failed": "Fehlgeschlagen"
+        },
+        "failedAlert": {
+          "title": "Fehlgeschlagene E-Mails ({{count}})"
+        },
+        "log": {
+          "title": "Live Log",
+          "waiting": "Warte auf Einträge…"
+        },
+        "resetButton": "Neue E-Mail erstellen"
+      }
+    },
+    "dashboard": {
+      "logout": "Abmelden",
+      "clubManagement": "Vereinsverwaltung",
+      "settings": {
+        "name": "Einstellungen",
+        "userManagement": "Nutzerverwaltung",
+        "emailConfig": "Email konfigurieren",
+        "linkConfig": "Externe Links konfigurieren",
+        "contributionPlanConfig": "Beitragstarifverwaltung",
+        "memberCategoryConfig": "Mitgliederkategorien verwalten",
+        "creditorConfig": "Bankverbindung konfigurieren",
+        "generalConfig": "Webseiteneinstellungen",
+        "profileSettings": "Profileinstellungen"
+      },
+      "pageNames": {
+        "members": "Mitgliederverwaltung",
+        "broadcastEmail": "Rundmail",
+        "sepa": "SEPA Export",
+        "contributions": "Beiträge",
+        "audit": "Audit",
+        "backup": "Backup"
+      }
+    },
+    "members": {
+      "title": "Mitgliederverwaltung",
+      "refresh": "Aktualisieren",
+      "addMember": "Mitglied hinzufügen",
+      "unknownTask": "Unbekannte Aufgabe",
+      "confirmDialog": {
+        "deleteQuestion": "Dieses Mitglied wirklich löschen?",
+        "delete": "Löschen",
+        "restoreQuestion": "Dieses Mitglied wirklich wiederherstellen?",
+        "restore": "Wiederherstellen"
+      },
+      "responseMessages": {
+        "deleted": "Mitglied erfolgreich gelöscht.",
+        "deleteError": "Fehler beim Löschen des Mitglieds.",
+        "restored": "Mitglied erfolgreich wiederhergestellt.",
+        "restoreError": "Fehler beim Wiederherstellen des Mitglieds."
+      },
+      "filter": {
+        "searchName": "Name suchen",
+        "taskInClub": "Aufgabe im Verein",
+        "allTasks": "Alle Aufgaben",
+        "memberCategory": "Mitgliederkategorie",
+        "ALL": "Alle",
+        "STUDENT": "Studierende",
+        "ALUMNI": "Alumni",
+        "OTHER": "Anderes",
+        "BOARD_OF_DIRECTORS": "Vorstand",
+        "showDeleted": "Gelöschte Mitglieder",
+        "resetFilter": "Filter zurücksetzen"
+      },
+      "table": {
+        "ariaLabel": "Mitgliedertabelle",
+        "colNumber": "Nr.",
+        "colName": "Name",
+        "colTask": "Aufgabe im Verein",
+        "colEmail": "E-Mail",
+        "colContribution": "Beitrag",
+        "colMemberCategory": "Mitgliederkategorie",
+        "colActions": "Aktionen",
+        "noMembers": "Keine Mitglieder gefunden.",
+        "noContribution": "Kein Beitrag konfiguriert",
+        "rowsPerPage": "Zeilen pro Seite:"
+      },
+      "actions": {
+        "restore": "Wiederherstellen",
+        "view": "Ansehen",
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      }
+    },
+    "sepa": {
+      "title": "SEPA-Lastschriften",
+      "description": "Generieren Sie die XML-Datei für den Bankeinzug der Mitgliedsbeiträge.",
+      "card": {
+        "title": "Sammellastschrift erstellen",
+        "description": "Es werden alle fälligen Beiträge der Mitglieder zusammengefasst und als standardisierte <strong>pain.008.001.08 XML-Datei</strong> exportiert."
+      },
+      "table": {
+        "noSepa": "Keine Exports gefunden",
+        "name": "Dateiname",
+        "amount": "Betrag",
+        "exportedDate": "Export Datum",
+        "exportedCases": "Anzahl Beiträge",
+        "action": "Aktion",
+        "rowsPerPage": "Zeilen pro Seite:"
+      },
+      "buttons": {
+        "download": "SEPA XML herunterladen",
+        "generating": "Generiere XML..."
+      },
+      "lastExport": {
+        "label": "Letzter Export:",
+        "noData": "Keine Daten vorhanden",
+        "time": "Heute, {{time}} Uhr",
+        "dateTime": "{{date}}, {{time}} Uhr"
+      },
+      "warning": {
+        "title": "Wichtiger Hinweis",
+        "message": "Stellen Sie sicher, dass alle Mitglieder über gültige IBAN-Daten verfügen, bevor Sie den Export starten. Fehlerhafte Datensätze werden im Protokoll markiert."
+      },
+      "apiError": {
+        "notConfigured": "Export konnte nicht erstellt werden. Bankdaten nicht konfiguriert",
+        "serverError": "Export konnte nicht erstellt werden. Server Fehler"
+      }
+    },
+    "userManagement": {
+      "title": "Nutzerverwaltung",
+      "buttons": {
+        "newUser": "Neuer Nutzer",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
+      },
+      "table": {
+        "username": "Benutzername",
+        "email": "E-Mail",
+        "role": "Rolle",
+        "actions": "Aktionen"
+      },
+      "tooltip": {
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      },
+      "dialog": {
+        "titleCreate": "Neuer Nutzer",
+        "titleEdit": "Nutzer bearbeiten",
+        "fields": {
+          "username": "Username",
+          "passwordCreate": "Passwort",
+          "passwordEdit": "Passwort (leer lassen zum Behalten)",
+          "email": "E-Mail",
+          "role": "Rolle"
+        },
+        "roles": {
+          "user": "User",
+          "admin": "Admin",
+          "financialManager": "Finanzverwalter"
+        }
+      },
+      "validation": {
+        "usernameEmpty": "Nutzername darf nicht leer sein.",
+        "usernameTooLong": "Nutzername darf maximal 50 Zeichen lang sein.",
+        "passwordEmpty": "Passwort darf nicht leer sein.",
+        "passwordTooShort": "Passwort muss mindestens 11 Zeichen lang sein.",
+        "passwordTooLong": "Passwort darf maximal 50 Zeichen lang sein.",
+        "emailTooLong": "E-Mail darf maximal 50 Zeichen lang sein."
+      },
+      "snackbar": {
+        "updateSuccess": "Nutzeränderungen erfolgreich gespeichert.",
+        "createSuccess": "Nutzer erfolgreich erstellt.",
+        "deleteSuccess": "Nutzer erfolgreich gelöscht.",
+        "usernameDuplicate": "Nutzername existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen."
+      },
+      "apiError": {
+        "loadFailed": "Nutzer konnten nicht geladen werden.",
+        "updateDuplicate": "Speichern fehlgeschlagen. Nutzername existiert bereits.",
+        "createDuplicate": "Nutzer konten nicht erstellt werden. Nutzername existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Nutzer konnte nicht gelöscht werden."
+      },
+      "confirm": {
+        "deleteMessage": "Nutzer wirklich löschen?",
+        "deleteButton": "Löschen"
+      }
+    }
+  }
+}
