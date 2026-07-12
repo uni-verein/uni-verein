@@ -31,7 +31,7 @@ services:
         check_and_set DB_USER           uni_verein_user;
         check_and_set DB_PASSWORD       password;
         check_and_set BACKUP_PATH       ./backup
-        check_and_set VERSION           1.0.0
+        check_and_set VERSION           1.0.1
 
         echo '';
         echo '[INIT] Final .env:';
