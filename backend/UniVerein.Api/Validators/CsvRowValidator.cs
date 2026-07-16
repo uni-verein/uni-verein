@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UniVerein.Api.ApiResults;
-using UniVerein.Api.Data;
+using UniVerein.Api.Models;
 using UniVerein.DAL.Entities.Enums;
 
 namespace UniVerein.Api.Validators;

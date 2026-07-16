@@ -779,6 +779,12 @@
         "contributions": "Membership fees",
         "audit": "Audit",
         "backup": "Backup"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "noNotifications": "No new notifications",
+        "firmwareUpdateTitle": "New firmware available",
+        "firmwareUpdateText": "A new firmware version is available: {{version}} (currently installed: {{currentVersion}})."
       }
     },
     "members": {

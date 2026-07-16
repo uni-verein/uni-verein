@@ -1,5 +1,5 @@
-using UniVerein.Api.Data;
-using UniVerein.Api.Data.Enums;
+using UniVerein.Api.Models;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.Api.Services.Sepa;
 using UniVerein.DAL.Data;

@@ -19,7 +19,7 @@ namespace UniVerein.DAL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.17")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -32,6 +32,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Action")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("action");
 
@@ -40,6 +41,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Data")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("data");
 
@@ -48,6 +50,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Entity")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("entity");
 
@@ -129,6 +132,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("interval");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("name");
 
@@ -145,14 +149,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Bic_Encrypted")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("bic_encrypted");
 
                     b.Property<string>("CityName")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("city_name");
 
                     b.Property<string>("CountryCode")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("country_code");
 
@@ -161,6 +168,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreditorId")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("creditor_id");
 
@@ -169,10 +177,12 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Iban_Encrypted")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("iban_encrypted");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("name");
 
@@ -187,6 +197,80 @@ namespace UniVerein.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CreditorConfigs");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at");
+
+                    b.Property<string>("ReleaseNotes")
+                        .HasColumnType("longtext")
+                        .HasColumnName("release_notes");
+
+                    b.Property<string>("TagName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("tag_name");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Version")
+                        .IsUnique();
+
+                    b.ToTable("FirmwareVersions");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionNotificationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid>("FirmwareVersionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("firmware_version_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("FirmwareVersionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("FirmwareVersionNotifications");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.LinkSettingsEntity", b =>
@@ -205,14 +289,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Icon")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("icon");
 
                     b.Property<string>("Link")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("link");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("name");
 
@@ -241,6 +328,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("enable_ssl");
 
                     b.Property<string>("FromMail")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("from_mail");
 
@@ -249,10 +337,12 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("imap_port");
 
                     b.Property<string>("ImapServer")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("imap_server");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("password");
 
@@ -261,10 +351,12 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("port");
 
                     b.Property<string>("SmtpServer")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("smtp_server");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("username");
 
@@ -281,6 +373,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Category")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("category");
 
@@ -293,6 +386,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("name");
 
@@ -317,6 +411,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("bic_encrypted");
 
                     b.Property<string>("BirthdayEncrypted")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("birthday");
 
@@ -326,6 +421,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("bulk_mail");
 
                     b.Property<string>("City")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("city");
 
@@ -338,6 +434,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("country_code");
 
                     b.Property<string>("CourseOfStudy")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("course_of_study");
 
@@ -350,10 +447,12 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("EmailEncrypted")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("emailEncrypted");
 
                     b.Property<string>("EmailHash")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("emailHash");
 
@@ -370,6 +469,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("exit_date");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("first_name");
 
@@ -387,10 +487,12 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("iban_hash");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("last_name");
 
                     b.Property<string>("MandateId")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("mandate_id");
 
@@ -403,14 +505,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("member_number");
 
                     b.Property<string>("MiddleName")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("middle_name");
 
                     b.Property<string>("PhoneEncrypted")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("phone");
 
                     b.Property<string>("PostalCode")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("postal_code");
 
@@ -423,6 +528,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("start_of_studies");
 
                     b.Property<string>("StreetEncrypted")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("street");
 
@@ -464,6 +570,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("name");
 
@@ -492,8 +599,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("longtext")
                         .HasColumnName("email");
 
                     b.Property<int>("FailedAttempts")
@@ -501,6 +607,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("failed_attempts");
 
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("password_hash");
@@ -511,6 +618,7 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("role");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")
                         .HasColumnName("username");
@@ -536,10 +644,12 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Logo")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("logo");
 
                     b.Property<string>("PageName")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("page_name");
 
@@ -570,6 +680,25 @@ namespace UniVerein.DAL.Migrations
                     b.Navigation("MemberEntity");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionNotificationEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.FirmwareVersionEntity", "FirmwareVersion")
+                        .WithMany("Notifications")
+                        .HasForeignKey("FirmwareVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FirmwareVersion");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.MemberEntity", b =>
                 {
                     b.HasOne("UniVerein.DAL.Entities.ContributionPlanEntity", "ContributionPlan")
@@ -583,6 +712,11 @@ namespace UniVerein.DAL.Migrations
                     b.Navigation("ContributionPlan");
 
                     b.Navigation("MemberCategory");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionEntity", b =>
+                {
+                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }

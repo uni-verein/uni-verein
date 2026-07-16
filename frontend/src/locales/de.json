@@ -779,6 +779,12 @@
         "contributions": "Beiträge",
         "audit": "Audit",
         "backup": "Backup"
+      },
+      "notifications": {
+        "label": "Benachrichtigungen",
+        "noNotifications": "Keine neuen Benachrichtigungen",
+        "firmwareUpdateTitle": "Neue Firmware verfügbar",
+        "firmwareUpdateText": "Es ist eine neue Firmware-Version verfügbar: {{version}} (aktuell installiert: {{currentVersion}})."
       }
     },
     "members": {

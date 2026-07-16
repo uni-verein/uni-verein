@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -77,24 +77,12 @@ export default function MemberForm({
   onClose: () => void;
 }) {
   const [m, setM] = useState<Member>(member);
-  const [memberCount, setMemberCount] = useState<number>(0);
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState<MemberErrors>({});
   const [editOrUpdateMember, setEditOrUpdateMember] =
     useState<SnackbarState>(SNACKBAR_INITIAL_STATE);
   const setSuccessMember = useSnackbar();
   const { t } = useTranslation();
-
-  const load = async () => {
-    const count = await api('/members/count');
-    if (count) {
-      setMemberCount(count?.count ?? 0);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
 
   const validate = () => {
     const newErrors: MemberErrors = {};
@@ -204,7 +192,6 @@ export default function MemberForm({
 
     try {
       if (m.id === NIL_UUID) {
-        m.memberNumber = memberCount + 1;
         let response = await api('/members', { method: 'POST', body: JSON.stringify(m) });
         console.log(response);
         if (response === 409) {
@@ -317,15 +304,17 @@ export default function MemberForm({
 
         <DialogContent>
           <Grid container spacing={2}>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled
-                label={t('components.memberForm.fields.memberNumber')}
-                variant="outlined"
-                value={m.memberNumber !== 0 ? m.memberNumber : memberCount + 1}
-              />
-            </Grid>
+            {m.id !== NIL_UUID && (
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled
+                  label={t('components.memberForm.fields.memberNumber')}
+                  variant="outlined"
+                  value={m.memberNumber}
+                />
+              </Grid>
+            )}
             <Grid size={6}>
               <TextField
                 fullWidth

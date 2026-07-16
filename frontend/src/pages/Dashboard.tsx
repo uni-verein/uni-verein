@@ -20,8 +20,11 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
+  Badge,
+  Popover,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import EmailIcon from '@mui/icons-material/Email';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import EuroIcon from '@mui/icons-material/Euro';
@@ -85,6 +88,12 @@ export default function Dashboard({
     links: [],
   });
   const [collapsed, setCollapsed] = useState(isMobile);
+  const [firmwareUpdate, setFirmwareUpdate] = useState<{
+    newFirmwareAvailable: boolean;
+    currentVersion?: string;
+    latestVersion?: string;
+  } | null>(null);
+  const [notificationsAnchor, setNotificationsAnchor] = useState<HTMLElement | null>(null);
   const { t, i18n } = useTranslation();
 
   const drawerWidth = collapsed ? drawerWidthCollapsed : drawerWidthExpanded;
@@ -108,6 +117,15 @@ export default function Dashboard({
     } catch (e) {}
   };
 
+  const loadFirmwareUpdate = async () => {
+    try {
+      const result = await api('/notifications/firmware-update');
+      if (result) {
+        setFirmwareUpdate(result);
+      }
+    } catch (e) {}
+  };
+
   useEffect(() => {
     const tokenString = localStorage.getItem('token');
     if (!tokenString) return;
@@ -125,6 +143,12 @@ export default function Dashboard({
 
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (user.role === Role.ADMIN) {
+      loadFirmwareUpdate();
+    }
+  }, [user.role]);
 
   const navItems = [
     {
@@ -237,6 +261,51 @@ export default function Dashboard({
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {user.role === Role.ADMIN && (
+              <>
+                <Tooltip title={t('pages.dashboard.notifications.label')} arrow>
+                  <IconButton
+                    onClick={(e) => setNotificationsAnchor(e.currentTarget)}
+                    color="inherit"
+                  >
+                    <Badge
+                      color="error"
+                      variant="dot"
+                      invisible={!firmwareUpdate?.newFirmwareAvailable}
+                    >
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+                <Popover
+                  open={Boolean(notificationsAnchor)}
+                  anchorEl={notificationsAnchor}
+                  onClose={() => setNotificationsAnchor(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                  <Box sx={{ p: 2, maxWidth: 320 }}>
+                    {firmwareUpdate?.newFirmwareAvailable ? (
+                      <>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          {t('pages.dashboard.notifications.firmwareUpdateTitle')}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {t('pages.dashboard.notifications.firmwareUpdateText', {
+                            version: firmwareUpdate.latestVersion,
+                            currentVersion: firmwareUpdate.currentVersion,
+                          })}
+                        </Typography>
+                      </>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        {t('pages.dashboard.notifications.noNotifications')}
+                      </Typography>
+                    )}
+                  </Box>
+                </Popover>
+              </>
+            )}
             <Button onClick={() => i18n.changeLanguage(i18n.language === 'de' ? 'en' : 'de')}>
               {i18n.language === 'de' ? '🇬🇧 English' : '🇩🇪 Deutsch'}
             </Button>

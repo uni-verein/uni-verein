@@ -1,0 +1,74 @@
+name: uni-verein-updater
+services:
+  update:
+    image: docker:27-cli
+    working_dir: ${PWD}
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${PWD}:${PWD}
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      REPO: uni-verein/uni-verein
+    entrypoint: >
+      sh -c "
+        set -e;
+        apk add --no-cache curl jq docker-cli-compose >/dev/null;
+
+        ENV_FILE=./.env;
+        if [ ! -f \"$$ENV_FILE\" ]; then
+          echo '[UPDATE] ERROR: No .env found in '\"$$(pwd)\"'. Run this from your installation directory.';
+          exit 1;
+        fi;
+
+        echo '[UPDATE] Checking latest release on GitHub...';
+        TAG=$$(curl -fsSL -H 'User-Agent: uni-verein-updater' https://api.github.com/repos/$$REPO/releases/latest | jq -r '.tag_name');
+        if [ -z \"$$TAG\" ] || [ \"$$TAG\" = 'null' ]; then
+          echo '[UPDATE] ERROR: Could not determine the latest release from GitHub.';
+          exit 1;
+        fi;
+
+        CURRENT=$$(grep '^VERSION=' $$ENV_FILE 2>/dev/null | cut -d'=' -f2-);
+        echo \"[UPDATE] Installed version: $${CURRENT:-unknown} -> Latest version: $$TAG\";
+
+        if [ \"$$CURRENT\" = \"$$TAG\" ]; then
+          echo '[UPDATE] Already up to date. Nothing to do.';
+          exit 0;
+        fi;
+
+        echo '';
+        echo \"[UPDATE] A new version ($$TAG) is available.\";
+        echo '[UPDATE] Before continuing, please create a manual backup: database backup AND member export (Settings -> Backup in the app).';
+        printf '[UPDATE] Have you completed a manual backup? Type yes to continue, anything else aborts: ';
+        read CONFIRM;
+        case \"$$CONFIRM\" in
+          y|Y|yes|Yes|YES) ;;
+          *)
+            echo '[UPDATE] Aborted. Please create a backup first, then re-run this file.';
+            exit 1;
+            ;;
+        esac;
+
+        RAW_BASE=https://raw.githubusercontent.com/$$REPO/refs/tags/$$TAG;
+
+        echo \"[UPDATE] Downloading docker-compose-ini.yml, nginx.conf and docker-compose-prod-image.yml for $$TAG...\";
+        curl -fsSL -o docker-compose-ini.yml $$RAW_BASE/docker-compose-ini.yml;
+        curl -fsSL -o nginx.conf $$RAW_BASE/nginx.conf;
+        curl -fsSL -o docker-compose-prod-image.yml $$RAW_BASE/docker-compose-prod-image.yml;
+
+        echo '[UPDATE] Applying new variables to .env (existing values are kept)...';
+        docker compose -f docker-compose-ini.yml up;
+
+        echo \"[UPDATE] Setting VERSION=$$TAG in .env...\";
+        sed -i '/^VERSION=/d' $$ENV_FILE;
+        echo \"VERSION=$$TAG\" >> $$ENV_FILE;
+
+        echo '[UPDATE] Pulling new images...';
+        docker compose -f docker-compose-prod-image.yml pull;
+
+        echo '[UPDATE] Restarting stack on the new version...';
+        docker compose -f docker-compose-prod-image.yml up -d --remove-orphans;
+
+        echo \"[UPDATE] Done. Now running version $$TAG.\";
+      "
+    restart: "no"

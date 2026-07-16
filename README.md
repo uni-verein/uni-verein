@@ -41,9 +41,9 @@ Make sure you have the following installed:
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.0.1/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.0.1/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.0.1/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.1.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.1.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.1.0/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**
@@ -68,6 +68,19 @@ docker compose -f docker-compose-prod-image.yml up -d
 ```
 
 The application will be available at `http://localhost:80` 🎉
+
+---
+
+### Updating
+
+As an admin, you'll see a notification bell in the app once a new version is available. Before updating, create a manual backup (database backup and member export, both available under Settings → Backup in the app). Then run this from your installation directory (the one containing `.env`):
+
+```bash
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/main/docker-compose-update.yml
+docker compose -f docker-compose-update.yml run --rm update
+```
+
+It checks GitHub for the latest release and asks you to confirm that you've created a manual backup — the update only proceeds once you type `yes`. It then downloads the matching `nginx.conf` and `docker-compose-prod-image.yml`, updates `VERSION` in your `.env`, and restarts the stack on the new version. Your existing secrets and database are left untouched.
 
 ---
 

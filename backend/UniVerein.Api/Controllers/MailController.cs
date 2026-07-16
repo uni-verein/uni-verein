@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
-using UniVerein.Api.Data;
+using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Authorization;

@@ -103,7 +103,7 @@ test.describe('Member – create new member', () => {
       await expect(
         page.getByText('Geben Sie hier die Stammdaten des Vereinsmitglieds ein.', { exact: true }),
       ).toBeVisible();
-      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Geschlecht Mann' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Vorname' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Zweitname' })).toBeVisible();
@@ -146,7 +146,7 @@ test.describe('Member – create new member', () => {
       await expect(
         page.getByText('Geben Sie hier die Stammdaten des Vereinsmitglieds ein.', { exact: true }),
       ).toBeVisible();
-      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Geschlecht Mann' })).toBeVisible();
       await page.getByRole('combobox', { name: 'Geschlecht Mann' }).click();
       await expect(page.getByRole('option', { name: 'Mann' })).toBeVisible();
@@ -274,34 +274,7 @@ test.describe('Member – create new member', () => {
 
     test('Edit test member', async ({ page }) => {
       await backend.deleteAllMember();
-      await backend.createMember({
-        academicDegree: null,
-        birthday: '2026-03-14T23:00:00.000Z',
-        city: 'Kiel',
-        countryCode: 'DE',
-        contributionPlanId: null,
-        courseOfStudy: '',
-        email: 'test_1774694157026@test.de',
-        bulkMail: BulkMail.ALLOWED,
-        endOfStudies: '2026-02-28T23:00:00.000Z',
-        entryDate: '2025-03-20T10:35:53.998Z',
-        exitDate: '2026-03-19T23:00:00.000Z',
-        firstName: 'Test',
-        gender: Gender.DIVERSE,
-        iban: 'DE40998929246819178888',
-        bic: 'DEUTDEDEXXX',
-        id: '00000000-0000-0000-0000-000000000000',
-        lastName: 'Tester',
-        memberCategoryId: backend.defaultMemberCategories.other,
-        memberNumber: 1,
-        middleName: '',
-        phone: '',
-        postalCode: '24103',
-        sepaConsent: '2026-03-15T23:00:00.000Z',
-        startOfStudies: '2025-02-28T23:00:00.000Z',
-        street: 'Teststr. 3',
-        taskWithinTheClub: TaskWithinTheClub.MEMBER,
-      });
+      await backend.createTestMember();
       await openDashboard(page, tc.get().token);
       await page.getByRole('textbox', { name: 'Name suche' }).fill('Test');
       await expect(page.getByRole('cell', { name: 'Test Tester' })).toBeVisible();
@@ -309,6 +282,9 @@ test.describe('Member – create new member', () => {
         .getByRole('row', { name: 'Test Tester Mitglied' })
         .getByLabel('Bearbeiten')
         .click();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).toBeDisabled();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).toHaveValue('1');
       await page.getByRole('textbox', { name: 'Vorname' }).click();
       await page.getByRole('textbox', { name: 'Vorname' }).fill('Susanne');
       await page.getByRole('button', { name: 'Speichern' }).click();
@@ -324,41 +300,14 @@ test.describe('Member – create new member', () => {
     test('Try to create duplicated member by add member dialog', async ({ page }) => {
       await openDashboard(page, tc.get().token);
       await backend.deleteAllMember();
-      await backend.createMember({
-        academicDegree: null,
-        birthday: '2026-03-14T23:00:00.000Z',
-        city: 'Kiel',
-        countryCode: 'DE',
-        contributionPlanId: null,
-        courseOfStudy: '',
-        email: 'test_1774694157026@test.de',
-        bulkMail: BulkMail.ALLOWED,
-        endOfStudies: '2026-02-28T23:00:00.000Z',
-        entryDate: '2025-03-20T10:35:53.998Z',
-        exitDate: '2026-03-19T23:00:00.000Z',
-        firstName: 'Test',
-        gender: Gender.DIVERSE,
-        iban: 'DE40998929246819178888',
-        bic: 'DEUTDEDEXXX',
-        id: '00000000-0000-0000-0000-000000000000',
-        lastName: 'Tester',
-        memberCategoryId: backend.defaultMemberCategories.other,
-        memberNumber: 1,
-        middleName: '',
-        phone: '',
-        postalCode: '24103',
-        sepaConsent: '2026-03-15T23:00:00.000Z',
-        startOfStudies: '2025-02-28T23:00:00.000Z',
-        street: 'Teststr. 3',
-        taskWithinTheClub: TaskWithinTheClub.MEMBER,
-      });
+      await backend.createTestMember();
       await page.reload();
       await page.getByRole('button', { name: 'Mitglied hinzufügen' }).click();
       await expect(page.getByText('Neues Mitglied anlegen', { exact: true })).toBeVisible();
       await expect(
         page.getByText('Geben Sie hier die Stammdaten des Vereinsmitglieds ein.', { exact: true }),
       ).toBeVisible();
-      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Geschlecht Mann' })).toBeVisible();
       await page.getByRole('combobox', { name: 'Geschlecht Mann' }).click();
       await expect(page.getByRole('option', { name: 'Mann' })).toBeVisible();
@@ -465,34 +414,7 @@ test.describe('Member – create new member', () => {
 
     test('Recover soft deleted member', async ({ page }) => {
       await backend.deleteAllMember();
-      await backend.createMember({
-        academicDegree: null,
-        birthday: '2026-03-14T23:00:00.000Z',
-        city: 'Kiel',
-        countryCode: 'DE',
-        contributionPlanId: null,
-        courseOfStudy: '',
-        email: 'test_1774694157026@test.de',
-        bulkMail: BulkMail.ALLOWED,
-        endOfStudies: '2026-02-28T23:00:00.000Z',
-        entryDate: '2025-03-20T10:35:53.998Z',
-        exitDate: '2026-03-19T23:00:00.000Z',
-        firstName: 'Test',
-        gender: Gender.DIVERSE,
-        iban: 'DE40998929246819178888',
-        bic: 'DEUTDEDEXXX',
-        id: '00000000-0000-0000-0000-000000000000',
-        lastName: 'Tester',
-        memberCategoryId: backend.defaultMemberCategories.other,
-        memberNumber: 1,
-        middleName: '',
-        phone: '',
-        postalCode: '24103',
-        sepaConsent: '2026-03-15T23:00:00.000Z',
-        startOfStudies: '2025-02-28T23:00:00.000Z',
-        street: 'Teststr. 3',
-        taskWithinTheClub: TaskWithinTheClub.MEMBER,
-      });
+      await backend.createTestMember();
       await backend.softDeleteMember(tc.get().token);
       await tc.setup(Role.ADMIN);
       await openDashboard(page, tc.get().token);
@@ -559,62 +481,13 @@ test.describe('Member – create new member', () => {
 
     test('Show only soft deleted member', async ({ page }) => {
       await backend.deleteAllMember();
-      await backend.createMember({
-        academicDegree: null,
-        birthday: '2026-03-14T23:00:00.000Z',
-        city: 'Kiel',
-        countryCode: 'DE',
-        contributionPlanId: null,
-        courseOfStudy: '',
-        email: 'test_1774694157026@test.de',
-        bulkMail: BulkMail.ALLOWED,
-        endOfStudies: '2026-02-28T23:00:00.000Z',
-        entryDate: '2025-03-20T10:35:53.998Z',
-        exitDate: '2026-03-19T23:00:00.000Z',
-        firstName: 'Test1',
-        gender: Gender.DIVERSE,
-        iban: 'DE40998929246819178888',
-        bic: 'DEUTDEDEXXX',
-        id: '00000000-0000-0000-0000-000000000000',
-        lastName: 'Tester',
-        memberCategoryId: backend.defaultMemberCategories.other,
-        memberNumber: 1,
-        middleName: '',
-        phone: '',
-        postalCode: '24103',
-        sepaConsent: '2026-03-15T23:00:00.000Z',
-        startOfStudies: '2025-02-28T23:00:00.000Z',
-        street: 'Teststr. 3',
-        taskWithinTheClub: TaskWithinTheClub.MEMBER,
-      });
+      await backend.createTestMember({ firstName: 'Test1' });
       await backend.softDeleteMember(tc.get().token);
-      await backend.createMember({
-        academicDegree: null,
-        birthday: '2026-03-14T23:00:00.000Z',
-        city: 'Kiel',
-        countryCode: 'DE',
-        contributionPlanId: null,
-        courseOfStudy: '',
+      await backend.createTestMember({
         email: 'test_1774694157022@test.de',
-        bulkMail: BulkMail.ALLOWED,
-        endOfStudies: '2026-02-28T23:00:00.000Z',
-        entryDate: '2025-03-20T10:35:53.998Z',
-        exitDate: '2026-03-19T23:00:00.000Z',
         firstName: 'Test2',
-        gender: 'DIVERSE',
         iban: 'DE40998929246819178777',
-        bic: 'DEUTDEDEXXX',
-        id: '00000000-0000-0000-0000-000000000000',
-        lastName: 'Tester',
-        memberCategoryId: backend.defaultMemberCategories.other,
         memberNumber: 2,
-        middleName: '',
-        phone: '',
-        postalCode: '24103',
-        sepaConsent: '2026-03-15T23:00:00.000Z',
-        startOfStudies: '2025-02-28T23:00:00.000Z',
-        street: 'Teststr. 3',
-        taskWithinTheClub: TaskWithinTheClub.MEMBER,
       });
       await tc.setup(Role.ADMIN);
       await openDashboard(page, tc.get().token);
@@ -625,6 +498,70 @@ test.describe('Member – create new member', () => {
       await page.getByRole('checkbox', { name: 'Gelöschte Mitglieder' }).click();
       await expect(page.getByRole('cell', { name: '1', exact: true })).toBeVisible();
       await expect(page.getByRole('cell', { name: '2', exact: true })).not.toBeVisible();
+      await backend.deleteAllMember();
+    });
+
+    test('New member number skips numbers freed up by deleted members', async ({ page }) => {
+      await backend.deleteAllMember();
+      const gapMemberOverrides = (label: string, memberNumber: number) => ({
+        email: `${label.toLowerCase()}_${Date.now()}@test.de`,
+        firstName: `${label}`,
+        iban: generateIBAN({ countryCode: 'DE' }),
+        memberNumber,
+      });
+
+      await backend.createTestMember(gapMemberOverrides('A', 1));
+      const memberB = await backend.createTestMember(gapMemberOverrides('B', 2));
+      await backend.createTestMember(gapMemberOverrides('C', 3));
+      // Deleting member #2 leaves a gap; the count of remaining members (2) must not be reused as a number.
+      await backend.deleteMember(memberB.id);
+
+      await openDashboard(page, tc.get().token);
+      await page.getByRole('button', { name: 'Mitglied hinzufügen' }).click();
+      await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
+
+      await page.getByRole('textbox', { name: 'Vorname' }).click();
+      await page.getByRole('textbox', { name: 'Vorname' }).fill('GapD');
+      await page.getByRole('textbox', { name: 'Nachname' }).click();
+      await page.getByRole('textbox', { name: 'Nachname' }).fill('Tester');
+      await page.setViewportSize({ width: 1280, height: 1200 });
+      const birthdayGroup = page.getByRole('group', { name: 'Geburtsdatum' });
+      await birthdayGroup.getByRole('spinbutton', { name: 'Day' }).click();
+      await page.keyboard.type('15032026');
+
+      await page.getByRole('textbox', { name: 'Straße & Haus-Nr.' }).click();
+      await page.getByRole('textbox', { name: 'Straße & Haus-Nr.' }).fill('Teststr. 3');
+
+      await page.getByRole('textbox', { name: 'PLZ' }).click();
+      await page.getByRole('textbox', { name: 'PLZ' }).fill('24103');
+
+      await page.getByRole('textbox', { name: 'Stadt' }).click();
+      await page.getByRole('textbox', { name: 'Stadt' }).fill('Kiel');
+
+      await expect(page.getByRole('combobox', { name: 'Ländercode' })).toBeVisible();
+      await page.getByRole('combobox', { name: 'Ländercode' }).click();
+      await page.getByRole('option', { name: 'Angola (AO)' }).click();
+
+      await page.getByRole('textbox', { name: 'E-Mail' }).click();
+      await page.getByRole('textbox', { name: 'E-Mail' }).fill(`gap_d_${Date.now()}@test.de`);
+
+      await page.getByRole('group', { name: 'Studienbeginn' }).getByLabel('Choose date').click();
+      await page.getByRole('radio', { name: 'März', exact: true }).click();
+      await page.getByRole('radio', { name: '2025', exact: true }).click();
+
+      await page.getByRole('combobox', { name: 'Mitgliederkategorie' }).click();
+      await expect(page.getByRole('option', { name: 'Anderes' })).toBeVisible();
+      await page.getByRole('option', { name: 'Anderes' }).click();
+
+      await page.getByRole('button', { name: 'Speichern' }).click();
+      await expect(
+        page.getByRole('alert').filter({ hasText: 'Nutzer erfolgreich erstellt' }),
+      ).toBeVisible();
+
+      await page.getByRole('textbox', { name: 'Name suche' }).fill('D');
+      await expect(page.getByRole('cell', { name: 'D Tester' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: '4', exact: true })).toBeVisible();
+
       await backend.deleteAllMember();
     });
   });

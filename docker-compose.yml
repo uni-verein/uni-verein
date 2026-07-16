@@ -32,6 +32,7 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
+      Version: ${VERSION}
     depends_on:
       db:
         condition: service_healthy

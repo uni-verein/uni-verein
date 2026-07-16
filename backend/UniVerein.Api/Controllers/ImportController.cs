@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Converter;
-using UniVerein.Api.Data;
+using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Services;
 using UniVerein.Api.Validators;

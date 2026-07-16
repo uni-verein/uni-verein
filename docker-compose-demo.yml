@@ -67,6 +67,7 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
+      Version: ${VERSION}
     volumes:
       - ./logs:/app/logs
     depends_on:
