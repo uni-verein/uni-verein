@@ -15,7 +15,7 @@ RUN npm run build
 
 FROM nginx:alpine
 
-RUN apk upgrade && apk upgrade c-ares --no-cache --available
+RUN apk upgrade --no-cache
 
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80

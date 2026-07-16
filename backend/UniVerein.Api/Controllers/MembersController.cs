@@ -5,8 +5,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
-using UniVerein.Api.Data.Enums;
-using UniVerein.Api.Data.MemberAudit;
+using UniVerein.Api.Models.Enums;
+using UniVerein.Api.Models.MemberAudit;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Mvc;
@@ -189,12 +189,13 @@ public class MembersController : ControllerBase
         }
 
 
-        int count = await _db.Members.CountAsync();
+        int maxMemberNumber = await _db.Members.Select(m => (int?)m.MemberNumber).MaxAsync() ?? 0;
+        int newMemberNumber = maxMemberNumber + 1;
 
         MemberEntity member = new()
         {
-            MandateId = $"{DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss")}_{count + 1}",
-            MemberNumber = count + 1,
+            MandateId = $"{DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss")}_{newMemberNumber}",
+            MemberNumber = newMemberNumber,
             Gender = request.Gender,
             FirstName = request.FirstName,
             MiddleName = request.MiddleName,

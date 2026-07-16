@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiResults;
-using UniVerein.Api.Data;
+using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Authorization;

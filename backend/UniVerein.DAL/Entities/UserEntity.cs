@@ -11,8 +11,7 @@ public class UserEntity : BaseEntity
     [MaxLength(50)] 
     [Column("username")] 
     public string Username { get; set; } = string.Empty;
-
-    [MaxLength(50)] 
+    
     [Column("email")] 
     public string? Email { get; set; }
 

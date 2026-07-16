@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.Extensions.Configuration;
@@ -80,5 +83,16 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
             return CreateFinancialUserClient();
 
         return CreateClient();
+    }
+
+    protected static (HttpClient Client, FakeHttpMessageHandler Handler) BuildHttpClient<T>(T? body)
+    {
+        FakeHttpMessageHandler handler = new(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = body == null
+                ? new StringContent("null", Encoding.UTF8, "application/json")
+                : JsonContent.Create(body)
+        });
+        return (new HttpClient(handler), handler);
     }
 }

@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
-using UniVerein.Api.Data.Enums;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Query;
 using UniVerein.Api.Services;
@@ -395,6 +395,38 @@ public class MemberControllerTests : IntegrationTestBase
         {
             MemberEntity? member = await db.Members.FirstOrDefaultAsync(m => m.FirstName == memberRequest.FirstName);
             CompareMember(member!, result);
+        });
+    }
+
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task CreateMember_AfterGapInMemberNumbers_UsesNextAvailableNumber(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        await CreateMemberEntity(1);
+        MemberEntity member2 = await CreateMemberEntity(2);
+        await CreateMemberEntity(3);
+        await WithDbContext(async db =>
+        {
+            db.Members.Remove(member2);
+            await db.ForceSaveChangesAsync();
+        });
+        MemberRequest memberRequest = CreateMemberRequest(email: "gap@test.de", iban: "GAPIBAN");
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/members", memberRequest);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result.ShouldNotBeNull();
+        result.MemberNumber.ShouldBe(4);
+        await WithDbContext(async db =>
+        {
+            (await db.Members.Where(m => m.MemberNumber == 3).CountAsync()).ShouldBe(1);
         });
     }
 

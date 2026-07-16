@@ -1,6 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
-using UniVerein.Api.Data;
+using UniVerein.Api.Models;
 
 namespace UniVerein.Api.Validators;
 

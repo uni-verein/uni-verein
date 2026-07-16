@@ -1,4 +1,4 @@
-﻿using UniVerein.Api.Data;
+﻿using UniVerein.Api.Models;
 using UniVerein.Api.Validators;
 using Xunit;
 

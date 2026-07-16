@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiResults;
-using UniVerein.Api.Data.Enums;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Query;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Entities;

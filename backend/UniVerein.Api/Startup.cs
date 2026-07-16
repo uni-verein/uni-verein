@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using UniVerein.Api.Services.Firmware;
 
 namespace UniVerein.Api
 {
@@ -57,6 +58,8 @@ namespace UniVerein.Api
             services.AddScoped<ContributionService>();
 
             services.AddHostedService<ContributionBackgroundService>();
+            services.AddHttpClient<FirmwareService>();
+            services.AddHostedService<FirmwareCheckBackgroundService>();
             services.AddHttpContextAccessor();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>

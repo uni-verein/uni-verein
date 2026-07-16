@@ -28,6 +28,9 @@ public class AppDbContext : DbContext
     public DbSet<WebPageConfigEntity> WebPageConfigs => Set<WebPageConfigEntity>();
     public DbSet<SepaExportEntity> SepaExports => Set<SepaExportEntity>();
     public DbSet<MemberCategoryEntity> MemberCategories => Set<MemberCategoryEntity>();
+    public DbSet<FirmwareVersionEntity> FirmwareVersions => Set<FirmwareVersionEntity>();
+    public DbSet<FirmwareVersionNotificationEntity> FirmwareVersionNotifications => Set<FirmwareVersionNotificationEntity>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +71,22 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<MemberCategoryEntity>()
             .HasQueryFilter(x => x.DeletedAt == null);
+        
+        
+        modelBuilder.Entity<FirmwareVersionEntity>()
+            .HasIndex(f => f.Version)
+            .IsUnique();
+
+        
+        modelBuilder.Entity<FirmwareVersionNotificationEntity>()
+            .HasIndex(n => new { n.FirmwareVersionId, n.UserId })
+            .IsUnique();
+
+        modelBuilder.Entity<FirmwareVersionNotificationEntity>()
+            .HasOne(n => n.FirmwareVersion)
+            .WithMany(f => f.Notifications)
+            .HasForeignKey(n => n.FirmwareVersionId);
+
 
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
         {

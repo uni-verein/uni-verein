@@ -1,5 +1,15 @@
 import { request } from '@playwright/test';
-import { Interval, Link, Member, Role, SidebarSettings, TestUser } from '../src/types';
+import {
+  BulkMail,
+  Gender,
+  Interval,
+  Link,
+  Member,
+  Role,
+  SidebarSettings,
+  TaskWithinTheClub,
+  TestUser,
+} from '../src/types';
 
 export const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:80/api';
 export const APP_BASE = process.env.APP_BASE_URL ?? 'http://localhost:80';
@@ -81,6 +91,50 @@ export class BackendClient {
     });
     if (!res.ok()) {
       throw new Error(`Member creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  async createTestMember(overrides: Partial<Member> = {}): Promise<any> {
+    return this.createMember({
+      academicDegree: null,
+      birthday: '2026-03-14T23:00:00.000Z',
+      city: 'Kiel',
+      countryCode: 'DE',
+      contributionPlanId: null,
+      courseOfStudy: '',
+      email: 'test_1774694157026@test.de',
+      bulkMail: BulkMail.ALLOWED,
+      endOfStudies: '2026-02-28T23:00:00.000Z',
+      entryDate: '2025-03-20T10:35:53.998Z',
+      exitDate: '2026-03-19T23:00:00.000Z',
+      firstName: 'Test',
+      gender: Gender.DIVERSE,
+      iban: 'DE40998929246819178888',
+      bic: 'DEUTDEDEXXX',
+      id: '00000000-0000-0000-0000-000000000000',
+      lastName: 'Tester',
+      memberCategoryId: this.defaultMemberCategories.other,
+      memberNumber: 1,
+      middleName: '',
+      phone: '',
+      postalCode: '24103',
+      sepaConsent: '2026-03-15T23:00:00.000Z',
+      startOfStudies: '2025-02-28T23:00:00.000Z',
+      street: 'Teststr. 3',
+      taskWithinTheClub: TaskWithinTheClub.MEMBER,
+      ...overrides,
+    });
+  }
+
+  async deleteMember(memberId: string): Promise<any> {
+    const ctx = await this.ctx();
+
+    const res = await ctx.delete('/api/members/' + memberId);
+    if (!res.ok()) {
+      throw new Error(`Member deletion failed: ${res.status()} ${await res.text()}`);
     }
     await ctx.dispose();
   }

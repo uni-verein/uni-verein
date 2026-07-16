@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using UniVerein.Api.Data.Sepa;
+using UniVerein.Api.Models.Sepa;
 
 namespace UniVerein.Api.Services.Sepa;
 

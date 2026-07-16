@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using UniVerein.Api.ApiRequests;
-using UniVerein.Api.Data;
+using UniVerein.Api.Models;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Entities;
 using UniVerein.IntegrationTests.Infrastructure;

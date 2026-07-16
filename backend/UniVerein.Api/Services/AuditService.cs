@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using UniVerein.Api.Data.Enums;
+using UniVerein.Api.Models.Enums;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using Microsoft.AspNetCore.Http;
