@@ -28,7 +28,7 @@ export const PageConfigProvider = ({ children }: any) => {
       }
       setServerReachable(true);
     } catch (err) {
-      setServerReachable(false);
+      setServerReachable(!(err instanceof TypeError));
       throw err;
     } finally {
       setLoading(false);
