@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, Dispatch, SetStateAction } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { ConfigContextType } from '../types';
 import { api } from '../api';
 
@@ -6,7 +6,10 @@ const PageConfigContext = createContext<ConfigContextType>({
   config: { pageName: '', logo: '' },
   loading: false,
   reloadConfig: async () => {},
+  serverReachable: true,
 });
+
+const RETRY_INTERVAL_MS = 15_000;
 
 export const PageConfigProvider = ({ children }: any) => {
   const [config, setConfig] = useState<{ pageName: string; logo: string }>({
@@ -14,6 +17,7 @@ export const PageConfigProvider = ({ children }: any) => {
     logo: '',
   });
   const [loading, setLoading] = useState(false);
+  const [serverReachable, setServerReachable] = useState(true);
 
   const reloadConfig = useCallback(async () => {
     setLoading(true);
@@ -22,13 +26,27 @@ export const PageConfigProvider = ({ children }: any) => {
       if (response) {
         setConfig(response);
       }
+      setServerReachable(true);
+    } catch (err) {
+      setServerReachable(false);
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
+  useEffect(() => {
+    if (serverReachable) return;
+
+    const interval = setInterval(() => {
+      reloadConfig().catch(() => {});
+    }, RETRY_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [serverReachable, reloadConfig]);
+
   return (
-    <PageConfigContext.Provider value={{ config, loading, reloadConfig }}>
+    <PageConfigContext.Provider value={{ config, loading, reloadConfig, serverReachable }}>
       {children}
     </PageConfigContext.Provider>
   );

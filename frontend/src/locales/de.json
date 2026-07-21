@@ -650,6 +650,7 @@
       "password": "Passwort",
       "loginError": "Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Daten.",
       "toManyLoginError": "Zu viele fehlerhafte Anmeldeversuche. Warte {{seconds}} Sekunden, um es erneut zu versuchen.",
+      "offline": "Du bist offline. Bitte überprüfe deine Internetverbindung.",
       "demo": {
         "header": "Demoversion",
         "caption": "Dies ist eine Demoversion. Alle Daten werden jede Nacht gelöscht. Bitte gib keine persönlichen Daten ein!",
@@ -729,7 +730,8 @@
         "memberCategoryLabel": "Mitgliederkategorie",
         "recipientList": "Empfängerliste",
         "rowsPerPage": "Zeilen pro Seite:",
-        "noRecipientFound": "Keine Empfänger vorhanden."
+        "noRecipientFound": "Keine Empfänger vorhanden.",
+        "member": "Mitglied"
       },
       "sendProgressPage": {
         "idle": {
@@ -761,6 +763,8 @@
     "dashboard": {
       "logout": "Abmelden",
       "clubManagement": "Vereinsverwaltung",
+      "openMenu": "Menü öffnen",
+      "switchLanguage": "Sprache wechseln",
       "settings": {
         "name": "Einstellungen",
         "userManagement": "Nutzerverwaltung",
@@ -774,6 +778,7 @@
       },
       "pageNames": {
         "members": "Mitgliederverwaltung",
+        "membersShort": "Mitglieder",
         "broadcastEmail": "Rundmail",
         "sepa": "SEPA Export",
         "contributions": "Beiträge",

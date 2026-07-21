@@ -4,26 +4,18 @@ import {
   Box,
   Button,
   ButtonProps,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  FormHelperText,
   IconButton,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { api } from '../api';
 import AddchartIcon from '@mui/icons-material/Addchart';
@@ -31,12 +23,16 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ContributionPlans, Interval } from '../types';
 import { UUIDTypes } from 'uuid';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../components/SnackbarContext';
 import { useTranslation } from 'react-i18next';
+import { MobileListCard } from '../components/MobileListCard';
+import { ContributionPlanDialog } from '../components/dialogs/ContributionPlanDialog';
 
 export default function ContributionPlanConfig() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { open, confirm, handleClose } = useConfirm();
   const [confirmDialog, setConfirmDialog] = useState<{
     message: string;
@@ -46,18 +42,9 @@ export default function ContributionPlanConfig() {
   const [contributionPlans, setContributionPlans] = useState<ContributionPlans[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editContributionPlan, setEditContributionPlan] = useState<ContributionPlans | null>(null);
-  const [errors, setErrors] = useState<{ name?: string; amount?: string; interval?: string }>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const setContributionChange = useSnackbar();
   const { t } = useTranslation();
-
-  const euroRegex = /^\d*(?:[.,]\d{0,2})?$/;
-
-  const [formData, setFormData] = useState({
-    name: '',
-    amount: '0',
-    interval: '',
-  });
 
   const loadContributionPlans = async () => {
     try {
@@ -72,98 +59,8 @@ export default function ContributionPlanConfig() {
     loadContributionPlans();
   }, []);
   const handleOpen = (contributionPlan: ContributionPlans | null = null) => {
-    if (contributionPlan) {
-      setEditContributionPlan(contributionPlan);
-      setFormData({
-        name: contributionPlan.name,
-        amount: contributionPlan.amount.toString().replace('.', ','),
-        interval: contributionPlan.interval,
-      });
-    } else {
-      setEditContributionPlan(null);
-      setFormData({ name: '', amount: '0', interval: '' });
-    }
+    setEditContributionPlan(contributionPlan);
     setOpenDialog(true);
-  };
-
-  const validate = () => {
-    const newErrors: { name?: string; amount?: string; interval?: string } = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = t('pages.contributionPlanConfig.validation.nameEmpty');
-    } else if (formData.name.length > 50) {
-      newErrors.name = t('pages.contributionPlanConfig.validation.nameTooLong');
-    }
-
-    const amount = parseFloat(String(formData.amount).replace(',', '.'));
-    if (!formData.amount.toString().trim()) {
-      newErrors.amount = t('pages.contributionPlanConfig.validation.amountEmpty');
-    } else if (isNaN(amount) || amount <= 0) {
-      newErrors.amount = t('pages.contributionPlanConfig.validation.amountInvalid');
-    }
-
-    if (!formData.interval.trim()) {
-      newErrors.interval = t('pages.contributionPlanConfig.validation.intervalEmpty');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validate()) return;
-
-    let data = {
-      name: formData.name,
-      amount: Number(formData.amount.replace(',', '.')),
-      interval: formData.interval,
-    };
-
-    try {
-      if (editContributionPlan) {
-        let response = await api(`/contribution-plans/${editContributionPlan.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(data),
-        });
-        if (response === 409) {
-          setApiError(t('pages.contributionPlanConfig.apiError.updateExists'));
-          setContributionChange({
-            status: 'error',
-            message: t('pages.contributionPlanConfig.snackbar.updateExists'),
-          });
-        } else {
-          setContributionChange({
-            status: 'success',
-            message: t('pages.contributionPlanConfig.snackbar.updateSuccess'),
-          });
-        }
-      } else {
-        let response = await api('/contribution-plans', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        });
-        if (response === 409) {
-          setApiError(t('pages.contributionPlanConfig.apiError.createExists'));
-          setContributionChange({
-            status: 'error',
-            message: t('pages.contributionPlanConfig.snackbar.createExists'),
-          });
-        } else {
-          setContributionChange({
-            status: 'success',
-            message: t('pages.contributionPlanConfig.snackbar.createSuccess'),
-          });
-        }
-      }
-    } catch (error) {
-      setApiError(t('pages.contributionPlanConfig.apiError.saveFailed'));
-      setContributionChange({
-        status: 'error',
-        message: t('pages.contributionPlanConfig.snackbar.saveFailed'),
-      });
-    }
-    setOpenDialog(false);
-    await loadContributionPlans();
   };
 
   const handleDelete = async (id: UUIDTypes) => {
@@ -210,7 +107,9 @@ export default function ContributionPlanConfig() {
         confirmColor={confirmDialog.confirmColor}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 3 }}
+      >
         <Typography variant="h5" fontWeight={700}>
           {t('pages.contributionPlanConfig.title')}
         </Typography>
@@ -225,125 +124,100 @@ export default function ContributionPlanConfig() {
         </Alert>
       )}
 
-      <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
-        <Table>
-          <TableHead sx={{ bgcolor: 'grey.50' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributionPlanConfig.table.name')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributionPlanConfig.table.amount')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributionPlanConfig.table.interval')}
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700 }}>
-                {t('pages.contributionPlanConfig.table.actions')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {contributionPlans.map((u) => (
-              <TableRow key={u.id.toString()} hover>
-                <TableCell>{u.name}</TableCell>
-                <TableCell>{u.amount.toString().replace('.', ',')}</TableCell>
-                <TableCell>
-                  {t(
+      {isMobile ? (
+        <Box>
+          {contributionPlans.map((u) => (
+            <MobileListCard
+              key={u.id.toString()}
+              primary={<Typography sx={{ fontWeight: 600 }}>{u.name}</Typography>}
+              secondaryRows={[
+                {
+                  label: t('pages.contributionPlanConfig.table.amount'),
+                  value: `${u.amount.toString().replace('.', ',')} €`,
+                },
+                {
+                  label: t('pages.contributionPlanConfig.table.interval'),
+                  value: t(
                     `pages.contributionPlanConfig.dialog.${u.interval === Interval.MONTHLY ? 'intervalMonthly' : 'intervalYearly'}`,
-                  )}
-                </TableCell>
-                <TableCell align="right">
+                  ),
+                },
+              ]}
+              actions={
+                <>
                   <Tooltip title={t('pages.contributionPlanConfig.tooltip.edit')}>
-                    <IconButton onClick={() => handleOpen(u)} color="primary">
-                      <EditIcon />
+                    <IconButton onClick={() => handleOpen(u)} color="primary" size="small">
+                      <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title={t('pages.contributionPlanConfig.tooltip.delete')}>
-                    <IconButton onClick={() => handleDelete(u.id)} color="error">
-                      <DeleteIcon />
+                    <IconButton onClick={() => handleDelete(u.id)} color="error" size="small">
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
+                </>
+              }
+            />
+          ))}
+        </Box>
+      ) : (
+        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+          <Table>
+            <TableHead sx={{ bgcolor: 'grey.50' }}>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributionPlanConfig.table.name')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributionPlanConfig.table.amount')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributionPlanConfig.table.interval')}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                  {t('pages.contributionPlanConfig.table.actions')}
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {contributionPlans.map((u) => (
+                <TableRow key={u.id.toString()} hover>
+                  <TableCell>{u.name}</TableCell>
+                  <TableCell>{u.amount.toString().replace('.', ',')}</TableCell>
+                  <TableCell>
+                    {t(
+                      `pages.contributionPlanConfig.dialog.${u.interval === Interval.MONTHLY ? 'intervalMonthly' : 'intervalYearly'}`,
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title={t('pages.contributionPlanConfig.tooltip.edit')}>
+                      <IconButton onClick={() => handleOpen(u)} color="primary">
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t('pages.contributionPlanConfig.tooltip.delete')}>
+                      <IconButton onClick={() => handleDelete(u.id)} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="xs">
-        <DialogTitle>
-          {editContributionPlan
-            ? t('pages.contributionPlanConfig.dialog.titleEdit')
-            : t('pages.contributionPlanConfig.dialog.titleCreate')}
-        </DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            sx={{ mt: 1 }}
-            label={t('pages.contributionPlanConfig.dialog.nameLabel')}
-            fullWidth
-            value={formData.name}
-            error={errors.name !== undefined}
-            helperText={errors.name ?? `${formData.name.length}/100`}
-            onChange={(e) => {
-              setFormData({ ...formData, name: e.target.value });
-              setErrors({ ...errors, name: undefined });
-            }}
-          />
-          <TextField
-            type="text"
-            label={t('pages.contributionPlanConfig.dialog.amountLabel')}
-            fullWidth
-            value={formData.amount.replace('.', ',')}
-            error={errors.amount !== undefined}
-            helperText={errors.amount}
-            onChange={(e) => {
-              const value = e.target.value;
-
-              if (value === '' || euroRegex.test(value)) {
-                setErrors({ ...errors, amount: undefined });
-                setFormData({
-                  ...formData,
-                  amount: value.replace('.', ','),
-                });
-              } else {
-                setErrors({
-                  ...errors,
-                  amount: t('pages.contributionPlanConfig.validation.amountFormat'),
-                });
-              }
-            }}
-          />
-          <FormControl fullWidth>
-            <InputLabel>{t('pages.contributionPlanConfig.dialog.intervalLabel')}</InputLabel>
-            <Select
-              error={errors.interval !== undefined}
-              value={formData.interval || ''}
-              label={t('pages.contributionPlanConfig.dialog.intervalLabel')}
-              onChange={(e) => {
-                setFormData({ ...formData, interval: e.target.value });
-                setErrors({ ...errors, interval: undefined });
-              }}
-            >
-              <MenuItem value={Interval.YEARLY}>
-                {t('pages.contributionPlanConfig.dialog.intervalYearly')}
-              </MenuItem>
-              <MenuItem value={Interval.MONTHLY}>
-                {t('pages.contributionPlanConfig.dialog.intervalMonthly')}
-              </MenuItem>
-            </Select>
-            {errors.interval && <FormHelperText error={true}>{errors.interval}</FormHelperText>}
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setOpenDialog(false)}>
-            {t('pages.contributionPlanConfig.dialog.cancel')}
-          </Button>
-          <Button variant="contained" onClick={handleSave}>
-            {t('pages.contributionPlanConfig.dialog.save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {openDialog && (
+        <ContributionPlanDialog
+          contributionPlan={editContributionPlan}
+          onClose={() => setOpenDialog(false)}
+          onSaved={() => {
+            setOpenDialog(false);
+            loadContributionPlans();
+          }}
+          onError={setApiError}
+        />
+      )}
     </Box>
   );
 }

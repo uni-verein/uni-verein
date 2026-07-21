@@ -19,12 +19,15 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
+import { MembersMobileView } from '../components/MembersMobileView';
+import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 import debounce from 'lodash.debounce';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -44,15 +47,17 @@ import {
   TaskWithinTheClub,
   UserRoleProps,
 } from '../types';
-import MemberForm from '../components/MemberForm';
+import MemberForm from '../components/dialogs/MemberForm';
 import { TASK_WITHIN_THE_CLUB_LABELS } from '../utils';
 import { NIL as NIL_UUID, UUIDTypes } from 'uuid';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../components/SnackbarContext';
 import { useTranslation } from 'react-i18next';
 
 export default function Members({ role }: UserRoleProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { open, confirm, handleClose } = useConfirm();
   const [confirmDialog, setConfirmDialog] = useState<{
     message: string;
@@ -235,11 +240,27 @@ export default function Members({ role }: UserRoleProps) {
         confirmColor={confirmDialog.confirmColor}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 3,
+        }}
+      >
         <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
           {t('pages.members.title')}
         </Typography>
-        <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: { xs: '100%', sm: 'auto' },
+          }}
+        >
           <Tooltip title={t('pages.members.refresh')}>
             <IconButton
               onClick={() => fetchData(search, task, status, showDeleted, page, rowsPerPage)}
@@ -274,7 +295,7 @@ export default function Members({ role }: UserRoleProps) {
       )}
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             label={t('pages.members.filter.searchName')}
             fullWidth
@@ -286,7 +307,7 @@ export default function Members({ role }: UserRoleProps) {
           />
         </Grid>
 
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <FormControl fullWidth>
             <InputLabel>{t('pages.members.filter.taskInClub')}</InputLabel>
             <Select
@@ -311,7 +332,7 @@ export default function Members({ role }: UserRoleProps) {
           </FormControl>
         </Grid>
 
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <FormControl fullWidth>
             <InputLabel>{t('pages.members.filter.memberCategory')}</InputLabel>
             <Select
@@ -333,7 +354,7 @@ export default function Members({ role }: UserRoleProps) {
           </FormControl>
         </Grid>
         {role === Role.ADMIN && (
-          <Grid size={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -349,7 +370,7 @@ export default function Members({ role }: UserRoleProps) {
           </Grid>
         )}
         {isFiltered && (
-          <Grid size={role === Role.ADMIN ? 12 : 3}>
+          <Grid size={{ xs: 12, md: role === Role.ADMIN ? 12 : 3 }}>
             <Button
               variant="outlined"
               color="secondary"
@@ -367,140 +388,172 @@ export default function Members({ role }: UserRoleProps) {
         )}
       </Grid>
 
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
-      >
-        {loading && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 1,
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        )}
-
-        <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
-          <TableHead sx={{ bgcolor: 'grey.50' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>
-                {t('pages.members.table.colNumber')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>{t('pages.members.table.colName')}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>{t('pages.members.table.colTask')}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>{t('pages.members.table.colEmail')}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>
-                {t('pages.members.table.colContribution')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>
-                {t('pages.members.table.colMemberCategory')}
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold', minWidth: '130px' }}>
-                {t('pages.members.table.colActions')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {members.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  {t('pages.members.table.noMembers')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              members.map((m) => (
-                <TableRow
-                  key={m.id.toString()}
-                  hover
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell>
-                    <Chip
-                      label={m.memberNumber}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontWeight: 500 }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>
-                    {m.firstName} {m.middleName} {m.lastName}
-                  </TableCell>
-                  <TableCell color="text.secondary">
-                    {t(`components.taskWithinTheClubOptions.${getTaskLabel(m.taskWithinTheClub)}`)}
-                  </TableCell>
-                  <TableCell color="text.secondary">{m.email}</TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-                    {m.contributionPlanId !== null
-                      ? `${contributionPlans.find((x) => x.id === m.contributionPlanId)?.amount} €`
-                      : t('pages.members.table.noContribution')}
-                  </TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-                    {m.memberCategoryId !== null && m.memberCategoryId !== undefined
-                      ? getCategoryTranslation(
-                          memberCategories.find((x) => x.id === m.memberCategoryId),
-                        )
-                      : ''}
-                  </TableCell>
-                  <TableCell align="right">
-                    {m.deletedAt !== null && (
-                      <Tooltip title={t('pages.members.actions.restore')}>
-                        <IconButton onClick={() => restore(m.id)} size="small" color="primary">
-                          <RestoreFromTrashIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    {m.deletedAt === null && (
-                      <Tooltip title={t('pages.members.actions.view')}>
-                        <IconButton
-                          onClick={() => {
-                            setView(true);
-                            setEdit(m);
-                          }}
-                          size="small"
-                          color="primary"
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    {m.deletedAt === null && (
-                      <Tooltip title={t('pages.members.actions.edit')}>
-                        <IconButton onClick={() => setEdit(m)} size="small" color="primary">
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    <Tooltip title={t('pages.members.actions.delete')}>
-                      <IconButton onClick={() => remove(m.id)} size="small" color="error">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-
-        <TablePagination
-          component="div"
-          count={totalCount}
-          rowsPerPage={rowsPerPage}
+      {isMobile ? (
+        <MembersMobileView
+          members={members}
+          contributionPlans={contributionPlans}
+          memberCategories={memberCategories}
+          loading={loading}
+          totalCount={totalCount}
           page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
+          rowsPerPage={rowsPerPage}
+          onPageChange={setPage}
+          onRowsPerPageChange={(newRowsPerPage) => {
+            setRowsPerPage(newRowsPerPage);
             setPage(0);
           }}
-          labelRowsPerPage={t('pages.members.table.rowsPerPage')}
+          onView={(m) => {
+            setView(true);
+            setEdit(m);
+          }}
+          onEdit={(m) => setEdit(m)}
+          onDelete={remove}
+          onRestore={restore}
         />
-      </TableContainer>
+      ) : (
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+        >
+          {loading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+
+          <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
+            <TableHead sx={{ bgcolor: 'grey.50' }}>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  {t('pages.members.table.colNumber')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  {t('pages.members.table.colName')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  {t('pages.members.table.colTask')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  {t('pages.members.table.colEmail')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  {t('pages.members.table.colContribution')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  {t('pages.members.table.colMemberCategory')}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', minWidth: '130px' }}>
+                  {t('pages.members.table.colActions')}
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {members.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    {t('pages.members.table.noMembers')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                members.map((m) => (
+                  <TableRow
+                    key={m.id.toString()}
+                    hover
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell>
+                      <Chip
+                        label={m.memberNumber}
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontWeight: 500 }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      {m.firstName} {m.middleName} {m.lastName}
+                    </TableCell>
+                    <TableCell color="text.secondary">
+                      {t(
+                        `components.taskWithinTheClubOptions.${getTaskLabel(m.taskWithinTheClub)}`,
+                      )}
+                    </TableCell>
+                    <TableCell color="text.secondary">{m.email}</TableCell>
+                    <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                      {m.contributionPlanId !== null
+                        ? `${contributionPlans.find((x) => x.id === m.contributionPlanId)?.amount} €`
+                        : t('pages.members.table.noContribution')}
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                      {m.memberCategoryId !== null && m.memberCategoryId !== undefined
+                        ? getCategoryTranslation(
+                            memberCategories.find((x) => x.id === m.memberCategoryId),
+                          )
+                        : ''}
+                    </TableCell>
+                    <TableCell align="right">
+                      {m.deletedAt !== null && (
+                        <Tooltip title={t('pages.members.actions.restore')}>
+                          <IconButton onClick={() => restore(m.id)} size="small" color="primary">
+                            <RestoreFromTrashIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {m.deletedAt === null && (
+                        <Tooltip title={t('pages.members.actions.view')}>
+                          <IconButton
+                            onClick={() => {
+                              setView(true);
+                              setEdit(m);
+                            }}
+                            size="small"
+                            color="primary"
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {m.deletedAt === null && (
+                        <Tooltip title={t('pages.members.actions.edit')}>
+                          <IconButton onClick={() => setEdit(m)} size="small" color="primary">
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title={t('pages.members.actions.delete')}>
+                        <IconButton onClick={() => remove(m.id)} size="small" color="error">
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+
+          <ResponsiveTablePagination
+            component="div"
+            count={totalCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage={t('pages.members.table.rowsPerPage')}
+          />
+        </TableContainer>
+      )}
     </Box>
   );
 }

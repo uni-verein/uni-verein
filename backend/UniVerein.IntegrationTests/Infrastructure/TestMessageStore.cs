@@ -23,7 +23,10 @@ public class TestMessageStore : MessageStore
     {
         using var stream = new MemoryStream(buffer.ToArray());
         var message = await MimeMessage.LoadAsync(stream, cancellationToken);
-        _messages.Add(message);
+        lock (_messages)
+        {
+            _messages.Add(message);
+        }
         return SmtpResponse.Ok;
     }
 }

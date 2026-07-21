@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useDeferredValue,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useState, useMemo, useDeferredValue, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
@@ -18,9 +12,11 @@ import {
   Tooltip,
   Typography,
   IconButton,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { DynamicIcon } from './muiIcons';
+import { DynamicIcon } from '../muiIcons';
 import { useTranslation } from 'react-i18next';
 
 interface IconPickerDialogProps {
@@ -31,6 +27,8 @@ interface IconPickerDialogProps {
 }
 
 export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: IconPickerDialogProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [iconNames, setIconNames] = useState<string[]>([]);
@@ -47,7 +45,7 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
 
     const load = async () => {
       try {
-        const { loadIconNames } = await import('./muiIcons');
+        const { loadIconNames } = await import('../muiIcons');
         const names = await loadIconNames();
 
         if (!abortRef.current) {
@@ -82,7 +80,13 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth={!isMobile}
+      fullScreen={isMobile}
+      maxWidth="md"
+    >
       <DialogTitle>{t('components.iconPickerDialog.selectIcon')}</DialogTitle>
 
       <DialogContent>

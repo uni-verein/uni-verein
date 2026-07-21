@@ -4,12 +4,7 @@ import {
   Box,
   Button,
   ButtonProps,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
-  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -17,23 +12,24 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { Link } from '../types';
 import { api } from '../api';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ImageSearchIcon from '@mui/icons-material/ImageSearch';
 import { UUIDTypes } from 'uuid';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../components/SnackbarContext';
 import { useTranslation } from 'react-i18next';
-import { IconPickerDialog } from '../components/IconPickerDialog';
 import { DynamicIcon } from '../components/muiIcons';
+import { MobileListCard } from '../components/MobileListCard';
+import { LinkDialog } from '../components/dialogs/LinkDialog';
 
 interface Data {
   items: Link[];
@@ -41,6 +37,8 @@ interface Data {
 }
 
 export default function LinkConfig() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { t } = useTranslation();
   const { open, confirm, handleClose } = useConfirm();
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -51,18 +49,10 @@ export default function LinkConfig() {
 
   const [links, setLinks] = useState<Data>({ items: [], total: 0 });
   const [openDialog, setOpenDialog] = useState(false);
-  const [openIconPicker, setOpenIconPicker] = useState(false);
   const [editLink, setEditLink] = useState<Link | null>(null);
-  const [errors, setErrors] = useState<{ link?: string; name?: string; icon?: string }>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [fetching, setFetching] = useState(true);
   const setConfigDeleteOrUpdate = useSnackbar();
-
-  const [formData, setFormData] = useState({
-    link: '',
-    name: '',
-    icon: '',
-  });
 
   const loadConfig = async () => {
     try {
@@ -82,64 +72,8 @@ export default function LinkConfig() {
   }, []);
 
   const handleOpen = (link: Link | null = null) => {
-    if (link) {
-      setEditLink(link);
-      setFormData({ link: link.link, name: link.name, icon: link.icon });
-    } else {
-      setEditLink(null);
-      setFormData({ link: '', name: '', icon: '' });
-    }
-    setErrors({});
+    setEditLink(link);
     setOpenDialog(true);
-  };
-
-  const validate = () => {
-    const newErrors: { link?: string; name?: string; icon?: string } = {};
-
-    if (!formData.link.trim()) {
-      newErrors.link = t('pages.linkConfig.validation.linkEmpty');
-    } else if (formData.link.length > 100) {
-      newErrors.link = t('pages.linkConfig.validation.linkTooLong');
-    }
-
-    if (!formData.name.trim()) {
-      newErrors.name = t('pages.linkConfig.validation.nameEmpty');
-    } else if (formData.name.length > 20) {
-      newErrors.name = t('pages.linkConfig.validation.nameTooLong');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validate()) return;
-
-    try {
-      if (editLink) {
-        await api(`/link/${editLink.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(formData),
-        });
-        setConfigDeleteOrUpdate({
-          status: 'success',
-          message: t('pages.linkConfig.snackbar.saveSuccess'),
-        });
-      } else {
-        await api('/link', {
-          method: 'POST',
-          body: JSON.stringify(formData),
-        });
-        setConfigDeleteOrUpdate({
-          status: 'success',
-          message: t('pages.linkConfig.snackbar.createSuccess'),
-        });
-      }
-      setOpenDialog(false);
-      loadConfig();
-    } catch {
-      setApiError(t('pages.linkConfig.errors.saveFailed'));
-    }
   };
 
   const handleDelete = async (id: UUIDTypes) => {
@@ -164,13 +98,8 @@ export default function LinkConfig() {
     }
   };
 
-  const handleIconSelect = (iconName: string) => {
-    setFormData({ ...formData, icon: iconName });
-    setErrors({ ...errors, icon: undefined });
-  };
-
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 0, sm: 3 } }}>
       <ConfirmDialog
         open={open}
         message={confirmDialog.message}
@@ -180,7 +109,14 @@ export default function LinkConfig() {
       />
 
       <Box
-        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 3,
+        }}
       >
         <Box>
           <Typography variant="h5" fontWeight={700}>
@@ -201,31 +137,17 @@ export default function LinkConfig() {
         </Alert>
       )}
 
-      <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
-        <Table>
-          <TableHead sx={{ bgcolor: 'grey.50' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700, width: '25%' }}>
-                {t('pages.linkConfig.table.link')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700, width: '25%' }}>
-                {t('pages.linkConfig.table.name')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700, width: '25%' }}>
-                {t('pages.linkConfig.table.icon')}
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700, width: '25%' }}>
-                {t('pages.linkConfig.table.actions')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {links.items.map((row) => (
-              <TableRow key={row.id!.toString()} hover>
-                <TableCell>{row.link}</TableCell>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>
-                  {row.icon ? (
+      {isMobile ? (
+        <Box>
+          {links.items.map((row) => (
+            <MobileListCard
+              key={row.id!.toString()}
+              primary={<Typography sx={{ fontWeight: 600 }}>{row.name}</Typography>}
+              secondaryRows={[
+                { label: t('pages.linkConfig.table.link'), value: row.link },
+                {
+                  label: t('pages.linkConfig.table.icon'),
+                  value: row.icon ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <DynamicIcon name={row.icon} fontSize="small" color="action" />
                       <Typography variant="body2" color="text.secondary">
@@ -233,118 +155,111 @@ export default function LinkConfig() {
                       </Typography>
                     </Box>
                   ) : (
-                    <Typography variant="body2" color="text.disabled">
-                      —
-                    </Typography>
-                  )}
-                </TableCell>
-
-                <TableCell align="right">
+                    '—'
+                  ),
+                },
+              ]}
+              actions={
+                <>
                   <Tooltip title={t('pages.linkConfig.tooltip.edit')}>
-                    <IconButton onClick={() => handleOpen(row)} color="primary">
-                      <EditIcon />
+                    <IconButton onClick={() => handleOpen(row)} color="primary" size="small">
+                      <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title={t('pages.linkConfig.tooltip.delete')}>
-                    <IconButton onClick={() => handleDelete(row.id!)} color="error">
-                      <DeleteIcon />
+                    <IconButton onClick={() => handleDelete(row.id!)} color="error" size="small">
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-
-            {!fetching && links.items.length === 0 && (
+                </>
+              }
+            />
+          ))}
+          {!fetching && links.items.length === 0 && (
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 4 }}>
+              {t('pages.linkConfig.table.empty')}
+            </Typography>
+          )}
+        </Box>
+      ) : (
+        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+          <Table>
+            <TableHead sx={{ bgcolor: 'grey.50' }}>
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {t('pages.linkConfig.table.empty')}
-                  </Typography>
+                <TableCell sx={{ fontWeight: 700, width: '25%' }}>
+                  {t('pages.linkConfig.table.link')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700, width: '25%' }}>
+                  {t('pages.linkConfig.table.name')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700, width: '25%' }}>
+                  {t('pages.linkConfig.table.icon')}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, width: '25%' }}>
+                  {t('pages.linkConfig.table.actions')}
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {links.items.map((row) => (
+                <TableRow key={row.id!.toString()} hover>
+                  <TableCell>{row.link}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>
+                    {row.icon ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <DynamicIcon name={row.icon} fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary">
+                          {row.icon}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.disabled">
+                        —
+                      </Typography>
+                    )}
+                  </TableCell>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="xs">
-        <DialogTitle>
-          {editLink
-            ? t('pages.linkConfig.dialog.titleEdit')
-            : t('pages.linkConfig.dialog.titleCreate')}
-        </DialogTitle>
+                  <TableCell align="right">
+                    <Tooltip title={t('pages.linkConfig.tooltip.edit')}>
+                      <IconButton onClick={() => handleOpen(row)} color="primary">
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t('pages.linkConfig.tooltip.delete')}>
+                      <IconButton onClick={() => handleDelete(row.id!)} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
 
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            sx={{ mt: 1 }}
-            label={t('pages.linkConfig.fields.link.label')}
-            fullWidth
-            value={formData.link}
-            error={!!errors.link}
-            helperText={errors.link ?? `${formData.link.length}/100`}
-            placeholder={t('pages.linkConfig.fields.link.placeholder')}
-            onChange={(e) => {
-              setFormData({ ...formData, link: e.target.value });
-              setErrors({ ...errors, link: undefined });
-            }}
-          />
+              {!fetching && links.items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('pages.linkConfig.table.empty')}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-          <TextField
-            sx={{ mt: 1 }}
-            label={t('pages.linkConfig.fields.name.label')}
-            fullWidth
-            value={formData.name}
-            error={!!errors.name}
-            helperText={errors.name ?? `${formData.name.length}/20`}
-            placeholder={t('pages.linkConfig.fields.name.placeholder')}
-            onChange={(e) => {
-              setFormData({ ...formData, name: e.target.value });
-              setErrors({ ...errors, name: undefined });
-            }}
-          />
-
-          <TextField
-            label={t('pages.linkConfig.fields.icon.label')}
-            fullWidth
-            value={formData.icon}
-            error={!!errors.icon}
-            helperText={errors.icon}
-            inputProps={{ readOnly: true }}
-            onClick={() => setOpenIconPicker(true)}
-            sx={{ cursor: 'pointer' }}
-            InputProps={{
-              startAdornment: formData.icon ? (
-                <InputAdornment position="start">
-                  <DynamicIcon name={formData.icon} fontSize="small" color="action" />
-                </InputAdornment>
-              ) : null,
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setOpenIconPicker(true)} edge="end" size="small">
-                    <ImageSearchIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setOpenDialog(false)}>
-            {t('pages.linkConfig.dialog.cancel')}
-          </Button>
-          <Button variant="contained" onClick={handleSave}>
-            {t('pages.linkConfig.dialog.save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <IconPickerDialog
-        open={openIconPicker}
-        selectedIcon={formData.icon}
-        onSelect={handleIconSelect}
-        onClose={() => setOpenIconPicker(false)}
-      />
+      {openDialog && (
+        <LinkDialog
+          link={editLink}
+          onClose={() => setOpenDialog(false)}
+          onSaved={() => {
+            setOpenDialog(false);
+            loadConfig();
+          }}
+          onError={setApiError}
+        />
+      )}
     </Box>
   );
 }

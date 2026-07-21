@@ -15,7 +15,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { api } from '../api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { UUIDTypes } from 'uuid';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../components/SnackbarContext';
 import { useTranslation } from 'react-i18next';

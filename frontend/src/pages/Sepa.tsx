@@ -11,8 +11,9 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TablePagination,
   TableContainer,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -20,6 +21,8 @@ import { api, apiFile } from '../api';
 import { UUIDTypes } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import debounce from 'lodash.debounce';
+import { MobileListCard } from '../components/MobileListCard';
+import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 
 function formatDate(date: Date, t: any): string {
   const now = new Date();
@@ -48,6 +51,8 @@ function formatDate(date: Date, t: any): string {
 }
 
 export default function Sepa() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<
@@ -139,71 +144,127 @@ export default function Sepa() {
         </Alert>
       )}
 
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
-      >
-        <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
-          <TableHead sx={{ bgcolor: 'grey.50' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.name')}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.amount')}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.exportedDate')}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.exportedCases')}</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700 }}>
-                {t('pages.sepa.table.action')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.length === 0 ? (
+      {isMobile ? (
+        <Box>
+          {data.length === 0 ? (
+            <Typography align="center" color="text.secondary" sx={{ py: 3 }}>
+              {t('pages.sepa.table.noSepa')}
+            </Typography>
+          ) : (
+            data.map((e) => (
+              <MobileListCard
+                key={e.id.toString()}
+                primary={<Typography sx={{ fontWeight: 600 }}>{e.name}</Typography>}
+                secondaryRows={[
+                  {
+                    label: t('pages.sepa.table.amount'),
+                    value: e.amount.toLocaleString('de-DE', {
+                      style: 'currency',
+                      currency: 'EUR',
+                    }),
+                  },
+                  {
+                    label: t('pages.sepa.table.exportedDate'),
+                    value: formatDate(new Date(e.exportedDate), t),
+                  },
+                  { label: t('pages.sepa.table.exportedCases'), value: e.exportedCases },
+                ]}
+                actions={
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => download(e.id, e.name)}
+                    sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                  >
+                    {t('pages.sepa.buttons.download')}
+                  </Button>
+                }
+              />
+            ))
+          )}
+          <ResponsiveTablePagination
+            component="div"
+            count={totalCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage={t('pages.sepa.table.rowsPerPage')}
+          />
+        </Box>
+      ) : (
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+        >
+          <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
+            <TableHead sx={{ bgcolor: 'grey.50' }}>
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  {t('pages.sepa.table.noSepa')}
+                <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.name')}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.amount')}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.exportedDate')}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.sepa.table.exportedCases')}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                  {t('pages.sepa.table.action')}
                 </TableCell>
               </TableRow>
-            ) : (
-              data.map((e) => (
-                <TableRow key={e.id.toString()} hover>
-                  <TableCell sx={{ fontWeight: 500 }}>{e.name}</TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>
-                    {e.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>
-                    {formatDate(new Date(e.exportedDate), t)}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{e.exportedCases}</TableCell>
-                  <TableCell align="right">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<DownloadIcon />}
-                      onClick={() => download(e.id, e.name)}
-                      sx={{ textTransform: 'none', borderRadius: 1.5 }}
-                    >
-                      {t('pages.sepa.buttons.download')}
-                    </Button>
+            </TableHead>
+            <TableBody>
+              {data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    {t('pages.sepa.table.noSepa')}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                data.map((e) => (
+                  <TableRow key={e.id.toString()} hover>
+                    <TableCell sx={{ fontWeight: 500 }}>{e.name}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      {e.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      {formatDate(new Date(e.exportedDate), t)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{e.exportedCases}</TableCell>
+                    <TableCell align="right">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<DownloadIcon />}
+                        onClick={() => download(e.id, e.name)}
+                        sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                      >
+                        {t('pages.sepa.buttons.download')}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
 
-        <TablePagination
-          component="div"
-          count={totalCount}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          labelRowsPerPage={t('pages.sepa.table.rowsPerPage')}
-        />
-      </TableContainer>
+          <ResponsiveTablePagination
+            component="div"
+            count={totalCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage={t('pages.sepa.table.rowsPerPage')}
+          />
+        </TableContainer>
+      )}
 
       <Grid size={12} mt={3}>
         <Alert

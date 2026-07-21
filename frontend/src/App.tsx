@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { createTheme, ThemeProvider, CssBaseline, Typography } from '@mui/material';
+import { createTheme, ThemeProvider, CssBaseline, Typography, useMediaQuery } from '@mui/material';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { isTokenValid } from './utils';
@@ -34,6 +34,8 @@ export default function App() {
       }),
     [],
   );
+
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -77,20 +79,22 @@ export default function App() {
       ) : (
         <Dashboard onLogout={handleLogout} pageName={config.pageName} />
       )}
-      <Typography
-        variant="caption"
-        sx={{
-          position: 'fixed',
-          bottom: 8,
-          right: 12,
-          color: 'text.disabled',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          userSelect: 'none',
-        }}
-      >
-        v{version}
-      </Typography>
+      {!isMobile && (
+        <Typography
+          variant="caption"
+          sx={{
+            position: 'fixed',
+            bottom: 8,
+            right: 12,
+            color: 'text.disabled',
+            pointerEvents: 'none',
+            zIndex: 9999,
+            userSelect: 'none',
+          }}
+        >
+          v{version}
+        </Typography>
+      )}
     </ThemeProvider>
   );
 }

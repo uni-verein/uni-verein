@@ -2,7 +2,7 @@ name: Update Third-Party Notices
 
 on:
   push:
-    branches: [main]
+    branches-ignore: [main]
     paths:
       - 'backend/**/*.csproj'
       - 'backend/**/packages.lock.json'

@@ -11,15 +11,17 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import { RecipientListProps } from '../types';
 import { useTranslation } from 'react-i18next';
 import { NIL as NIL_UUID } from 'uuid';
+import ResponsiveTablePagination from './ResponsiveTablePagination';
 
 const stringToColor = (str: string): string => {
   let hash = 0;
@@ -41,6 +43,8 @@ const RecipientList: FC<RecipientListProps> = ({
 }) => {
   const [page, setPage] = useState(0);
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const toggleOne = (email: string) => {
     if (filter.categoryId !== NIL_UUID) {
@@ -149,21 +153,27 @@ const RecipientList: FC<RecipientListProps> = ({
 
       <Divider />
 
-      <TableContainer sx={{ overflowY: 'auto', flexGrow: 1 }}>
-        <Table size="small" stickyHeader>
+      <TableContainer sx={{ overflowY: 'auto', overflowX: 'hidden', flexGrow: 1 }}>
+        <Table size="small" stickyHeader sx={{ tableLayout: 'fixed' }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: 48 }} />
-              <TableCell sx={{ width: 48 }} />
-              <TableCell>Name</TableCell>
-              <TableCell>E-Mail</TableCell>
+              <TableCell sx={{ width: 42, px: isMobile ? 0.5 : 2 }} />
+              <TableCell sx={{ width: isMobile ? 40 : 48, px: isMobile ? 0.5 : 2 }} />
+              {isMobile ? (
+                <TableCell>{t('pages.mail.recipientPage.member')}</TableCell>
+              ) : (
+                <>
+                  <TableCell sx={{ width: '35%' }}>Name</TableCell>
+                  <TableCell>E-Mail</TableCell>
+                </>
+              )}
             </TableRow>
           </TableHead>
 
           <TableBody>
             {recipients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={isMobile ? 3 : 4}>
                   <Box sx={{ p: 4, textAlign: 'center' }}>
                     <Typography color="text.secondary">
                       {t('pages.mail.recipientPage.noRecipientFound')}
@@ -190,7 +200,7 @@ const RecipientList: FC<RecipientListProps> = ({
                       },
                     }}
                   >
-                    <TableCell padding="checkbox">
+                    <TableCell padding="checkbox" sx={{ px: isMobile ? 0.5 : 2 }}>
                       <Checkbox
                         checked={isSelected}
                         color="primary"
@@ -198,33 +208,53 @@ const RecipientList: FC<RecipientListProps> = ({
                         onChange={() => toggleOne(r.email)}
                       />
                     </TableCell>
-                    <TableCell sx={{ width: 48, pr: 0 }}>
+                    <TableCell sx={{ px: isMobile ? 0.5 : 2, pr: 0 }}>
                       <Avatar
                         sx={{
                           bgcolor: stringToColor(`${r.firstName} ${r.lastName}`),
-                          width: 38,
-                          height: 38,
-                          fontSize: 16,
+                          width: isMobile ? 30 : 38,
+                          height: isMobile ? 30 : 38,
+                          fontSize: isMobile ? 13 : 16,
                           fontWeight: 700,
                         }}
                       >
                         {initials}
                       </Avatar>
                     </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        fontWeight={isSelected ? 600 : 400}
-                        color="text.primary"
-                      >
-                        {r.firstName} {r.lastName}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {r.email}
-                      </Typography>
-                    </TableCell>
+                    {(() => {
+                      const nameLabel = (
+                        <Typography
+                          variant="body2"
+                          fontWeight={isSelected ? 600 : 400}
+                          color="text.primary"
+                          noWrap
+                        >
+                          {r.firstName} {r.lastName}
+                        </Typography>
+                      );
+                      const emailLabel = (
+                        <Typography
+                          variant={isMobile ? 'caption' : 'body2'}
+                          color="text.secondary"
+                          noWrap
+                          component="div"
+                        >
+                          {r.email}
+                        </Typography>
+                      );
+
+                      return isMobile ? (
+                        <TableCell sx={{ minWidth: 0 }}>
+                          {nameLabel}
+                          {emailLabel}
+                        </TableCell>
+                      ) : (
+                        <>
+                          <TableCell sx={{ width: '35%' }}>{nameLabel}</TableCell>
+                          <TableCell>{emailLabel}</TableCell>
+                        </>
+                      );
+                    })()}
                   </TableRow>
                 );
               })
@@ -232,15 +262,13 @@ const RecipientList: FC<RecipientListProps> = ({
           </TableBody>
         </Table>
 
-        <TablePagination
+        <ResponsiveTablePagination
           component="div"
           count={totalCount}
           rowsPerPage={filter.limit}
           page={page}
           onPageChange={(_, newPage) => {
             setPage(newPage);
-            console.log(newPage);
-            console.log(filter.limit);
             onFilter({ ...filter, offset: newPage * filter.limit });
           }}
           onRowsPerPageChange={(e) => {

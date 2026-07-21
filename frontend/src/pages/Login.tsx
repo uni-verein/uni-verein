@@ -16,6 +16,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
 import PersonIcon from '@mui/icons-material/Person';
 import { login } from '../api';
 import { useTranslation } from 'react-i18next';
@@ -29,14 +30,28 @@ export default function Login({
   onLogin: () => void;
   demo: boolean | undefined;
 }) {
-  const { config } = usePageConfig();
+  const { config, serverReachable } = usePageConfig();
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [browserOnline, setBrowserOnline] = useState(navigator.onLine);
   const { t } = useTranslation();
+
+  const isOffline = !browserOnline || !serverReachable;
+
+  useEffect(() => {
+    const handleOnline = () => setBrowserOnline(true);
+    const handleOffline = () => setBrowserOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (countdown === null || countdown <= 0) {
@@ -82,7 +97,9 @@ export default function Login({
         });
       }
     } catch (err) {
-      setError(t('pages.login.loginError'));
+      if (!(err instanceof TypeError)) {
+        setError(t('pages.login.loginError'));
+      }
     } finally {
       setLoading(false);
     }
@@ -132,6 +149,12 @@ export default function Login({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             {t('pages.login.loginHint')}
           </Typography>
+
+          {isOffline && (
+            <Alert severity="warning" icon={<WifiOffIcon fontSize="inherit" />} sx={{ width: '100%', mb: 2 }}>
+              {t('pages.login.offline')}
+            </Alert>
+          )}
 
           {error && (
             <Alert severity="error" sx={{ width: '100%', mb: 2 }}>

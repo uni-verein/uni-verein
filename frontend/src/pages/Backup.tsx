@@ -11,27 +11,18 @@ import {
   Alert,
   AlertTitle,
   ButtonProps,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
 } from '@mui/material';
 import RestoreIcon from '@mui/icons-material/Restore';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadFileIcon from '@mui/icons-material/Download';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { api, apiFile } from '../api';
 import { MemberCategory } from '../types';
 import { useSnackbar } from '../components/SnackbarContext';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useIndexedTranslation } from '../hooks/useIndexedTranslation';
+import { ImportErrorDialog } from '../components/dialogs/ImportErrorDialog';
 
 export default function Backup() {
   const { open, confirm, handleClose } = useConfirm();
@@ -206,52 +197,11 @@ export default function Backup() {
         confirmColor={confirmDialog.confirmColor}
       />
 
-      {/* Import Error Dialog */}
-      <Dialog
+      <ImportErrorDialog
         open={importErrorDialogOpen}
+        errors={importErrors}
         onClose={() => setImportErrorDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <ErrorOutlineIcon color="error" />
-            <Typography variant="h6" fontWeight={700}>
-              {ti('pages.backup.csvImport.importErrors.title')}
-            </Typography>
-          </Stack>
-        </DialogTitle>
-
-        <DialogContent dividers>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {ti('pages.backup.csvImport.importErrors.description')}
-          </Typography>
-          <List disablePadding>
-            {importErrors.map((error, index) => (
-              <React.Fragment key={index}>
-                <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                  <ListItemIcon sx={{ minWidth: 32, mt: 0.5 }}>
-                    <ErrorOutlineIcon color="error" fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={ti(`pages.backup.csvImport.${error.translationKey}`, error.values)}
-                    primaryTypographyProps={{
-                      variant: 'body2',
-                    }}
-                  />
-                </ListItem>
-                {index < importErrors.length - 1 && <Divider component="li" />}
-              </React.Fragment>
-            ))}
-          </List>
-        </DialogContent>
-
-        <DialogActions>
-          <Button variant="contained" color="error" onClick={() => setImportErrorDialogOpen(false)}>
-            {ti('pages.backup.csvImport.importErrors.closeButton')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      />
 
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
@@ -337,7 +287,7 @@ export default function Backup() {
                   </Stack>
                 </Grid>
 
-                <Grid size={6} sx={{ textAlign: 'right' }}>
+                <Grid size={{ xs: 12, sm: 6 }} sx={{ textAlign: 'right' }}>
                   <Button
                     variant="outlined"
                     component="label"
@@ -350,7 +300,7 @@ export default function Backup() {
                   </Button>
                 </Grid>
 
-                <Grid size={6} sx={{ textAlign: 'right' }}>
+                <Grid size={{ xs: 12, sm: 6 }} sx={{ textAlign: 'right' }}>
                   <Button
                     variant="outlined"
                     component="label"

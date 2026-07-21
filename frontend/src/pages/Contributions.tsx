@@ -14,12 +14,13 @@ import {
   Grid,
   Card,
   CardContent,
-  TablePagination,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
@@ -28,9 +29,13 @@ import EuroIcon from '@mui/icons-material/Euro';
 import { api } from '../api';
 import { useTranslation } from 'react-i18next';
 import { Role, UserRoleProps } from '../types';
+import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 import debounce from 'lodash.debounce';
+import { MobileListCard } from '../components/MobileListCard';
 
 export default function Contributions({ role }: UserRoleProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const [data, setData] = useState<any[]>([]);
   const [paymentData, setPaymentData] = useState<{ openPayments: number; openAmount: number }>({
     openPayments: 0,
@@ -110,7 +115,7 @@ export default function Contributions({ role }: UserRoleProps) {
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
             elevation={0}
             sx={{
@@ -135,7 +140,7 @@ export default function Contributions({ role }: UserRoleProps) {
           </Card>
         </Grid>
 
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
             elevation={0}
             sx={{
@@ -168,7 +173,7 @@ export default function Contributions({ role }: UserRoleProps) {
           </Card>
         </Grid>
 
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
             elevation={0}
             sx={{
@@ -206,7 +211,7 @@ export default function Contributions({ role }: UserRoleProps) {
         </Grid>
 
         {isFiltered && (
-          <Grid size={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card
               elevation={0}
               sx={{
@@ -243,44 +248,14 @@ export default function Contributions({ role }: UserRoleProps) {
         )}
       </Grid>
 
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}
-      >
-        <Table>
-          <TableHead sx={{ bgcolor: 'grey.50' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributions.table.member')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributions.table.amount')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributions.table.dueDate')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                {t('pages.contributions.table.status')}
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700 }}>
-                {t('pages.contributions.table.action')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((c) => (
-              <TableRow key={c.id} hover>
-                <TableCell sx={{ fontWeight: 500 }}>{c.name}</TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {c.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
-                  </Typography>
-                </TableCell>
-                <TableCell color="text.secondary">
-                  {new Date(c.dueDate).toLocaleDateString('de-DE')}
-                </TableCell>
-                <TableCell>
+      {isMobile ? (
+        <Box>
+          {data.map((c) => (
+            <MobileListCard
+              key={c.id}
+              primary={
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>
                   {c.paid ? (
                     <Chip
                       label={t('pages.contributions.status.paid')}
@@ -298,39 +273,137 @@ export default function Contributions({ role }: UserRoleProps) {
                       sx={{ borderRadius: 1, fontWeight: 600 }}
                     />
                   )}
+                </Box>
+              }
+              secondaryRows={[
+                {
+                  label: t('pages.contributions.table.amount'),
+                  value: c.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }),
+                },
+                {
+                  label: t('pages.contributions.table.dueDate'),
+                  value: new Date(c.dueDate).toLocaleDateString('de-DE'),
+                },
+              ]}
+              actions={
+                role !== Role.USER && (
+                  <Button
+                    variant={!c.paid ? 'contained' : 'outlined'}
+                    color={!c.paid ? 'success' : 'warning'}
+                    size="small"
+                    startIcon={<EuroIcon />}
+                    onClick={() => markAsPaid(c.id, !c.paid)}
+                    sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                  >
+                    {t(`pages.contributions.button.${!c.paid ? 'markAsPaid' : 'markAsUnPaid'}`)}
+                  </Button>
+                )
+              }
+            />
+          ))}
+          <ResponsiveTablePagination
+            component="div"
+            count={totalCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage={t('pages.contributions.table.rowsPerPage')}
+          />
+        </Box>
+      ) : (
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}
+        >
+          <Table>
+            <TableHead sx={{ bgcolor: 'grey.50' }}>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributions.table.member')}
                 </TableCell>
-                <TableCell align="right">
-                  {role !== Role.USER && (
-                    <Button
-                      variant={!c.paid ? 'contained' : 'outlined'}
-                      color={!c.paid ? 'success' : 'warning'}
-                      size="small"
-                      startIcon={<EuroIcon />}
-                      onClick={() => markAsPaid(c.id, !c.paid)}
-                      sx={{ textTransform: 'none', borderRadius: 1.5 }}
-                    >
-                      {t(`pages.contributions.button.${!c.paid ? 'markAsPaid' : 'markAsUnPaid'}`)}
-                    </Button>
-                  )}
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributions.table.amount')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributions.table.dueDate')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.contributions.table.status')}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                  {t('pages.contributions.table.action')}
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {data.map((c) => (
+                <TableRow key={c.id} hover>
+                  <TableCell sx={{ fontWeight: 500 }}>{c.name}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {c.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                    </Typography>
+                  </TableCell>
+                  <TableCell color="text.secondary">
+                    {new Date(c.dueDate).toLocaleDateString('de-DE')}
+                  </TableCell>
+                  <TableCell>
+                    {c.paid ? (
+                      <Chip
+                        label={t('pages.contributions.status.paid')}
+                        color="success"
+                        size="small"
+                        icon={<CheckCircleIcon />}
+                        sx={{ borderRadius: 1, fontWeight: 600 }}
+                      />
+                    ) : (
+                      <Chip
+                        label={t('pages.contributions.status.open')}
+                        color="warning"
+                        size="small"
+                        variant="outlined"
+                        sx={{ borderRadius: 1, fontWeight: 600 }}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    {role !== Role.USER && (
+                      <Button
+                        variant={!c.paid ? 'contained' : 'outlined'}
+                        color={!c.paid ? 'success' : 'warning'}
+                        size="small"
+                        startIcon={<EuroIcon />}
+                        onClick={() => markAsPaid(c.id, !c.paid)}
+                        sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                      >
+                        {t(`pages.contributions.button.${!c.paid ? 'markAsPaid' : 'markAsUnPaid'}`)}
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-        <TablePagination
-          component="div"
-          count={totalCount}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          labelRowsPerPage={t('pages.contributions.table.rowsPerPage')}
-        />
-      </TableContainer>
+          <ResponsiveTablePagination
+            component="div"
+            count={totalCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage={t('pages.contributions.table.rowsPerPage')}
+          />
+        </TableContainer>
+      )}
     </Box>
   );
 }

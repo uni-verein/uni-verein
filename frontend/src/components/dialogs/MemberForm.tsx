@@ -11,10 +11,12 @@ import {
   Alert,
   MenuItem,
   Button,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
-import { api } from '../api';
+import { api } from '../../api';
 import {
   BulkMail,
   ContributionPlans,
@@ -24,7 +26,7 @@ import {
   MemberErrors,
   SNACKBAR_INITIAL_STATE,
   SnackbarState,
-} from '../types';
+} from '../../types';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -38,12 +40,12 @@ import {
   ACADEMIC_DEGREE_LABELS,
   validateIBAN,
   validateBIC,
-} from '../utils';
+} from '../../utils';
 import { NIL as NIL_UUID } from 'uuid';
 import * as countries from 'i18n-iso-countries';
 import deLocale from 'i18n-iso-countries/langs/de.json';
-import { useSnackbar } from './SnackbarContext';
-import { CustomSnackbar } from './CustomSnackbar';
+import { useSnackbar } from '../SnackbarContext';
+import { CustomSnackbar } from '../CustomSnackbar';
 import { useTranslation } from 'react-i18next';
 countries.registerLocale(deLocale);
 
@@ -56,12 +58,11 @@ function ValidateRequiredStringLength(value: string, name: string, maxLength: nu
 }
 
 const countryOptions = Object.entries(countries.getNames('de', { select: 'official' }))
-    .map(([code, name]) => ({
-      value: code,
-      label: name,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
-
+  .map(([code, name]) => ({
+    value: code,
+    label: name,
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function MemberForm({
   view,
@@ -76,6 +77,8 @@ export default function MemberForm({
   memberCategories: MemberCategory[];
   onClose: () => void;
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const [m, setM] = useState<Member>(member);
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState<MemberErrors>({});
@@ -282,17 +285,18 @@ export default function MemberForm({
     <Dialog
       open={true}
       onClose={onClose}
-      fullWidth
+      fullWidth={!isMobile}
+      fullScreen={isMobile}
       maxWidth="sm"
       slotProps={{
-        paper: { sx: { borderRadius: 3, p: 1 } },
+        paper: { sx: { borderRadius: isMobile ? 0 : 3, p: 1 } },
       }}
     >
       <form onSubmit={save}>
         <DialogTitle>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
             {m.id !== NIL_UUID
-              ? t(`components.memberForm.title.${(view ? 'view' : 'edit')}`)
+              ? t(`components.memberForm.title.${view ? 'view' : 'edit'}`)
               : t('components.memberForm.title.new')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -445,17 +449,17 @@ export default function MemberForm({
             </Grid>
             <Grid size={6}>
               <TextField
-                  label={t('components.memberForm.fields.countryCode')}
-                  fullWidth
-                  required
-                  value={m.countryCode}
-                  onChange={handleChange('countryCode')}
-                  select
+                label={t('components.memberForm.fields.countryCode')}
+                fullWidth
+                required
+                value={m.countryCode}
+                onChange={handleChange('countryCode')}
+                select
               >
                 {countryOptions.map(({ value, label }) => (
-                    <MenuItem key={value} value={value}>
-                      {label} ({value})
-                    </MenuItem>
+                  <MenuItem key={value} value={value}>
+                    {label} ({value})
+                  </MenuItem>
                 ))}
               </TextField>
             </Grid>
