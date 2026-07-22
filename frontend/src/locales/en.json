@@ -650,6 +650,7 @@
       "password": "Password",
       "loginError": "Login failed. Please check your details.",
       "toManyLoginError": "Too many failed login attempts. Wait {{seconds}} seconds to try again.",
+      "offline": "You're offline. Please check your internet connection.",
       "demo": {
         "header": "Demo version",
         "caption": "This is a demo version. All data will be deleted every night. Please do not enter any personal data!",
@@ -729,7 +730,8 @@
         "memberCategoryLabel": "Member category",
         "recipientList": "Recipient list",
         "rowsPerPage": "Rows per page:",
-        "noRecipientFound": "No recipient found."
+        "noRecipientFound": "No recipient found.",
+        "member": "Member"
       },
       "sendProgressPage": {
         "idle": {
@@ -761,6 +763,8 @@
     "dashboard": {
       "logout": "Logout",
       "clubManagement": "Club administration",
+      "openMenu": "Open menu",
+      "switchLanguage": "Switch language",
       "settings": {
         "name": "Settings",
         "userManagement": "User management",
@@ -774,6 +778,7 @@
       },
       "pageNames": {
         "members": "Member management",
+        "membersShort": "Members",
         "broadcastEmail": "Broadcast email",
         "sepa": "SEPA export",
         "contributions": "Membership fees",

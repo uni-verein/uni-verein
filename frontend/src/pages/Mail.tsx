@@ -131,12 +131,10 @@ export default function Mail() {
   }, [filter]);
 
   const getMemberCategoryName = (id: UUIDTypes | null) => {
-    if (id === NIL_UUID) 
-      return t('pages.mail.memberCategory.customLabel');
+    if (id === NIL_UUID) return t('pages.mail.memberCategory.customLabel');
 
     const category = memberCategories.find((x) => x.id === id);
-    if (category === undefined) 
-      return t('pages.mail.memberCategory.ALL');
+    if (category === undefined) return t('pages.mail.memberCategory.ALL');
 
     const translationKey = `pages.mail.memberCategory.${category.category}`;
     return t(translationKey).startsWith(translationKey) ? category.name : t(translationKey);
@@ -226,7 +224,15 @@ export default function Mail() {
           overflow: 'hidden',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative', px: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            position: 'relative',
+            px: 1,
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+          }}
+        >
           <Tabs
             value={activeTab}
             onChange={(_, newValue) => setActiveTab(newValue)}

@@ -3,39 +3,62 @@ services:
     image: alpine/openssl
     volumes:
       - ./.env:/app/.env
-    entrypoint: >
-      sh -c "
-        ENV_FILE=/app/.env;
+    entrypoint:
+      - sh
+      - -c
+      - |
+        apk add --no-cache curl
+        ENV_FILE=/app/.env
 
-        [ ! -f $$ENV_FILE ] && touch $$ENV_FILE && echo '[INIT] New .env file created.';
+        [ ! -f "$$ENV_FILE" ] && touch "$$ENV_FILE" && echo "[INIT] New .env file created."
+
+        remove_key() {
+          KEY=$$1
+          grep -v "^$${KEY}=" "$$ENV_FILE" > /tmp/env.tmp 2>/dev/null
+          cat /tmp/env.tmp > "$$ENV_FILE"
+          rm -f /tmp/env.tmp
+        }
 
         check_and_set() {
-          KEY=$$1;
-          VALUE=$$2;
-          CURRENT=$$(grep \"^$${KEY}=\" $$ENV_FILE 2>/dev/null | cut -d'=' -f2-);
-          if [ -z \"$$CURRENT\" ]; then
-            sed -i \"/^$${KEY}=/d\" $$ENV_FILE 2>/dev/null || true;
-            echo \"$${KEY}=$${VALUE}\" >> $$ENV_FILE;
-            echo \"[INIT] - $${KEY} generated\";
+          KEY=$$1
+          VALUE=$$2
+          CURRENT=$$(grep "^$${KEY}=" "$$ENV_FILE" 2>/dev/null | cut -d'=' -f2-)
+          if [ -z "$$CURRENT" ]; then
+            echo "$${KEY}=$${VALUE}" >> "$$ENV_FILE"
+            echo "[INIT] - $${KEY} generated"
           else
-            echo \"[INIT] - $${KEY} already exists – will not be overwritten\";
+            echo "[INIT] - $${KEY} already exists – will not be overwritten"
           fi
-        };
+        }
 
-        check_and_set JWT_KEY           $$(openssl rand -hex 32);
-        check_and_set JWT_ISSUER        uni-verein;
-        check_and_set HMAC_KEY          $$(openssl rand -base64 32);
-        check_and_set CRYPTO_KEY        $$(openssl rand -base64 32);
-        check_and_set DB_ROOT_PASSWORD  root_password;
-        check_and_set DB_NAME           uni_verein;
-        check_and_set DB_USER           uni_verein_user;
-        check_and_set DB_PASSWORD       password;
+        set_always() {
+          KEY=$$1
+          VALUE=$$2
+          remove_key "$$KEY"
+          echo "$${KEY}=$${VALUE}" >> "$$ENV_FILE"
+          echo "[INIT] - $${KEY} set to $${VALUE} (latest GitHub release)"
+        }
+
+        check_and_set JWT_KEY           "$$(openssl rand -hex 32)"
+        check_and_set JWT_ISSUER        uni-verein
+        check_and_set HMAC_KEY          "$$(openssl rand -base64 32)"
+        check_and_set CRYPTO_KEY        "$$(openssl rand -base64 32)"
+        check_and_set DB_ROOT_PASSWORD  root_password
+        check_and_set DB_NAME           uni_verein
+        check_and_set DB_USER           uni_verein_user
+        check_and_set DB_PASSWORD       password
         check_and_set BACKUP_PATH       ./backup
-        check_and_set VERSION           1.0.1
 
-        echo '';
-        echo '[INIT] Final .env:';
-        cat $$ENV_FILE;
-        echo '[INIT] Setup complete!';
-      "
+        API_RESPONSE=$$(curl -fsSL https://api.github.com/repos/uni-verein/uni-verein/releases/latest 2>&1)
+        LATEST_VERSION=$$(printf '%s' "$$API_RESPONSE" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1 | sed 's/^[vV]//')
+        if [ -z "$$LATEST_VERSION" ]; then
+          echo "[INIT] - could not determine latest GitHub release, defaulting VERSION to 0.0.0 (reason: $$API_RESPONSE)"
+          LATEST_VERSION=0.0.0
+        fi
+        set_always VERSION "$$LATEST_VERSION"
+
+        echo ""
+        echo "[INIT] Final .env:"
+        cat "$$ENV_FILE"
+        echo "[INIT] Setup complete!"        
     restart: "no"

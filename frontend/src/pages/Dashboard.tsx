@@ -4,14 +4,8 @@ import {
   Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
   Divider,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Avatar,
   Button,
   CssBaseline,
   Container,
@@ -22,6 +16,8 @@ import {
   useTheme,
   Badge,
   Popover,
+  BottomNavigation,
+  BottomNavigationAction,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -29,19 +25,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import EuroIcon from '@mui/icons-material/Euro';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import FolderIcon from '@mui/icons-material/Folder';
-import Collapse from '@mui/material/Collapse';
-import SaveIcon from '@mui/icons-material/Save';
-import ArticleIcon from '@mui/icons-material/Article';
-import WebIcon from '@mui/icons-material/Web';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import GroupIcon from '@mui/icons-material/Group';
+import MenuIcon from '@mui/icons-material/Menu';
 
 import Members from './Members';
 import Mail from './Mail';
@@ -59,11 +43,12 @@ import CreditorConfig from './CreditorConfig';
 import GeneralConfig from './GeneralConfig';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
-import { DynamicIcon } from '../components/muiIcons';
 import MemberCategoryConfig from './MemberCategoryConfig';
+import { SidebarContent } from '../components/SidebarContent';
 
 const drawerWidthExpanded = 280;
 const drawerWidthCollapsed = 64;
+const bottomNavHeight = 56;
 
 export default function Dashboard({
   onLogout,
@@ -73,7 +58,7 @@ export default function Dashboard({
   pageName: string;
 }) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
   const [page, setPage] = useState('members');
   const [user, setUser] = useState<{
@@ -88,6 +73,7 @@ export default function Dashboard({
     links: [],
   });
   const [collapsed, setCollapsed] = useState(isMobile);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [firmwareUpdate, setFirmwareUpdate] = useState<{
     newFirmwareAvailable: boolean;
     currentVersion?: string;
@@ -107,6 +93,12 @@ export default function Dashboard({
       setOpenSettings(false);
     }
   }, [collapsed]);
+
+  useEffect(() => {
+    if (isMobile) {
+      setMobileNavOpen(false);
+    }
+  }, [page, isMobile]);
 
   const loadSettings = async () => {
     try {
@@ -154,6 +146,7 @@ export default function Dashboard({
     {
       id: 'members',
       label: t('pages.dashboard.pageNames.members'),
+      shortLabel: t('pages.dashboard.pageNames.membersShort'),
       icon: <PeopleIcon />,
       roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
@@ -198,42 +191,8 @@ export default function Dashboard({
     }
   };
 
-  const selectedStyle = {
-    borderRadius: 2,
-    '&.Mui-selected': {
-      bgcolor: 'primary.light',
-      color: 'white',
-      '& .MuiListItemIcon-root': { color: 'white' },
-      '& .MuiListItemText-primary': { color: 'white' },
-      '&:hover': { bgcolor: 'primary.light' },
-    },
-  };
-
-  const DrawerToggleButton = () => (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: collapsed ? 'center' : 'flex-end',
-        px: collapsed ? 0 : 1,
-        py: 0.5,
-        width: '100%',
-      }}
-    >
-      <Tooltip title={collapsed ? 'Menü ausklappen' : 'Menü einklappen'} placement="right" arrow>
-        <IconButton
-          onClick={() => setCollapsed(!collapsed)}
-          size="small"
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-        >
-          {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
-        </IconButton>
-      </Tooltip>
-    </Box>
+  const bottomNavItems = navItems.filter(
+    (item) => item.roles.includes(user.role as Role) && viewPage(item.id),
   );
 
   return (
@@ -243,8 +202,8 @@ export default function Dashboard({
         position="fixed"
         elevation={0}
         sx={{
-          width: `calc(100% - ${drawerWidth}px)`,
-          ml: `${drawerWidth}px`,
+          width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
+          ml: isMobile ? 0 : `${drawerWidth}px`,
           bgcolor: 'white',
           color: 'text.primary',
           borderBottom: '1px solid',
@@ -256,11 +215,22 @@ export default function Dashboard({
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {''}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {isMobile && (
+              <IconButton
+                edge="start"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label={t('pages.dashboard.openMenu')}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {''}
+            </Typography>
+          </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 0.5 : 2 }}>
             {user.role === Role.ADMIN && (
               <>
                 <Tooltip title={t('pages.dashboard.notifications.label')} arrow>
@@ -306,35 +276,71 @@ export default function Dashboard({
                 </Popover>
               </>
             )}
-            <Button onClick={() => i18n.changeLanguage(i18n.language === 'de' ? 'en' : 'de')}>
-              {i18n.language === 'de' ? '🇬🇧 English' : '🇩🇪 Deutsch'}
-            </Button>
-            <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<LogoutIcon />}
-              onClick={onLogout}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                '&:hover': { bgcolor: 'error.lighter' },
-              }}
-            >
-              {t('pages.dashboard.logout')}
-            </Button>
+
+            {isMobile ? (
+              <Tooltip title={t('pages.dashboard.switchLanguage')} arrow>
+                <IconButton
+                  color="inherit"
+                  onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'de' ? 'en' : 'de')}
+                  aria-label={t('pages.dashboard.switchLanguage')}
+                >
+                  <Typography sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
+                    {i18n.resolvedLanguage === 'de' ? '🇬🇧' : '🇩🇪'}
+                  </Typography>
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Button
+                onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'de' ? 'en' : 'de')}
+              >
+                {i18n.resolvedLanguage === 'de' ? '🇬🇧 English' : '🇩🇪 Deutsch'}
+              </Button>
+            )}
+
+            {!isMobile && <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />}
+
+            {isMobile ? (
+              <Tooltip title={t('pages.dashboard.logout')} arrow>
+                <IconButton
+                  color="error"
+                  onClick={onLogout}
+                  aria-label={t('pages.dashboard.logout')}
+                >
+                  <LogoutIcon />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<LogoutIcon />}
+                onClick={onLogout}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  '&:hover': { bgcolor: 'error.lighter' },
+                }}
+              >
+                {t('pages.dashboard.logout')}
+              </Button>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
 
       <Drawer
+        variant={isMobile ? 'temporary' : 'permanent'}
+        anchor="left"
+        open={isMobile ? mobileNavOpen : true}
+        onClose={() => setMobileNavOpen(false)}
+        ModalProps={isMobile ? { keepMounted: true } : undefined}
         sx={{
-          width: drawerWidth,
+          width: isMobile ? undefined : drawerWidth,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: drawerWidth,
+            width: isMobile ? drawerWidthExpanded : drawerWidth,
             boxSizing: 'border-box',
-            borderRight: '1px solid',
+            borderRight: isMobile ? undefined : '1px solid',
             borderColor: 'divider',
             overflowX: 'hidden',
             transition: theme.transitions.create('width', {
@@ -343,359 +349,20 @@ export default function Dashboard({
             }),
           },
         }}
-        variant="permanent"
-        anchor="left"
       >
-        <Box
-          sx={{
-            p: collapsed ? 1 : 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            minHeight: 64,
-          }}
-        >
-          {collapsed ? (
-            <Tooltip
-              title={pageName !== '' ? pageName : t('pages.dashboard.clubManagement')}
-              placement="right"
-              arrow
-            >
-              <Box
-                component="span"
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  px: 1,
-                  borderRadius: 1,
-                  fontWeight: 800,
-                  fontSize: '1.1rem',
-                }}
-              >
-                {(pageName !== '' ? pageName : t('pages.dashboard.clubManagement')).substring(0, 1)}
-              </Box>
-            </Tooltip>
-          ) : (
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 800,
-                color: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <Box
-                component="span"
-                sx={{ bgcolor: 'primary.main', color: 'white', px: 1, borderRadius: 1 }}
-              >
-                {(pageName !== '' ? pageName : t('pages.dashboard.clubManagement')).substring(0, 1)}
-              </Box>
-              {pageName !== '' ? pageName : t('pages.dashboard.clubManagement')}
-            </Typography>
-          )}
-
-          <DrawerToggleButton />
-        </Box>
-
-        <Divider sx={{ mx: collapsed ? 0 : 2, mb: 1 }} />
-
-        <List sx={{ px: collapsed ? 0.5 : 2 }}>
-          {navItems.map((item) =>
-            item.roles.includes(user.role as Role) && viewPage(item.id) ? (
-              <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
-                <Tooltip title={collapsed ? item.label : ''} placement="right" arrow>
-                  <ListItemButton
-                    onClick={() => setPage(item.id)}
-                    selected={page === item.id}
-                    sx={{
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      px: collapsed ? 1 : 2,
-                      ...selectedStyle,
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: collapsed ? 'unset' : 40,
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {item.icon}
-                    </ListItemIcon>
-                    {!collapsed && (
-                      <ListItemText
-                        primary={item.label}
-                        primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
-                      />
-                    )}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
-            ) : null,
-          )}
-
-          {sideBarSettings.links &&
-            sideBarSettings.links.map(
-              (linkEntry: { id: UUIDTypes; link: string; name: string; icon: string }) => {
-                return (
-                  <ListItem key={linkEntry.name} disablePadding sx={{ mb: 0.5 }}>
-                    <Tooltip
-                      title={collapsed ? t('pages.dashboard.pageNames.files') : ''}
-                      placement="right"
-                      arrow
-                    >
-                      <ListItemButton
-                        component="a"
-                        href={
-                          linkEntry.link.startsWith('http')
-                            ? linkEntry.link
-                            : `https://${linkEntry.link}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{
-                          borderRadius: 2,
-                          justifyContent: collapsed ? 'center' : 'flex-start',
-                          px: collapsed ? 1 : 2,
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={{
-                            minWidth: collapsed ? 'unset' : 40,
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <DynamicIcon name={linkEntry.icon} fontSize="small" color="action" />
-                        </ListItemIcon>
-                        {!collapsed && (
-                          <ListItemText
-                            primary={linkEntry.name}
-                            primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
-                          />
-                        )}
-                      </ListItemButton>
-                    </Tooltip>
-                  </ListItem>
-                );
-              },
-            )}
-
-          {user.role === Role.ADMIN && (
-            <>
-              <ListItem key="audit" disablePadding sx={{ mb: 0.5 }}>
-                <Tooltip
-                  title={collapsed ? t('pages.dashboard.pageNames.audit') : ''}
-                  placement="right"
-                  arrow
-                >
-                  <ListItemButton
-                    onClick={() => setPage('audit')}
-                    selected={page === 'audit'}
-                    sx={{
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      px: collapsed ? 1 : 2,
-                      ...selectedStyle,
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: collapsed ? 'unset' : 40,
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <ArticleIcon />
-                    </ListItemIcon>
-                    {!collapsed && (
-                      <ListItemText
-                        primary={t('pages.dashboard.pageNames.audit')}
-                        primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
-                      />
-                    )}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
-
-              <ListItem key="backup" disablePadding sx={{ mb: 0.5 }}>
-                <Tooltip
-                  title={collapsed ? t('pages.dashboard.pageNames.backup') : ''}
-                  placement="right"
-                  arrow
-                >
-                  <ListItemButton
-                    onClick={() => setPage('backup')}
-                    selected={page === 'backup'}
-                    sx={{
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      px: collapsed ? 1 : 2,
-                      ...selectedStyle,
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: collapsed ? 'unset' : 40,
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <SaveIcon />
-                    </ListItemIcon>
-                    {!collapsed && (
-                      <ListItemText
-                        primary={t('pages.dashboard.pageNames.backup')}
-                        primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
-                      />
-                    )}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
-            </>
-          )}
-
-          {user.role === Role.ADMIN && (
-            <>
-              <ListItem disablePadding>
-                <Tooltip
-                  title={collapsed ? t('pages.dashboard.settings.name') : ''}
-                  placement="right"
-                  arrow
-                >
-                  <ListItemButton
-                    onClick={handleSettingsClick}
-                    sx={{
-                      borderRadius: 2,
-                      mt: 1,
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      px: collapsed ? 1 : 2,
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: collapsed ? 'unset' : 40,
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <SettingsIcon />
-                    </ListItemIcon>
-                    {!collapsed && (
-                      <>
-                        <ListItemText primary={t('pages.dashboard.settings.name')} />
-                        {openSettings ? <ExpandLess /> : <ExpandMore />}
-                      </>
-                    )}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
-
-              <Collapse in={openSettings && !collapsed} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding sx={{ pl: 3 }}>
-                  {[
-                    {
-                      id: 'users',
-                      icon: <PeopleAltIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.userManagement'),
-                    },
-                    {
-                      id: 'email-config',
-                      icon: <EmailIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.emailConfig'),
-                    },
-                    {
-                      id: 'link-config',
-                      icon: <FolderIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.linkConfig'),
-                    },
-                    {
-                      id: 'contribution-plan-config',
-                      icon: <EuroIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.contributionPlanConfig'),
-                    },
-                    {
-                      id: 'member-category-config',
-                      icon: <GroupIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.memberCategoryConfig'),
-                    },
-                    {
-                      id: 'creditor-config',
-                      icon: <AccountBalanceIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.creditorConfig'),
-                    },
-                    {
-                      id: 'general-config',
-                      icon: <WebIcon fontSize="small" />,
-                      label: t('pages.dashboard.settings.generalConfig'),
-                    },
-                  ].map((item) => (
-                    <ListItemButton
-                      key={item.id}
-                      onClick={() => setPage(item.id)}
-                      selected={page === item.id}
-                      sx={{ borderRadius: 2, mt: 0.5 }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 35 }}>{item.icon}</ListItemIcon>
-                      <ListItemText primary={item.label} />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
-            </>
-          )}
-        </List>
-
-        <Box
-          sx={{ mt: 'auto', p: collapsed ? 1 : 2, borderTop: '1px solid', borderColor: 'divider' }}
-        >
-          <Tooltip
-            title={
-              collapsed
-                ? `${user.name} (${user.role})`
-                : t('pages.dashboard.settings.profileSettings')
-            }
-            placement="right"
-            arrow
-          >
-            <Box
-              onClick={() => setPage('user')}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: collapsed ? 0 : 2,
-                px: 1,
-                py: 0.75,
-                borderRadius: 2,
-                cursor: 'pointer',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                transition: 'background-color 0.2s',
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <Avatar
-                sx={{
-                  bgcolor: 'secondary.main',
-                  width: 32,
-                  height: 32,
-                }}
-              >
-                {user.name.charAt(0)}
-              </Avatar>
-              {!collapsed && (
-                <>
-                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
-                      {user.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {user.role}
-                    </Typography>
-                  </Box>
-                  <MoreVertIcon
-                    sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0, opacity: 0.6 }}
-                  />
-                </>
-              )}
-            </Box>
-          </Tooltip>
-        </Box>
+        <SidebarContent
+          collapsedView={isMobile ? false : collapsed}
+          showToggle={!isMobile}
+          pageName={pageName}
+          page={page}
+          onPageChange={setPage}
+          onToggleCollapse={() => setCollapsed(!collapsed)}
+          navItems={navItems}
+          sideBarSettings={sideBarSettings}
+          user={user}
+          openSettings={openSettings}
+          onSettingsClick={handleSettingsClick}
+        />
       </Drawer>
 
       <Box
@@ -703,7 +370,13 @@ export default function Dashboard({
         sx={{
           flexGrow: 1,
           bgcolor: 'grey.50',
-          p: 3,
+          p: { xs: 1.5, sm: 3 },
+          pb: {
+            xs: isMobile
+              ? `calc(${bottomNavHeight}px + env(safe-area-inset-bottom, 0px) + 16px)`
+              : 1.5,
+            sm: 3,
+          },
           minHeight: '100vh',
           transition: theme.transitions.create('margin', {
             easing: theme.transitions.easing.sharp,
@@ -712,15 +385,15 @@ export default function Dashboard({
         }}
       >
         <Toolbar />
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" disableGutters={isMobile}>
           <Paper
             elevation={0}
             sx={{
-              p: 4,
-              borderRadius: 3,
+              p: { xs: 1.5, sm: 4 },
+              borderRadius: { xs: 2, sm: 3 },
               border: '1px solid',
               borderColor: 'divider',
-              minHeight: '70vh',
+              minHeight: { xs: 'auto', sm: '70vh' },
             }}
           >
             {page === 'members' && <Members role={user.role} />}
@@ -740,6 +413,35 @@ export default function Dashboard({
           </Paper>
         </Container>
       </Box>
+
+      {isMobile && bottomNavItems.length > 0 && (
+        <BottomNavigation
+          value={page}
+          onChange={(_, newValue) => setPage(newValue)}
+          sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: `calc(${bottomNavHeight}px + env(safe-area-inset-bottom, 0px))`,
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            boxSizing: 'border-box',
+            zIndex: theme.zIndex.appBar,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          {bottomNavItems.map((item) => (
+            <BottomNavigationAction
+              key={item.id}
+              label={item.shortLabel ?? item.label}
+              value={item.id}
+              icon={item.icon}
+              sx={{ minWidth: 0, px: 0.5 }}
+            />
+          ))}
+        </BottomNavigation>
+      )}
     </Box>
   );
 }

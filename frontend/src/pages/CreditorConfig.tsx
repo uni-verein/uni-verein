@@ -19,7 +19,7 @@ import deLocale from 'i18n-iso-countries/langs/de.json';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { UUIDTypes } from 'uuid';
 import { useConfirm } from '../hooks/useConfirm';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useSnackbar } from '../components/SnackbarContext';
 import { useTranslation } from 'react-i18next';
 countries.registerLocale(deLocale);

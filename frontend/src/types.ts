@@ -5,6 +5,7 @@ export interface ConfigContextType {
   config: { pageName: string; logo: string };
   loading: boolean;
   reloadConfig: () => Promise<void>;
+  serverReachable: boolean;
 }
 
 export interface UserRoleProps {
