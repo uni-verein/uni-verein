@@ -15,8 +15,15 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/out .
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -o Acquire::Retries=3 \
+    && apt-get upgrade -y -o Acquire::Retries=3 \
+    && apt-get install -y -o Acquire::Retries=3 --no-install-recommends \
+    curl \
     mariadb-client \
     && rm -rf /var/lib/apt/lists/*
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
+    CMD curl -fsS http://127.0.0.1:8095/health || exit 1
 
 ENTRYPOINT ["dotnet", "UniVerein.Api.dll"]

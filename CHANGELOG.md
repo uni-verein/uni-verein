@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.0] UV-4
+
+### Added
+- Name search in the Broadcast email "Recipient" tab: recipients can now be filtered by first or last name, in addition to the existing member category filter.
+
+### Changed
+- `backend`, `frontend`, and `proxy` now have proper health checks (previously only the database did), and each service waits for its dependencies to be actually ready (`service_healthy`) instead of just started, across all `docker-compose*.yml` files.
+- CI now fails immediately with container logs attached when the stack doesn't become healthy in time, instead of silently continuing on to the Playwright tests and failing there with no diagnostics.
+- Increased the database health check's retry budget to tolerate occasional slow first-time initialization on CI runners.
+- `.env.example` now lists `BACKUP_PATH`, matching every value `docker-compose-ini.yml` generates.
+
+### Fixed
+- Rundmail recipient category dropdown showed the raw translation key instead of the category name for custom (non-default) member categories.
+- `proxy` container could stay unhealthy indefinitely because its health check resolved `localhost` to IPv6 while `nginx.conf` only listens on IPv4.
+- Backend Docker image build occasionally failing due to transient package-mirror errors during `apt-get install`.
+
 ## [v1.2.0] UV-3
 
 ### Added

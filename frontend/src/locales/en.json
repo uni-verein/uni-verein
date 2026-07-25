@@ -728,6 +728,7 @@
       },
       "recipientPage": {
         "memberCategoryLabel": "Member category",
+        "searchNamePlaceholder": "Search name",
         "recipientList": "Recipient list",
         "rowsPerPage": "Rows per page:",
         "noRecipientFound": "No recipient found.",
