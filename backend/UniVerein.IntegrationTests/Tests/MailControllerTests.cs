@@ -235,6 +235,179 @@ public class MailControllerTests : IntegrationTestBase
         members.First(x => x.FirstName == "1").FirstName.ShouldBe(result.FirstName);
     }
 
+    [Fact]
+    public async Task GetAllRecipientsByName_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        await CreateNamedMemberEntity("Alice", "Anderson", "alice@test.de");
+        await CreateNamedMemberEntity("Bob", "Brown", "bob@test.de");
+        RecipientQuery recipientQuery = new()
+        {
+            Name = "Alice"
+        };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/mail/recipients{recipientQuery.GetQueryString()}");
+        AllRecipientResult? result =
+            await response.Content.ReadFromJsonAsync<AllRecipientResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Total.ShouldBe(1);
+        result.Items.Count.ShouldBe(1);
+        result.Items.FirstOrDefault(x => x.Email == "alice@test.de").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GetAllRecipientsByLastNameOnly_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        await CreateNamedMemberEntity("Alice", "Anderson", "alice@test.de");
+        await CreateNamedMemberEntity("Bob", "Brown", "bob@test.de");
+        RecipientQuery recipientQuery = new()
+        {
+            Name = "Anderson"
+        };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/mail/recipients{recipientQuery.GetQueryString()}");
+        AllRecipientResult? result =
+            await response.Content.ReadFromJsonAsync<AllRecipientResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Total.ShouldBe(1);
+        result.Items.Count.ShouldBe(1);
+        result.Items.FirstOrDefault(x => x.Email == "alice@test.de").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GetAllRecipientsByName_NoMatch_ReturnsEmpty()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        await CreateNamedMemberEntity("Alice", "Anderson", "alice@test.de");
+        RecipientQuery recipientQuery = new()
+        {
+            Name = "Zzzyx Nonexistent"
+        };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/mail/recipients{recipientQuery.GetQueryString()}");
+        AllRecipientResult? result =
+            await response.Content.ReadFromJsonAsync<AllRecipientResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Total.ShouldBe(0);
+        result.Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAllRecipientsByNameAndCategory_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        MemberEntity alumniAlice =
+            await CreateNamedMemberEntity("Alice", "Anderson", "alice-alumni@test.de");
+        await WithDbContext(async db =>
+        {
+            MemberEntity? entity = await db.Members.FindAsync(alumniAlice.Id);
+            entity!.MemberCategoryId = Guid.Parse(Program.MemberCategoriesAlumni);
+            await db.SaveChangesAsync();
+        });
+        await CreateNamedMemberEntity("Alice", "Alumnus", "alice-student@test.de");
+
+        RecipientQuery recipientQuery = new()
+        {
+            Name = "Alice",
+            CategoryId = Guid.Parse(Program.MemberCategoriesAlumni)
+        };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/mail/recipients{recipientQuery.GetQueryString()}");
+        AllRecipientResult? result =
+            await response.Content.ReadFromJsonAsync<AllRecipientResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Total.ShouldBe(1);
+        result.Items.FirstOrDefault(x => x.Email == "alice-alumni@test.de").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GetAllRecipientsByName_Paging_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        foreach (int index in Enumerable.Range(0, 5))
+            await CreateNamedMemberEntity("Anna", $"Schmidt{index}", $"anna{index}@test.de");
+
+        RecipientQuery recipientQuery = new()
+        {
+            Name = "Anna",
+            Offset = 1,
+            Limit = 2
+        };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/mail/recipients{recipientQuery.GetQueryString()}");
+        AllRecipientResult? result =
+            await response.Content.ReadFromJsonAsync<AllRecipientResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Total.ShouldBe(5);
+        result.Items.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetAllRecipientsByName_ExcludesDeletedAndNoBulkMailConsentMembers()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        await CreateNamedMemberEntity("Clara", "Keller", "clara@test.de");
+
+        MemberEntity deletedMember = await CreateNamedMemberEntity("Clara", "Kaiser", "clara-deleted@test.de");
+        await WithDbContext(async db =>
+        {
+            MemberEntity? entity = await db.Members.FindAsync(deletedMember.Id);
+            entity!.DeletedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+        });
+
+        MemberEntity noBulkMailMember = await CreateNamedMemberEntity("Clara", "Klein", "clara-nobulk@test.de");
+        await WithDbContext(async db =>
+        {
+            MemberEntity? entity = await db.Members.FindAsync(noBulkMailMember.Id);
+            entity!.BulkMail = BulkMail.NOT_ALLOWED;
+            await db.SaveChangesAsync();
+        });
+
+        RecipientQuery recipientQuery = new()
+        {
+            Name = "Clara"
+        };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/mail/recipients{recipientQuery.GetQueryString()}");
+        AllRecipientResult? result =
+            await response.Content.ReadFromJsonAsync<AllRecipientResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Total.ShouldBe(1);
+        result.Items.FirstOrDefault(x => x.Email == "clara@test.de").ShouldNotBeNull();
+    }
+
     [Theory]
     [InlineData(-1, -1)]
     [InlineData(0, 0)]
@@ -883,6 +1056,32 @@ public class MailControllerTests : IntegrationTestBase
             MemberCategoryId = category ?? Guid.Parse(Program.MemberCategoriesStudent),
             DeletedAt = deleted == true ? DateTime.UtcNow : null,
             BulkMail = bulkMail ?? BulkMail.ALLOWED
+        };
+
+        await WithDbContext(async db =>
+        {
+            await db.Members.AddAsync(memberEntity);
+            await db.SaveChangesAsync();
+        });
+
+        return memberEntity;
+    }
+
+    private async Task<MemberEntity> CreateNamedMemberEntity(string firstName, string lastName, string email)
+    {
+        MemberEntity memberEntity = new()
+        {
+            MandateId = Guid.NewGuid().ToString(),
+            FirstName = firstName,
+            LastName = lastName,
+            EmailEncrypted = _cryptoService.Encrypt(email),
+            BirthdayEncrypted = _cryptoService.Encrypt(DateTime.UtcNow.AddHours(-1)),
+            StreetEncrypted = _cryptoService.Encrypt("Test"),
+            City = "City",
+            PostalCode = "1234",
+            CountryCode = "DE",
+            MemberCategoryId = Guid.Parse(Program.MemberCategoriesStudent),
+            BulkMail = BulkMail.ALLOWED
         };
 
         await WithDbContext(async db =>

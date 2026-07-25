@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -18,9 +18,11 @@ import {
   useTheme,
 } from '@mui/material';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import { RecipientListProps } from '../types';
+import SearchIcon from '@mui/icons-material/Search';
+import { MemberCategory, RecipientListProps } from '../types';
 import { useTranslation } from 'react-i18next';
 import { NIL as NIL_UUID } from 'uuid';
+import debounce from 'lodash.debounce';
 import ResponsiveTablePagination from './ResponsiveTablePagination';
 
 const stringToColor = (str: string): string => {
@@ -42,9 +44,28 @@ const RecipientList: FC<RecipientListProps> = ({
   memberCategories,
 }) => {
   const [page, setPage] = useState(0);
+  const [nameInput, setNameInput] = useState(filter.name ?? '');
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  const debouncedSetName = useCallback(
+    debounce((value: string) => {
+      setPage(0);
+      onFilter((prev) => ({ ...prev, name: value, offset: 0 }));
+    }, 500),
+    [],
+  );
+
+  const getCategoryTranslation = (category: MemberCategory) => {
+    const translationKey = `pages.mail.memberCategory.${category.category}`;
+    return t(translationKey).startsWith(translationKey) ? category.name : t(translationKey);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setNameInput(value);
+    debouncedSetName(value);
+  };
 
   const toggleOne = (email: string) => {
     if (filter.categoryId !== NIL_UUID) {
@@ -88,7 +109,42 @@ const RecipientList: FC<RecipientListProps> = ({
             <Typography>{t('pages.mail.recipientPage.recipientList')}</Typography>
           </Stack>
 
-          <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Stack
+            direction={isMobile ? 'column' : 'row'}
+            alignItems={isMobile ? 'stretch' : 'center'}
+            spacing={1.5}
+            sx={{ width: isMobile ? '100%' : 'auto' }}
+          >
+            <TextField
+              placeholder={t('pages.mail.recipientPage.searchNamePlaceholder')}
+              variant="outlined"
+              value={nameInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              size="small"
+              fullWidth={isMobile}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
+              }}
+              sx={{
+                minWidth: isMobile ? 'auto' : 180,
+                '& .MuiOutlinedInput-root': {
+                  color: 'inherit',
+                  '& fieldset': {
+                    borderColor: 'rgba(255,255,255,0.7)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#fff',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#fff',
+                  },
+                },
+                '& .MuiInputBase-input::placeholder': {
+                  color: 'rgba(255,255,255,0.7)',
+                  opacity: 1,
+                },
+              }}
+            />
             <TextField
               label={t('pages.mail.recipientPage.memberCategoryLabel')}
               variant="outlined"
@@ -105,6 +161,7 @@ const RecipientList: FC<RecipientListProps> = ({
               }}
               select
               size="small"
+              fullWidth={isMobile}
               SelectProps={{
                 displayEmpty: true,
               }}
@@ -113,7 +170,7 @@ const RecipientList: FC<RecipientListProps> = ({
                 sx: { color: 'rgba(255,255,255,0.7)' },
               }}
               sx={{
-                minWidth: 180,
+                minWidth: isMobile ? 'auto' : 180,
                 '& .MuiOutlinedInput-root': {
                   color: 'inherit',
                   '& fieldset': {
@@ -141,8 +198,8 @@ const RecipientList: FC<RecipientListProps> = ({
 
               {memberCategories.map((e) => {
                 return (
-                  <MenuItem value={e.id.toString()}>
-                    {t('pages.mail.memberCategory.' + e.category)}
+                  <MenuItem key={e.id.toString()} value={e.id.toString()}>
+                    {getCategoryTranslation(e)}
                   </MenuItem>
                 );
               })}

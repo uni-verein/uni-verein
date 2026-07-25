@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-07-21
+Generated automatically on 2026-07-25
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -128,10 +128,11 @@ Generated automatically on 2026-07-21
 | @humanfs/types@0.15.0 | - | Apache-2.0 |
 | @humanwhocodes/module-importer@1.0.1 | - | Apache-2.0 |
 | @humanwhocodes/retry@0.4.3 | - | Apache-2.0 |
-| @img/sharp-libvips-linux-x64@1.0.4 | - | LGPL-3.0-or-later |
-| @img/sharp-libvips-linuxmusl-x64@1.0.4 | - | LGPL-3.0-or-later |
-| @img/sharp-linux-x64@0.33.5 | - | Apache-2.0 |
-| @img/sharp-linuxmusl-x64@0.33.5 | - | Apache-2.0 |
+| @img/colour@1.1.0 | - | MIT |
+| @img/sharp-libvips-linux-x64@1.3.2 | - | LGPL-3.0-or-later |
+| @img/sharp-libvips-linuxmusl-x64@1.3.2 | - | LGPL-3.0-or-later |
+| @img/sharp-linux-x64@0.35.3 | - | Apache-2.0 |
+| @img/sharp-linuxmusl-x64@0.35.3 | - | Apache-2.0 |
 | @isaacs/cliui@9.0.0 | - | BlueOak-1.0.0 |
 | @jridgewell/gen-mapping@0.3.13 | - | MIT |
 | @jridgewell/remapping@2.3.5 | - | MIT |
@@ -244,10 +245,6 @@ Generated automatically on 2026-07-21
 | callsites@3.1.0 | - | MIT |
 | caniuse-lite@1.0.30001799 | - | CC-BY-4.0 |
 | clsx@2.1.1 | - | MIT |
-| color-convert@2.0.1 | - | MIT |
-| color-name@1.1.4 | - | MIT |
-| color-string@1.9.1 | - | MIT |
-| color@4.2.3 | - | MIT |
 | colorette@2.0.20 | - | MIT |
 | commander@2.20.3 | - | MIT |
 | common-tags@1.8.2 | - | MIT |
@@ -308,7 +305,7 @@ Generated automatically on 2026-07-21
 | fast-equals@5.4.0 | - | MIT |
 | fast-json-stable-stringify@2.1.0 | - | MIT |
 | fast-levenshtein@2.0.6 | - | MIT |
-| fast-uri@3.1.3 | - | BSD-3-Clause |
+| fast-uri@3.1.4 | - | BSD-3-Clause |
 | fdir@6.5.0 | - | MIT |
 | fetch-cookie@2.2.0 | - | Unlicense |
 | file-entry-cache@8.0.0 | - | MIT |
@@ -353,7 +350,6 @@ Generated automatically on 2026-07-21
 | internal-slot@1.1.0 | - | MIT |
 | is-array-buffer@3.0.5 | - | MIT |
 | is-arrayish@0.2.1 | - | MIT |
-| is-arrayish@0.3.4 | - | MIT |
 | is-async-function@2.1.1 | - | MIT |
 | is-bigint@1.1.0 | - | MIT |
 | is-boolean-object@1.2.2 | - | MIT |
@@ -415,7 +411,7 @@ Generated automatically on 2026-07-21
 | minimatch@5.1.9 | - | ISC |
 | minipass@7.1.3 | - | BlueOak-1.0.0 |
 | ms@2.1.3 | - | MIT |
-| nanoid@3.3.14 | - | MIT |
+| nanoid@3.3.16 | - | MIT |
 | natural-compare@1.4.0 | - | MIT |
 | node-fetch@2.7.0 | - | MIT |
 | node-releases@2.0.48 | - | MIT |
@@ -441,7 +437,7 @@ Generated automatically on 2026-07-21
 | playwright-core@1.58.2 | - | Apache-2.0 |
 | playwright@1.58.2 | - | Apache-2.0 |
 | possible-typed-array-names@1.1.0 | - | MIT |
-| postcss@8.5.15 | - | MIT |
+| postcss@8.5.23 | - | MIT |
 | prelude-ls@1.2.1 | - | MIT |
 | prettier-linter-helpers@1.0.1 | - | MIT |
 | prettier@3.8.3 | - | MIT |
@@ -497,7 +493,7 @@ Generated automatically on 2026-07-21
 | set-function-name@2.0.2 | - | MIT |
 | set-proto@1.0.0 | - | MIT |
 | sharp-ico@0.1.5 | - | MIT |
-| sharp@0.33.5 | - | Apache-2.0 |
+| sharp@0.35.3 | - | Apache-2.0 |
 | shebang-command@2.0.0 | - | MIT |
 | shebang-regex@3.0.0 | - | MIT |
 | side-channel-list@1.0.1 | - | MIT |
@@ -505,7 +501,6 @@ Generated automatically on 2026-07-21
 | side-channel-weakmap@1.0.2 | - | MIT |
 | side-channel@1.1.1 | - | MIT |
 | signal-exit@4.1.0 | - | ISC |
-| simple-swizzle@0.2.4 | - | MIT |
 | smob@1.6.2 | - | MIT |
 | source-map-js@1.2.1 | - | BSD-3-Clause |
 | source-map-support@0.5.21 | - | MIT |

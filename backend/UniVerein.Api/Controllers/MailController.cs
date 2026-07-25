@@ -14,6 +14,7 @@ using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
+using F23.StringSimilarity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -61,10 +62,38 @@ public class MailController : ControllerBase
         if (recipientQuery.CategoryId != null && recipientQuery.CategoryId != Guid.Parse(Program.MemberCategoriesAll))
             memberQuery = memberQuery.Where(x => x.MemberCategoryId == recipientQuery.CategoryId);
 
-        int total = await memberQuery.CountAsync();
+        int total;
+        List<MemberEntity> recipients;
 
-        List<MemberEntity> recipients = await memberQuery.OrderBy(x => x.FirstName).Skip(recipientQuery.Offset)
-            .Take(recipientQuery.Limit).ToListAsync();
+        if (!string.IsNullOrWhiteSpace(recipientQuery.Name))
+        {
+            List<MemberEntity> members = await memberQuery.ToListAsync();
+            JaroWinkler jaroWinkler = new();
+            string needle = recipientQuery.Name.ToLower();
+            recipients = members
+                .Select(x => new
+                {
+                    member = x,
+                    similarity = new[]
+                    {
+                        jaroWinkler.Similarity(x.FirstName.ToLower(), needle),
+                        jaroWinkler.Similarity(x.MiddleName.ToLower(), needle),
+                        jaroWinkler.Similarity(x.LastName.ToLower(), needle)
+                    }.Max()
+                })
+                .Where(x => x.similarity > 0.75)
+                .OrderByDescending(x => x.similarity)
+                .Select(x => x.member)
+                .ToList();
+            total = recipients.Count;
+            recipients = recipients.Skip(recipientQuery.Offset).Take(recipientQuery.Limit).ToList();
+        }
+        else
+        {
+            total = await memberQuery.CountAsync();
+            recipients = await memberQuery.OrderBy(x => x.FirstName).Skip(recipientQuery.Offset)
+                .Take(recipientQuery.Limit).ToListAsync();
+        }
 
         AllRecipientResult result = new AllRecipientResult()
         {
