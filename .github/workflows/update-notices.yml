@@ -2,7 +2,7 @@ name: Update Third-Party Notices
 
 on:
   push:
-    branches-ignore: [main]
+    branches-ignore: [main, development]
     paths:
       - 'backend/**/*.csproj'
       - 'backend/**/packages.lock.json'
@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 jobs:
-  update-backend-notices:
+  update-notices:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -55,24 +55,10 @@ jobs:
           ' ../licenses-temp.json >> THIRD-PARTY-NOTICES.md
           rm ../licenses-temp.json
 
-      - name: Commit backend changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add backend/THIRD-PARTY-NOTICES.md
-          git diff --staged --quiet || git commit -m "chore: update backend third-party notices [automated]"
-          git pull --rebase
-          git push
-
-  update-frontend-notices:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install dependencies
         working-directory: frontend
@@ -98,11 +84,11 @@ jobs:
           jq -r 'to_entries[] | "| \(.key) | \(.value.version // "-") | \(.value.licenses // "-") |"' licenses-temp.json >> THIRD-PARTY-NOTICES.md
           rm licenses-temp.json
 
-      - name: Commit frontend changes
+      - name: Commit notices changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add frontend/THIRD-PARTY-NOTICES.md
-          git diff --staged --quiet || git commit -m "chore: update frontend third-party notices [automated]"
+          git add backend/THIRD-PARTY-NOTICES.md frontend/THIRD-PARTY-NOTICES.md
+          git diff --staged --quiet || git commit -m "chore: update third-party notices [automated]"
           git pull --rebase
           git push

@@ -728,6 +728,7 @@
       },
       "recipientPage": {
         "memberCategoryLabel": "Mitgliederkategorie",
+        "searchNamePlaceholder": "Name suchen",
         "recipientList": "Empfängerliste",
         "rowsPerPage": "Zeilen pro Seite:",
         "noRecipientFound": "Keine Empfänger vorhanden.",

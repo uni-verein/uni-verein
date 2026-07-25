@@ -95,19 +95,30 @@ jobs:
               | grep -c '"Health":"starting"' || true)
             if [ "$UNHEALTHY" -eq 0 ] && [ "$STARTING" -eq 0 ]; then
               echo "All container are ready."
-              break
+              exit 0
             fi
             echo "Not ready... ($i/30) – unhealthy: $UNHEALTHY, starting: $STARTING"
             sleep 5
           done
+          echo "::error::Stack did not become healthy in time"
+          docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml ps
+          docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml logs --no-color
+          exit 1
 
       - name: Wait for frontend HTTP
         run: |
           for i in $(seq 1 30); do
-            curl -sf http://localhost:80 && echo "Frontend reachable." && break
+            if curl -sf http://localhost:80 > /dev/null; then
+              echo "Frontend reachable."
+              exit 0
+            fi
             echo "Wait for HTTP... ($i/30)"
             sleep 5
           done
+          echo "::error::Frontend did not respond on http://localhost:80 in time"
+          docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml ps
+          docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml logs --no-color
+          exit 1
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -140,6 +151,12 @@ jobs:
           mkdir -p "$REPORT_DIR"
           cp -r ${{ env.BASE_WORKDIR }}/frontend-src/frontend/playwright-report/* "$REPORT_DIR/" 2>/dev/null || true
           echo "Playwright report gespeichert unter: $REPORT_DIR"
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: |
+          docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml ps
+          docker compose -f ${{ env.BASE_WORKDIR }}/frontend-src/docker-compose.yml logs --no-color
 
       - name: Stop Stack
         if: always()

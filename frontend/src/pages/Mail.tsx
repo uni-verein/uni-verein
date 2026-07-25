@@ -25,6 +25,7 @@ export default function Mail() {
     categoryId: NIL_UUID,
     offset: 0,
     limit: 10,
+    name: '',
   });
   const { t } = useTranslation();
   const [connection, setConnection] = useState<HubConnection | null>(null);
@@ -112,6 +113,7 @@ export default function Mail() {
       categoryId: (filter.categoryId !== NIL_UUID ? filter.categoryId : '').toString(),
       limit: filter.limit.toString(),
       offset: filter.offset.toString(),
+      name: filter.name ?? '',
     });
 
     api(`/mail/recipients?${params.toString()}`)

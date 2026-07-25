@@ -412,5 +412,77 @@ test.describe('E-Mail – Configure and send e-mail', () => {
       await backend.deleteAllMember();
       await backend.deleteMailSettings();
     });
+
+    test('Search recipients by name', async ({ page }) => {
+      await backend.deleteAllMember();
+      await backend.createTestMember({
+        email: 'alice@test.de',
+        firstName: 'Alice',
+        lastName: 'Anderson',
+        iban: 'DE40998929246819178801',
+      });
+      await backend.createTestMember({
+        email: 'bob@test.de',
+        firstName: 'Bob',
+        lastName: 'Brown',
+        iban: 'DE40998929246819178802',
+      });
+      await backend.updateMailSettings();
+      await openDashboard(page, tc.get().token);
+      await page.getByRole('button', { name: 'Rundmail' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Rundmail versenden', exact: true }),
+      ).toBeVisible();
+
+      await page.getByRole('tab', { name: /Empfänger/ }).click();
+      await expect(page.getByText('Empfängerliste')).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'Alice Anderson' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'Bob Brown' })).toBeVisible();
+
+      const searchField = page.getByRole('textbox', { name: 'Name suchen' });
+      await expect(searchField).toBeVisible();
+
+      await searchField.fill('Alice');
+      await expect(page.getByRole('cell', { name: 'Alice Anderson' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'Bob Brown' })).not.toBeVisible();
+      await expect(page.getByText('1–1 of 1')).toBeVisible();
+
+      await searchField.fill('Bob');
+      await expect(page.getByRole('cell', { name: 'Bob Brown' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'Alice Anderson' })).not.toBeVisible();
+
+      await searchField.fill('Anderson');
+      await expect(page.getByRole('cell', { name: 'Alice Anderson' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'Bob Brown' })).not.toBeVisible();
+
+      await searchField.fill('');
+      await expect(page.getByRole('cell', { name: 'Alice Anderson' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'Bob Brown' })).toBeVisible();
+
+      await backend.deleteAllMember();
+      await backend.deleteMailSettings();
+    });
+
+    test('Show custom member category name in recipient category dropdown', async ({ page }) => {
+      await backend.deleteTestMemberCategory();
+      const categoryName = await backend.createTestMemberCategory();
+      await backend.updateMailSettings();
+      await openDashboard(page, tc.get().token);
+      await page.getByRole('button', { name: 'Rundmail' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Rundmail versenden', exact: true }),
+      ).toBeVisible();
+
+      await page.getByRole('tab', { name: /Empfänger/ }).click();
+      await expect(page.getByText('Empfängerliste')).toBeVisible();
+      await page.getByRole('combobox', { name: 'Mitgliederkategorie' }).click();
+      await expect(page.getByRole('option', { name: categoryName, exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('option', { name: `pages.mail.memberCategory.${categoryName}` }),
+      ).not.toBeVisible();
+
+      await backend.deleteTestMemberCategory();
+      await backend.deleteMailSettings();
+    });
   });
 });

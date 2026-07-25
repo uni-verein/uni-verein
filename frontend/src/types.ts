@@ -219,6 +219,7 @@ export interface Filter {
   categoryId: UUIDTypes;
   offset: number;
   limit: number;
+  name?: string;
 }
 
 export interface ProgressData {
