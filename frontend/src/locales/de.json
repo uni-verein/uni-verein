@@ -20,6 +20,7 @@
       "selectIcon": "Symbol auswählen",
       "searchIcon": "Symbol suchen...",
       "foundIcons": "Symbol gefunden",
+      "refineSearch": "Weitere Symbole werden nicht angezeigt, Suche eingrenzen, um mehr zu sehen.",
       "loadingIcons": "Symbol werden geladen...",
       "buttons": {
         "cancel": "Abbrechen",

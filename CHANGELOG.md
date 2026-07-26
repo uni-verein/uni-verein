@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.1] UV-11
+
+### Changed
+- The frontend's page components (Mail, Members, Sepa, Contributions, user/link/contribution-plan/email/creditor/general/member-category config, Audit, Backup) are now lazily loaded on demand instead of bundled into the initial JavaScript payload, cutting the main bundle from ~1.4 MB to ~577 kB.
+- The icon picker ("Symbol auswählen") now caps the number of rendered icon tiles at 250 and prompts the user to refine their search for more, instead of mounting all ~8600 icons at once — this previously froze the UI for over a second every time the dialog was reopened.
+- The icon picker now waits for icons to be fully loaded/cached before revealing the grid, showing a loading spinner in the meantime instead of an empty or partially populated dialog.
+- `IconPickerDialog.tsx` no longer redundantly dynamically imports `muiIcons` for `loadIconNames` when it already imports it statically elsewhere, resolving a Vite build warning and allowing the module to be chunked correctly.
+- GitHub Actions' `enforce-source-branch` CI job now also runs for pull requests targeting `development`, so merging `main` back into `development` isn't blocked by a status check that previously only evaluated (and could report) PRs targeting `main`.
+- Bumped the `brace-expansion` npm override to `^5.0.8` to close a high-severity ReDoS advisory (GHSA, exponential-time expansion of consecutive non-expanding `{}` groups); the previous override version had drifted out of sync with the lockfile and a duplicate vulnerable copy remained nested under `filelist`.
+
+### Fixed
+- Vite's chunk-size warning for the `@mui/icons-material` barrel (loaded on demand by the icon picker) is now suppressed via `chunkSizeWarningLimit`, since that chunk is expected to be large and is never part of the initial page load.
+
 ## [v1.3.0] UV-4
 
 ### Added
