@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import {
   Box,
   Drawer,
@@ -18,6 +18,7 @@ import {
   Popover,
   BottomNavigation,
   BottomNavigationAction,
+  CircularProgress,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -27,24 +28,25 @@ import EuroIcon from '@mui/icons-material/Euro';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 
-import Members from './Members';
-import Mail from './Mail';
-import Sepa from './Sepa';
-import Contributions from './Contributions';
-import UserManagement from './UserManagement';
-import EmailConfig from './EmailConfig';
-import ContributionPlanConfig from './ContributionPlanConfig';
-import LinkConfig from './LinkConfig';
 import { api } from '../api';
-import Backup from './Backup';
-import Audit from './Audit';
 import { Role } from '../types';
-import CreditorConfig from './CreditorConfig';
-import GeneralConfig from './GeneralConfig';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
-import MemberCategoryConfig from './MemberCategoryConfig';
 import { SidebarContent } from '../components/SidebarContent';
+
+const Members = lazy(() => import('./Members'));
+const Mail = lazy(() => import('./Mail'));
+const Sepa = lazy(() => import('./Sepa'));
+const Contributions = lazy(() => import('./Contributions'));
+const UserManagement = lazy(() => import('./UserManagement'));
+const EmailConfig = lazy(() => import('./EmailConfig'));
+const ContributionPlanConfig = lazy(() => import('./ContributionPlanConfig'));
+const LinkConfig = lazy(() => import('./LinkConfig'));
+const Backup = lazy(() => import('./Backup'));
+const Audit = lazy(() => import('./Audit'));
+const CreditorConfig = lazy(() => import('./CreditorConfig'));
+const GeneralConfig = lazy(() => import('./GeneralConfig'));
+const MemberCategoryConfig = lazy(() => import('./MemberCategoryConfig'));
 
 const drawerWidthExpanded = 280;
 const drawerWidthCollapsed = 64;
@@ -396,20 +398,28 @@ export default function Dashboard({
               minHeight: { xs: 'auto', sm: '70vh' },
             }}
           >
-            {page === 'members' && <Members role={user.role} />}
-            {page === 'mail' && <Mail />}
-            {page === 'sepa' && <Sepa />}
-            {page === 'contributions' && <Contributions role={user.role} />}
-            {page === 'user' && <UserManagement accountView={true} userId={user.id} />}
-            {page === 'users' && <UserManagement accountView={false} userId={user.id} />}
-            {page === 'email-config' && <EmailConfig />}
-            {page === 'link-config' && <LinkConfig />}
-            {page === 'contribution-plan-config' && <ContributionPlanConfig />}
-            {page === 'audit' && <Audit />}
-            {page === 'backup' && <Backup />}
-            {page === 'creditor-config' && <CreditorConfig />}
-            {page === 'general-config' && <GeneralConfig />}
-            {page === 'member-category-config' && <MemberCategoryConfig />}
+            <Suspense
+              fallback={
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              {page === 'members' && <Members role={user.role} />}
+              {page === 'mail' && <Mail />}
+              {page === 'sepa' && <Sepa />}
+              {page === 'contributions' && <Contributions role={user.role} />}
+              {page === 'user' && <UserManagement accountView={true} userId={user.id} />}
+              {page === 'users' && <UserManagement accountView={false} userId={user.id} />}
+              {page === 'email-config' && <EmailConfig />}
+              {page === 'link-config' && <LinkConfig />}
+              {page === 'contribution-plan-config' && <ContributionPlanConfig />}
+              {page === 'audit' && <Audit />}
+              {page === 'backup' && <Backup />}
+              {page === 'creditor-config' && <CreditorConfig />}
+              {page === 'general-config' && <GeneralConfig />}
+              {page === 'member-category-config' && <MemberCategoryConfig />}
+            </Suspense>
           </Paper>
         </Container>
       </Box>

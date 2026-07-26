@@ -20,6 +20,7 @@
       "selectIcon": "Select Icon",
       "searchIcon": "Search icon...",
       "foundIcons": "Icons found",
+      "refineSearch": "Not all icons are shown, refine your search to see more.",
       "loadingIcons": "Loading icons...",
       "buttons": {
         "cancel": "Cancel",

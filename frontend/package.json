@@ -32,7 +32,8 @@
     "uuid": "^13.0.0"
   },
   "overrides": {
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "brace-expansion": "^5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

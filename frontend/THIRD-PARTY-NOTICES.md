@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-07-25
+Generated automatically on 2026-07-26
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -231,11 +231,9 @@ Generated automatically on 2026-07-25
 | babel-plugin-polyfill-corejs2@0.4.17 | - | MIT |
 | babel-plugin-polyfill-corejs3@0.14.2 | - | MIT |
 | babel-plugin-polyfill-regenerator@0.6.8 | - | MIT |
-| balanced-match@1.0.2 | - | MIT |
 | balanced-match@4.0.4 | - | MIT |
 | baseline-browser-mapping@2.10.38 | - | Apache-2.0 |
-| brace-expansion@2.1.2 | - | MIT |
-| brace-expansion@5.0.6 | - | MIT |
+| brace-expansion@5.0.8 | - | MIT |
 | browserslist@4.28.2 | - | MIT |
 | buffer-from@1.1.2 | - | MIT |
 | cac@6.7.14 | - | MIT |
