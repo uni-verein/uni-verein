@@ -16,8 +16,14 @@ import {
   useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { DynamicIcon } from '../muiIcons';
+import type { SvgIconComponent } from '@mui/icons-material';
+import { DynamicIcon, loadAllIcons } from '../muiIcons';
 import { useTranslation } from 'react-i18next';
+
+// Rendering all ~8600 icons at once means mounting that many MUI IconButton/Tooltip
+// instances, which blocks the main thread for over a second on every open. Capping the
+// rendered tiles keeps the dialog responsive; searching narrows the list further.
+const MAX_RENDERED_ICONS = 250;
 
 interface IconPickerDialogProps {
   open: boolean;
@@ -32,7 +38,8 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [iconNames, setIconNames] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [icons, setIcons] = useState<Record<string, SvgIconComponent>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const abortRef = useRef(false);
 
   const deferredSearch = useDeferredValue(search);
@@ -45,10 +52,13 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
 
     const load = async () => {
       try {
-        const { loadIconNames } = await import('../muiIcons');
-        const names = await loadIconNames();
+        const MuiIcons = await loadAllIcons();
+        const names = Object.keys(MuiIcons).filter(
+          (key) => !key.endsWith('Outlined') && key !== 'default',
+        );
 
         if (!abortRef.current) {
+          setIcons(MuiIcons);
           setIconNames(names);
         }
       } catch (error) {
@@ -73,6 +83,7 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
     () => iconNames.filter((name) => name.toLowerCase().includes(deferredSearch.toLowerCase())),
     [iconNames, deferredSearch],
   );
+  const visible = filtered.slice(0, MAX_RENDERED_ICONS);
 
   const handleClose = () => {
     setSearch('');
@@ -112,6 +123,8 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
         {!isLoading && (
           <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
             {filtered.length} {t('components.iconPickerDialog.foundIcons')}
+            {filtered.length > MAX_RENDERED_ICONS &&
+              `: ${t('components.iconPickerDialog.refineSearch')}`}
           </Typography>
         )}
         <Box
@@ -141,8 +154,10 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
               </Typography>
             </Box>
           ) : (
-            filtered.map((name) => {
+            visible.map((name) => {
               const isSelected = name === selectedIcon;
+              const Icon = icons[name];
+              if (!Icon) return null;
               return (
                 <Tooltip key={name} title={name} placement="top" arrow>
                   <IconButton
@@ -160,7 +175,7 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
                       },
                     }}
                   >
-                    <DynamicIcon name={name} fontSize="small" />
+                    <Icon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               );

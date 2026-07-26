@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { SvgIconComponent } from '@mui/icons-material';
+import type { SvgIconComponent } from '@mui/icons-material';
 
-export async function loadIconNames(): Promise<string[]> {
-  const MuiIcons = await import('@mui/icons-material');
-  return Object.keys(MuiIcons).filter((key) => !key.endsWith('Outlined') && key !== 'default');
+let muiIconsPromise: Promise<Record<string, SvgIconComponent>> | null = null;
+
+export function loadAllIcons(): Promise<Record<string, SvgIconComponent>> {
+  if (!muiIconsPromise) {
+    muiIconsPromise = import('@mui/icons-material') as Promise<Record<string, SvgIconComponent>>;
+  }
+  return muiIconsPromise;
 }
 
 export function DynamicIcon({
@@ -14,10 +18,15 @@ export function DynamicIcon({
 
   useEffect(() => {
     if (!name) return;
-    import('@mui/icons-material').then((MuiIcons) => {
-      const icon = (MuiIcons as Record<string, unknown>)[name] as SvgIconComponent | undefined;
+    let cancelled = false;
+    loadAllIcons().then((MuiIcons) => {
+      if (cancelled) return;
+      const icon = MuiIcons[name];
       setIcon(() => icon ?? null);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [name]);
 
   if (!Icon) return null;

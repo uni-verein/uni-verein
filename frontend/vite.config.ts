@@ -53,5 +53,10 @@ export default defineConfig({
         proxy:{
             "/api":"http://backend:8080"
         }
-    }
+    },
+    build:{
+        // The @mui/icons-material barrel is lazy-loaded on demand for the icon
+        // picker and is expected to produce one large chunk.
+        chunkSizeWarningLimit: 4000,
+    },
 })

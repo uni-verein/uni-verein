@@ -35,11 +35,11 @@ jobs:
   # ─────────────────────────────────────────────
   enforce-source-branch:
     name: Enforce Source Branch
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Only allow development -> main
-        if: github.head_ref != 'development'
+        if: github.base_ref == 'main' && github.head_ref != 'development'
         run: |
           echo "::error::PRs gegen main sind nur von development erlaubt."
           exit 1
