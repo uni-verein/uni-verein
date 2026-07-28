@@ -27,12 +27,16 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import EuroIcon from '@mui/icons-material/Euro';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 
 import { api } from '../api';
 import { Role } from '../types';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
 import { SidebarContent } from '../components/SidebarContent';
+import { useThemeMode, ThemeMode } from '../components/ThemeModeContext';
 
 const Members = lazy(() => import('./Members'));
 const Mail = lazy(() => import('./Mail'));
@@ -83,8 +87,26 @@ export default function Dashboard({
   } | null>(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState<HTMLElement | null>(null);
   const { t, i18n } = useTranslation();
+  const { mode, setMode } = useThemeMode();
 
   const drawerWidth = collapsed ? drawerWidthCollapsed : drawerWidthExpanded;
+
+  const cycleThemeMode = () => {
+    const order: ThemeMode[] = ['system', 'light', 'dark'];
+    const next = order[(order.indexOf(mode) + 1) % order.length];
+    setMode(next);
+  };
+
+  const themeModeIcon =
+    mode === 'system' ? (
+      <SettingsBrightnessIcon />
+    ) : mode === 'dark' ? (
+      <Brightness4Icon />
+    ) : (
+      <Brightness7Icon />
+    );
+
+  const themeModeLabel = t(`pages.dashboard.themeMode.${mode}`);
 
   useEffect(() => {
     setCollapsed(isMobile);
@@ -206,7 +228,7 @@ export default function Dashboard({
         sx={{
           width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
           ml: isMobile ? 0 : `${drawerWidth}px`,
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
           color: 'text.primary',
           borderBottom: '1px solid',
           borderColor: 'divider',
@@ -277,6 +299,24 @@ export default function Dashboard({
                   </Box>
                 </Popover>
               </>
+            )}
+
+            {isMobile ? (
+              <Tooltip title={themeModeLabel} arrow>
+                <IconButton
+                  color="inherit"
+                  onClick={cycleThemeMode}
+                  aria-label={themeModeLabel}
+                >
+                  {themeModeIcon}
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title={themeModeLabel} arrow>
+                <Button onClick={cycleThemeMode} startIcon={themeModeIcon} color="inherit">
+                  {themeModeLabel}
+                </Button>
+              </Tooltip>
             )}
 
             {isMobile ? (
@@ -371,7 +411,7 @@ export default function Dashboard({
         component="main"
         sx={{
           flexGrow: 1,
-          bgcolor: 'grey.50',
+          bgcolor: 'background.default',
           p: { xs: 1.5, sm: 3 },
           pb: {
             xs: isMobile

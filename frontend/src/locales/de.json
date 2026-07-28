@@ -767,6 +767,11 @@
       "clubManagement": "Vereinsverwaltung",
       "openMenu": "Menü öffnen",
       "switchLanguage": "Sprache wechseln",
+      "themeMode": {
+        "system": "System",
+        "light": "Hell",
+        "dark": "Dunkel"
+      },
       "settings": {
         "name": "Einstellungen",
         "userManagement": "Nutzerverwaltung",

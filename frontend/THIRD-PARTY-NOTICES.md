@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-07-26
+Generated automatically on 2026-07-28
 
 | Package | Version | License |
 |---------|---------|---------|

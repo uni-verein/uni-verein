@@ -27,7 +27,7 @@ import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../components/SnackbarContext';
 import { useTranslation } from 'react-i18next';
-import { DynamicIcon } from '../components/muiIcons';
+import { DynamicIcon } from '../components/MuiIcons';
 import { MobileListCard } from '../components/MobileListCard';
 import { LinkDialog } from '../components/dialogs/LinkDialog';
 
@@ -184,7 +184,7 @@ export default function LinkConfig() {
       ) : (
         <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
           <Table>
-            <TableHead sx={{ bgcolor: 'grey.50' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, width: '25%' }}>
                   {t('pages.linkConfig.table.link')}

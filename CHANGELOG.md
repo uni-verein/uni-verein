@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.4.0] UV-5, UV-12
+
+### Added
+- Dark mode: the app follows the OS/browser color scheme (`prefers-color-scheme`) by default, or can be set manually to light/dark via a toggle next to the language switcher in the top bar; the choice is persisted in `localStorage` and survives reloads. As part of this, surfaces that were previously hardcoded to light-mode colors (the main content background, table headers, the Backup/EmailEditor/SendProgress panels, the top bar, the login page's background gradient and fallback lock icon) were made theme-aware, a lighter shade of the brand blue is used for `primary.main` in dark mode to keep focus rings/labels/buttons legible, and the login page's logo/icon now has a subtle border in both themes.
+
+- `UniVerein.DbMigrator`, a new console tool published as `ghcr.io/uni-verein/univerein-db-migrator`, that copies all tables (including soft-deleted rows) from an existing MariaDB database into a fresh PostgreSQL database in foreign-key-safe order, verifying row counts per table.
+
+### Changed
+- Replaced MariaDB with PostgreSQL (`postgres:17-alpine`) across every `docker-compose*.yml`, the backend's EF Core provider (Pomelo → Npgsql), and the backup service (`mariadb-dump`/`mariadb` → `pg_dump`/`psql`).
+- `docker-compose-update.yml` now detects whether the running stack is still on MariaDB. If so, it first updates installations that aren't yet on `v1.3.1` to that version (unchanged, MariaDB-only behavior); once an installation is on `v1.3.1` with MariaDB, the next update migrates the database (schema and data) to PostgreSQL and switches the whole stack over, including backups. Already-PostgreSQL installations keep updating exactly as before.
+- The MariaDB → PostgreSQL cutover runs against an isolated, temporary PostgreSQL instance so the live MariaDB container keeps serving until the copy is verified complete; on success the old MariaDB container is stopped (its data volume is kept, not deleted) and a copy of the pre-migration `docker-compose-prod-image.yml` is kept as `docker-compose-prod-image.yml.mariadb-backup` for the duration of the update, for manual rollback, then removed automatically once the stack has restarted successfully on PostgreSQL. On failure, the migration attempt is cleaned up and the MariaDB installation is left completely untouched.
+
+### Fixed
+- On local dev the frontend always showed the demo-mode login dialog regardless of `VITE_APP_DEMO`'s actual value: the build-time flag (a string) was used directly as a boolean instead of compared against `'true'`, so any explicitly set value — including `"false"` — was truthy.
+
 ## [v1.3.1] UV-11
 
 ### Changed

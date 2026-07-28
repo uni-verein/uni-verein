@@ -4,11 +4,14 @@ import App from './App';
 import './i18n';
 import { PageConfigProvider } from './components/PageConfigContext';
 import { SnackbarProvider } from './components/SnackbarContext';
+import { ThemeModeProvider } from './components/ThemeModeContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <SnackbarProvider>
-    <PageConfigProvider>
-      <App />
-    </PageConfigProvider>
-  </SnackbarProvider>,
+  <ThemeModeProvider>
+    <SnackbarProvider>
+      <PageConfigProvider>
+        <App />
+      </PageConfigProvider>
+    </SnackbarProvider>
+  </ThemeModeProvider>,
 );

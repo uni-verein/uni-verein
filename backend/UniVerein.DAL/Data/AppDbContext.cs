@@ -17,6 +17,9 @@ public class AppDbContext : DbContext
         _timeProvider = timeProvider;
     }
 
+    // Skips CreatedAt/DeletedAt auto-stamping below, so UniVerein.DbMigrator can preserve original timestamps.
+    public bool SuppressAutoTimestamps { get; set; }
+
     public DbSet<MemberEntity> Members => Set<MemberEntity>();
     public DbSet<UserEntity> Users => Set<UserEntity>();
     public DbSet<ContributionEntity> Contributions => Set<ContributionEntity>();
@@ -107,6 +110,9 @@ public class AppDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        if (SuppressAutoTimestamps)
+            return await base.SaveChangesAsync(cancellationToken);
+
         var entries = ChangeTracker
             .Entries()
             .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Deleted));

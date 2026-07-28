@@ -1,29 +1,28 @@
 version: "3.9"
 services:
   db:
-    image: mariadb:11
+    image: postgres:17-alpine
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
 
   db-backup:
-    image: mariadb:11
+    image: postgres:17-alpine
     command: >
       sh -c 'while true; do
         BACKUP_FILE="/backup/$$(date +%Y-%m-%d_%H-%M-%S)_uni_verein_db.sql"
         echo "Creating backup: $$BACKUP_FILE"
-        mariadb-dump -h db -u root -p$$MYSQL_ROOT_PASSWORD --single-transaction --routines --triggers --all-databases > $$BACKUP_FILE 2>/tmp/err.log
+        pg_dump -h db -U $$POSTGRES_USER --format=plain --no-owner $$POSTGRES_DB > $$BACKUP_FILE 2>/tmp/err.log
         if [ $$? -ne 0 ]; then
           echo "ERROR: Backup failed!"
           cat /tmp/err.log
@@ -36,7 +35,9 @@ services:
         sleep 86400
       done'
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      PGPASSWORD: ${DB_PASSWORD}
     volumes:
       - ${BACKUP_PATH}:/backup
     depends_on:
@@ -47,10 +48,10 @@ services:
     image: ghcr.io/uni-verein/univerein-backend:${VERSION}
     restart: always
     environment:
-      ConnectionStrings__Default: server=db;database=${DB_NAME};user=${DB_USER};password=${DB_PASSWORD}
+      ConnectionStrings__Default: Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
       ConnectionStrings__Database: ${DB_NAME}
-      ConnectionStrings__MysqlUser: ${DB_USER}
-      ConnectionStrings__MysqlPassword: ${DB_PASSWORD}
+      ConnectionStrings__DbUser: ${DB_USER}
+      ConnectionStrings__DbPassword: ${DB_PASSWORD}
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       CRYPTO_KEY: ${CRYPTO_KEY}
@@ -91,4 +92,4 @@ services:
         condition: service_healthy
 
 volumes:
-  db_data:
+  db_data_pg:

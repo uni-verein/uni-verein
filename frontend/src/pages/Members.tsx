@@ -431,7 +431,7 @@ export default function Members({ role }: UserRoleProps) {
           )}
 
           <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
-            <TableHead sx={{ bgcolor: 'grey.50' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 'bold' }}>
                   {t('pages.members.table.colNumber')}

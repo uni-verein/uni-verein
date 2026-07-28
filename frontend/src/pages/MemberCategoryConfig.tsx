@@ -158,7 +158,7 @@ export default function MemberCategoryConfig() {
       ) : (
         <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
           <Table>
-            <TableHead sx={{ bgcolor: 'grey.50' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>
                   {t('pages.memberCategoryConfig.table.name')}
