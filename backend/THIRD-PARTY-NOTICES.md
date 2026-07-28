@@ -1,6 +1,6 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-07-25
+Generated automatically on 2026-07-28
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -104,6 +104,8 @@ Generated automatically on 2026-07-25
 | MySqlConnector | 2.4.0 | MIT |
 | NETStandard.Library | 1.6.1 | MS-EULA |
 | Newtonsoft.Json | 13.0.3 | MIT |
+| Npgsql | 9.0.3 | PostgreSQL |
+| Npgsql.EntityFrameworkCore.PostgreSQL | 9.0.4 | PostgreSQL |
 | Pomelo.EntityFrameworkCore.MySql | 9.0.0 | MIT |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.10 | Apache-2.0 |
 | SQLitePCLRaw.config.e_sqlite3 | 3.0.3 | Apache-2.0 |
