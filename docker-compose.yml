@@ -2,21 +2,20 @@ version: "3.9"
 
 services:
   db:
-    image: mariadb:11
+    image: postgres:17-alpine
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_pg:/var/lib/postgresql/data
 
   backend:
     build:
@@ -24,10 +23,10 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      ConnectionStrings__Default: server=db;database=${DB_NAME};user=${DB_USER};password=${DB_PASSWORD}
+      ConnectionStrings__Default: Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
       ConnectionStrings__Database: ${DB_NAME}
-      ConnectionStrings__MysqlUser: ${DB_USER}
-      ConnectionStrings__MysqlPassword: ${DB_PASSWORD}
+      ConnectionStrings__DbUser: ${DB_USER}
+      ConnectionStrings__DbPassword: ${DB_PASSWORD}
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       CRYPTO_KEY: ${CRYPTO_KEY}
@@ -75,4 +74,4 @@ services:
       - "2525:2525"
     
 volumes:
-  db_data:
+  db_data_pg:

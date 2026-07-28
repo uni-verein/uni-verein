@@ -26,15 +26,15 @@ public class BackupService
 
         ProcessStartInfo psi = new()
         {
-            FileName = "mariadb-dump",
+            FileName = "pg_dump",
             Arguments =
-                $"-h db -u {_config["ConnectionStrings:MysqlUser"]} --single-transaction --quick {_config["ConnectionStrings:Database"]}",
+                $"-h db -U {_config["ConnectionStrings:DbUser"]} --format=plain --no-owner --clean --if-exists {_config["ConnectionStrings:Database"]}",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        psi.Environment["MYSQL_PWD"] = _config["ConnectionStrings:MysqlPassword"];
+        psi.Environment["PGPASSWORD"] = _config["ConnectionStrings:DbPassword"];
 
         using Process process = new() { StartInfo = psi };
         process.Start();
@@ -66,14 +66,15 @@ public class BackupService
 
         ProcessStartInfo psi = new()
         {
-            FileName = "mariadb",
-            Arguments = $"-h db -u {_config["ConnectionStrings:MysqlUser"]} {_config["ConnectionStrings:Database"]}",
+            FileName = "psql",
+            Arguments =
+                $"-h db -U {_config["ConnectionStrings:DbUser"]} -d {_config["ConnectionStrings:Database"]} -v ON_ERROR_STOP=1",
             RedirectStandardInput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        psi.Environment["MYSQL_PWD"] = _config["ConnectionStrings:MysqlPassword"];
+        psi.Environment["PGPASSWORD"] = _config["ConnectionStrings:DbPassword"];
 
         using Process process = new() { StartInfo = psi };
         process.Start();
