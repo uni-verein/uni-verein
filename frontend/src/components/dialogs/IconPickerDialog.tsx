@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import type { SvgIconComponent } from '@mui/icons-material';
-import { DynamicIcon, loadAllIcons } from '../muiIcons';
+import { DynamicIcon, loadAllIcons } from '../MuiIcons';
 import { useTranslation } from 'react-i18next';
 
 // Rendering all ~8600 icons at once means mounting that many MUI IconButton/Tooltip

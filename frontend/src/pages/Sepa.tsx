@@ -203,7 +203,7 @@ export default function Sepa() {
           sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
         >
           <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
-            <TableHead sx={{ bgcolor: 'grey.50' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.name')}</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>{t('pages.sepa.table.amount')}</TableCell>

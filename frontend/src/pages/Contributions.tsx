@@ -321,7 +321,7 @@ export default function Contributions({ role }: UserRoleProps) {
           sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}
         >
           <Table>
-            <TableHead sx={{ bgcolor: 'grey.50' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>
                   {t('pages.contributions.table.member')}

@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [Unreleased] UV-5
+
+### Added
+- Dark mode: the app follows the OS/browser color scheme (`prefers-color-scheme`) by default, or can be set manually to light/dark via a toggle next to the language switcher in the top bar; the choice is persisted in `localStorage` and survives reloads. As part of this, surfaces that were previously hardcoded to light-mode colors (the main content background, table headers, the Backup/EmailEditor/SendProgress panels, the top bar, the login page's background gradient and fallback lock icon) were made theme-aware, a lighter shade of the brand blue is used for `primary.main` in dark mode to keep focus rings/labels/buttons legible, and the login page's logo/icon now has a subtle border in both themes.
 
 ## [v1.3.1] UV-11
 

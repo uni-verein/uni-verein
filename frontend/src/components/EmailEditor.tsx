@@ -209,7 +209,7 @@ export default function EmailEditor({
           p: 1,
           mb: 1,
           borderRadius: 2,
-          bgcolor: 'grey.50',
+          bgcolor: 'action.hover',
         }}
       >
         <Stack direction="row" spacing={0.5}>

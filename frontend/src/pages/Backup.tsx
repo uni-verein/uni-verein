@@ -271,7 +271,7 @@ export default function Backup() {
 
         {memberCount === 0 ? (
           <Grid size={12}>
-            <Paper variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'grey.50' }}>
+            <Paper variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}>
               <Grid container spacing={2} alignItems="center">
                 <Grid size={12}>
                   <Stack direction="row" spacing={2} alignItems="center">
@@ -316,7 +316,7 @@ export default function Backup() {
           </Grid>
         ) : (
           <Grid size={12}>
-            <Paper variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'grey.50' }}>
+            <Paper variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}>
               <Grid container spacing={2} alignItems="center">
                 <Grid size={12}>
                   <Stack direction="row" spacing={2} alignItems="center">
