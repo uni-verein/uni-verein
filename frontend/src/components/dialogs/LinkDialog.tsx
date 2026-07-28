@@ -16,7 +16,7 @@ import { api } from '../../api';
 import { Link } from '../../types';
 import { useSnackbar } from '../SnackbarContext';
 import { IconPickerDialog } from './IconPickerDialog';
-import { DynamicIcon } from '../muiIcons';
+import { DynamicIcon } from '../MuiIcons';
 import { useTranslation } from 'react-i18next';
 
 export function LinkDialog({

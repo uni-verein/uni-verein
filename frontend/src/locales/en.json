@@ -767,6 +767,11 @@
       "clubManagement": "Club administration",
       "openMenu": "Open menu",
       "switchLanguage": "Switch language",
+      "themeMode": {
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
+      },
       "settings": {
         "name": "Settings",
         "userManagement": "User management",

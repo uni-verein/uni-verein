@@ -4,10 +4,12 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { isTokenValid } from './utils';
 import { usePageConfig } from './components/PageConfigContext';
+import { useThemeMode } from './components/ThemeModeContext';
 
 export default function App() {
   const [logged, setLogged] = useState(!!localStorage.getItem('token'));
   const { config, reloadConfig } = usePageConfig();
+  const { resolvedMode } = useThemeMode();
 
   // @ts-ignore
   const version = import.meta.env.VITE_APP_VERSION;
@@ -18,12 +20,19 @@ export default function App() {
     () =>
       createTheme({
         palette: {
+          mode: resolvedMode,
           primary: {
-            main: '#2563eb',
+            main: resolvedMode === 'dark' ? '#60a5fa' : '#2563eb',
           },
-          background: {
-            default: '#f8fafc',
-          },
+          background:
+            resolvedMode === 'dark'
+              ? {
+                  default: '#121212',
+                  paper: '#1e1e1e',
+                }
+              : {
+                  default: '#f8fafc',
+                },
         },
         shape: {
           borderRadius: 8,
@@ -32,7 +41,7 @@ export default function App() {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
         },
       }),
-    [],
+    [resolvedMode],
   );
 
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });

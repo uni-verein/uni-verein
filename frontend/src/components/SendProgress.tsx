@@ -240,7 +240,7 @@ const SendProgress: FC<SendProgressProps> = ({
               maxHeight: 260,
               overflowY: 'auto',
               borderRadius: 2,
-              bgcolor: 'grey.50',
+              bgcolor: 'action.hover',
               p: 1,
             }}
           >

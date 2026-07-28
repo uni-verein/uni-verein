@@ -31,7 +31,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
 import { Role } from '../types';
-import { DynamicIcon } from './muiIcons';
+import { DynamicIcon } from './MuiIcons';
 
 const selectedStyle = {
   borderRadius: 2,

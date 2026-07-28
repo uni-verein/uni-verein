@@ -10,7 +10,7 @@ import {
   InputAdornment,
   IconButton,
   Alert,
-  Divider,
+  useTheme,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
@@ -21,7 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { login } from '../api';
 import { useTranslation } from 'react-i18next';
 import { usePageConfig } from '../components/PageConfigContext';
-import { DemoDialog } from '../components/DemoDialog';
+import { DemoDialog } from '../components/dialogs/DemoDialog';
 
 export default function Login({
   onLogin,
@@ -31,6 +31,7 @@ export default function Login({
   demo: boolean | undefined;
 }) {
   const { config, serverReachable } = usePageConfig();
+  const theme = useTheme();
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -112,7 +113,10 @@ export default function Login({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        background:
+          theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+            : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       }}
     >
       <Container maxWidth="xs">
@@ -131,10 +135,13 @@ export default function Login({
             sx={{
               m: 1,
               bgcolor: 'transparent',
+              color: 'text.secondary',
               width: '100px',
               height: '100px',
               maxHeight: '100px',
               maxWidth: '100px',
+              border: '1px solid',
+              borderColor: 'divider',
               '& img': {
                 objectFit: 'contain',
               },
