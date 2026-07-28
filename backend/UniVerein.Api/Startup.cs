@@ -44,7 +44,7 @@ namespace UniVerein.Api
                     if (connectionString.Contains("Data Source"))
                         opt.UseSqlite(connectionString);
                     else
-                        opt.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0)));
+                        opt.UseNpgsql(connectionString);
                 });
             }
 

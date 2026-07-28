@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UniVerein.DAL.Data;
 
 #nullable disable
@@ -12,48 +12,51 @@ using UniVerein.DAL.Data;
 namespace UniVerein.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260603175537_Initial")]
-    partial class Initial
+    [Migration("20260726204911_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("ProductVersion", "9.0.17")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("UniVerein.DAL.Entities.AuditLogEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Action")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("action");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Data")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("data");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Entity")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("entity");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
@@ -67,35 +70,35 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("numeric")
                         .HasColumnName("amount");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<DateTime>("DueDate")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("due_date");
 
                     b.Property<Guid>("ExportId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("exportId");
 
                     b.Property<Guid>("MemberId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("member_id");
 
                     b.Property<DateTimeOffset?>("Paid")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid");
 
                     b.HasKey("Id");
@@ -109,28 +112,29 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("numeric")
                         .HasColumnName("amount");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Interval")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("interval");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.HasKey("Id");
@@ -142,47 +146,53 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Bic_Encrypted")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("bic_encrypted");
 
                     b.Property<string>("CityName")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("city_name");
 
                     b.Property<string>("CountryCode")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("country_code");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreditorId")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("creditor_id");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Iban_Encrypted")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("iban_encrypted");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.Property<string>("PostCode")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("post_code");
 
                     b.Property<string>("StreetNameAndNumber")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("street_name_and_number");
 
                     b.HasKey("Id");
@@ -190,31 +200,108 @@ namespace UniVerein.DAL.Migrations
                     b.ToTable("CreditorConfigs");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<string>("ReleaseNotes")
+                        .HasColumnType("text")
+                        .HasColumnName("release_notes");
+
+                    b.Property<string>("TagName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tag_name");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Version")
+                        .IsUnique();
+
+                    b.ToTable("FirmwareVersions");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionNotificationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid>("FirmwareVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("firmware_version_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("FirmwareVersionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("FirmwareVersionNotifications");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.LinkSettingsEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Icon")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("icon");
 
                     b.Property<string>("Link")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("link");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.HasKey("Id");
@@ -226,47 +313,52 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<bool>("EnableSsl")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("enable_ssl");
 
                     b.Property<string>("FromMail")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("from_mail");
 
                     b.Property<int>("ImapPort")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("imap_port");
 
                     b.Property<string>("ImapServer")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("imap_server");
 
                     b.Property<string>("Password")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("password");
 
                     b.Property<int>("Port")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("port");
 
                     b.Property<string>("SmtpServer")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("smtp_server");
 
                     b.Property<string>("Username")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
@@ -278,23 +370,25 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Category")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("category");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.HasKey("Id");
@@ -306,130 +400,142 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("AcademicDegree")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("academic_degree");
 
                     b.Property<string>("Bic_Encrypted")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("bic_encrypted");
 
                     b.Property<string>("BirthdayEncrypted")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("birthday");
 
                     b.Property<string>("BulkMail")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("bulk_mail");
 
                     b.Property<string>("City")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("city");
 
                     b.Property<Guid?>("ContributionPlanId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("contribution_plan_id");
 
                     b.Property<string>("CountryCode")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("country_code");
 
                     b.Property<string>("CourseOfStudy")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("course_of_study");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("EmailEncrypted")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("emailEncrypted");
 
                     b.Property<string>("EmailHash")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("emailHash");
 
                     b.Property<DateTimeOffset?>("EndOfStudies")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_of_studies");
 
                     b.Property<DateTimeOffset>("EntryDate")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("entry_date");
 
                     b.Property<DateTimeOffset?>("ExitDate")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("exit_date");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("first_name");
 
                     b.Property<string>("Gender")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("gender");
 
                     b.Property<string>("IBAN_Encrypted")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("iban_encrypted");
 
                     b.Property<string>("IBAN_Hash")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("iban_hash");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("last_name");
 
                     b.Property<string>("MandateId")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("mandate_id");
 
                     b.Property<Guid?>("MemberCategoryId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("member_category_id");
 
                     b.Property<int>("MemberNumber")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("member_number");
 
                     b.Property<string>("MiddleName")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("middle_name");
 
                     b.Property<string>("PhoneEncrypted")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("phone");
 
                     b.Property<string>("PostalCode")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("postal_code");
 
                     b.Property<DateTimeOffset?>("SepaConsent")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("sepa_consent");
 
                     b.Property<DateTimeOffset>("StartOfStudies")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_of_studies");
 
                     b.Property<string>("StreetEncrypted")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("street");
 
                     b.Property<string>("TaskWithinTheClub")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("task_within_the_club");
 
                     b.HasKey("Id");
@@ -445,27 +551,28 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("numeric")
                         .HasColumnName("amount");
 
                     b.Property<int>("Count")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("exportedCases");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.HasKey("Id");
@@ -477,43 +584,44 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset?>("BlockingLoginTimeout")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("blocking_login_timeout");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("text")
                         .HasColumnName("email");
 
                     b.Property<int>("FailedAttempts")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("failed_attempts");
 
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("password_hash");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("role");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
@@ -525,23 +633,25 @@ namespace UniVerein.DAL.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Logo")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("logo");
 
                     b.Property<string>("PageName")
-                        .HasColumnType("longtext")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("page_name");
 
                     b.HasKey("Id");
@@ -571,6 +681,25 @@ namespace UniVerein.DAL.Migrations
                     b.Navigation("MemberEntity");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionNotificationEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.FirmwareVersionEntity", "FirmwareVersion")
+                        .WithMany("Notifications")
+                        .HasForeignKey("FirmwareVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FirmwareVersion");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.MemberEntity", b =>
                 {
                     b.HasOne("UniVerein.DAL.Entities.ContributionPlanEntity", "ContributionPlan")
@@ -584,6 +713,11 @@ namespace UniVerein.DAL.Migrations
                     b.Navigation("ContributionPlan");
 
                     b.Navigation("MemberCategory");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionEntity", b =>
+                {
+                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }

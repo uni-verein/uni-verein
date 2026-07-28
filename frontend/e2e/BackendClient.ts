@@ -13,7 +13,7 @@ import {
 
 export const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:80/api';
 export const APP_BASE = process.env.APP_BASE_URL ?? 'http://localhost:80';
-const ADMIN_USER = process.env.TEST_ADMIN_USER ?? 'admin';
+const ADMIN_USER = process.env.TEST_ADMIN_USER ?? 'Admin';
 const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? 'admin123';
 
 export class BackendClient {

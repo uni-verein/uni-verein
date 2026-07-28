@@ -14,7 +14,7 @@ export default function App() {
   // @ts-ignore
   const version = import.meta.env.VITE_APP_VERSION;
   // @ts-ignore
-  const demo = import.meta.env.VITE_APP_DEMO;
+  const demo = import.meta.env.VITE_APP_DEMO === 'true';
 
   const theme = useMemo(
     () =>

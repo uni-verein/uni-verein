@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-07-26
+Generated automatically on 2026-07-25
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -99,6 +99,7 @@ Generated automatically on 2026-07-26
 | @babel/traverse@7.29.7 | - | MIT |
 | @babel/types@7.29.7 | - | MIT |
 | @canvas/image-data@1.1.0 | - | MIT |
+| @emnapi/runtime@1.11.3 | - | MIT |
 | @emotion/babel-plugin@11.13.5 | - | MIT |
 | @emotion/cache@11.14.0 | - | MIT |
 | @emotion/hash@0.9.2 | - | MIT |
@@ -112,7 +113,7 @@ Generated automatically on 2026-07-26
 | @emotion/use-insertion-effect-with-fallbacks@1.2.0 | - | MIT |
 | @emotion/utils@1.4.2 | - | MIT |
 | @emotion/weak-memoize@0.4.0 | - | MIT |
-| @esbuild/linux-x64@0.27.7 | - | MIT |
+| @esbuild/win32-x64@0.27.7 | - | MIT |
 | @eslint-community/eslint-utils@4.9.1 | - | MIT |
 | @eslint-community/regexpp@4.12.2 | - | MIT |
 | @eslint/config-array@0.23.5 | - | Apache-2.0 |
@@ -129,10 +130,8 @@ Generated automatically on 2026-07-26
 | @humanwhocodes/module-importer@1.0.1 | - | Apache-2.0 |
 | @humanwhocodes/retry@0.4.3 | - | Apache-2.0 |
 | @img/colour@1.1.0 | - | MIT |
-| @img/sharp-libvips-linux-x64@1.3.2 | - | LGPL-3.0-or-later |
-| @img/sharp-libvips-linuxmusl-x64@1.3.2 | - | LGPL-3.0-or-later |
-| @img/sharp-linux-x64@0.35.3 | - | Apache-2.0 |
-| @img/sharp-linuxmusl-x64@0.35.3 | - | Apache-2.0 |
+| @img/sharp-wasm32@0.35.3 | - | Apache-2.0 AND LGPL-3.0-or-later AND MIT |
+| @img/sharp-win32-x64@0.35.3 | - | Apache-2.0 AND LGPL-3.0-or-later |
 | @isaacs/cliui@9.0.0 | - | BlueOak-1.0.0 |
 | @jridgewell/gen-mapping@0.3.13 | - | MIT |
 | @jridgewell/remapping@2.3.5 | - | MIT |
@@ -161,8 +160,8 @@ Generated automatically on 2026-07-26
 | @rollup/plugin-replace@6.0.3 | - | MIT |
 | @rollup/plugin-terser@1.0.0 | - | MIT |
 | @rollup/pluginutils@5.4.0 | - | MIT |
-| @rollup/rollup-linux-x64-gnu@4.62.2 | - | MIT |
-| @rollup/rollup-linux-x64-musl@4.62.2 | - | MIT |
+| @rollup/rollup-win32-x64-gnu@4.62.2 | - | MIT |
+| @rollup/rollup-win32-x64-msvc@4.62.2 | - | MIT |
 | @tiptap/core@3.22.4 | - | MIT |
 | @tiptap/extension-blockquote@3.22.4 | - | MIT |
 | @tiptap/extension-bold@3.22.4 | - | MIT |
@@ -231,9 +230,11 @@ Generated automatically on 2026-07-26
 | babel-plugin-polyfill-corejs2@0.4.17 | - | MIT |
 | babel-plugin-polyfill-corejs3@0.14.2 | - | MIT |
 | babel-plugin-polyfill-regenerator@0.6.8 | - | MIT |
+| balanced-match@1.0.2 | - | MIT |
 | balanced-match@4.0.4 | - | MIT |
 | baseline-browser-mapping@2.10.38 | - | Apache-2.0 |
-| brace-expansion@5.0.8 | - | MIT |
+| brace-expansion@2.1.2 | - | MIT |
+| brace-expansion@5.0.6 | - | MIT |
 | browserslist@4.28.2 | - | MIT |
 | buffer-from@1.1.2 | - | MIT |
 | cac@6.7.14 | - | MIT |
@@ -523,6 +524,7 @@ Generated automatically on 2026-07-26
 | tough-cookie@4.1.4 | - | BSD-3-Clause |
 | tr46@0.0.3 | - | MIT |
 | tr46@1.0.1 | - | MIT |
+| tslib@2.8.1 | - | 0BSD |
 | type-check@0.4.0 | - | MIT |
 | type-fest@0.16.0 | - | (MIT OR CC0-1.0) |
 | typed-array-buffer@1.0.3 | - | MIT |

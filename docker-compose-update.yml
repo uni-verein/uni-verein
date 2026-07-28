@@ -10,6 +10,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       REPO: uni-verein/uni-verein
+      LAST_MARIADB_RELEASE_TAG: 1.3.1
+      FIRST_POSTGRES_RELEASE_TAG: 1.4.0
+      DB_MIGRATOR_IMAGE: ghcr.io/uni-verein/univerein-db-migrator
     entrypoint: >
       sh -c "
         set -e;
@@ -21,15 +24,29 @@ services:
           exit 1;
         fi;
 
-        echo '[UPDATE] Checking latest release on GitHub...';
-        TAG=$$(curl -fsSL -H 'User-Agent: uni-verein-updater' https://api.github.com/repos/$$REPO/releases/latest | jq -r '.tag_name');
-        if [ -z \"$$TAG\" ] || [ \"$$TAG\" = 'null' ]; then
-          echo '[UPDATE] ERROR: Could not determine the latest release from GitHub.';
-          exit 1;
+        CURRENT=$$(grep '^VERSION=' $$ENV_FILE 2>/dev/null | cut -d'=' -f2-);
+
+        IS_MARIADB=false;
+        if [ -f docker-compose-prod-image.yml ] && grep -q 'image: *mariadb' docker-compose-prod-image.yml; then
+          IS_MARIADB=true;
         fi;
 
-        CURRENT=$$(grep '^VERSION=' $$ENV_FILE 2>/dev/null | cut -d'=' -f2-);
-        echo \"[UPDATE] Installed version: $${CURRENT:-unknown} -> Latest version: $$TAG\";
+        if [ \"$$IS_MARIADB\" = true ] && [ \"$$CURRENT\" != \"$$LAST_MARIADB_RELEASE_TAG\" ]; then
+          echo \"[UPDATE] Installation is still on MariaDB and not yet on $$LAST_MARIADB_RELEASE_TAG (the last MariaDB release). Updating to $$LAST_MARIADB_RELEASE_TAG first, without changing the database engine.\";
+          TAG=\"$$LAST_MARIADB_RELEASE_TAG\";
+        elif [ \"$$IS_MARIADB\" = true ] && [ \"$$CURRENT\" = \"$$LAST_MARIADB_RELEASE_TAG\" ]; then
+          echo \"[UPDATE] Installation is on $$LAST_MARIADB_RELEASE_TAG with MariaDB. Updating to $$FIRST_POSTGRES_RELEASE_TAG next, which migrates the database to PostgreSQL.\";
+          TAG=\"$$FIRST_POSTGRES_RELEASE_TAG\";
+        else
+          echo '[UPDATE] Checking latest release on GitHub...';
+          TAG=$$(curl -fsSL -H 'User-Agent: uni-verein-updater' https://api.github.com/repos/$$REPO/releases/latest | jq -r '.tag_name');
+          if [ -z \"$$TAG\" ] || [ \"$$TAG\" = 'null' ]; then
+            echo '[UPDATE] ERROR: Could not determine the latest release from GitHub.';
+            exit 1;
+          fi;
+        fi;
+
+        echo \"[UPDATE] Installed version: $${CURRENT:-unknown} -> Target version: $$TAG\";
 
         if [ \"$$CURRENT\" = \"$$TAG\" ]; then
           echo '[UPDATE] Already up to date. Nothing to do.';
@@ -54,10 +71,75 @@ services:
         echo \"[UPDATE] Downloading docker-compose-ini.yml, nginx.conf and docker-compose-prod-image.yml for $$TAG...\";
         curl -fsSL -o docker-compose-ini.yml $$RAW_BASE/docker-compose-ini.yml;
         curl -fsSL -o nginx.conf $$RAW_BASE/nginx.conf;
-        curl -fsSL -o docker-compose-prod-image.yml $$RAW_BASE/docker-compose-prod-image.yml;
+        curl -fsSL -o docker-compose-prod-image.yml.new $$RAW_BASE/docker-compose-prod-image.yml;
 
         echo '[UPDATE] Applying new variables to .env (existing values are kept)...';
         docker compose -f docker-compose-ini.yml up;
+
+        NEW_IS_POSTGRES=false;
+        if grep -q 'image: *postgres' docker-compose-prod-image.yml.new; then
+          NEW_IS_POSTGRES=true;
+        fi;
+
+        if [ \"$$IS_MARIADB\" = true ] && [ \"$$NEW_IS_POSTGRES\" = true ]; then
+          echo '';
+          echo '[UPDATE] This update migrates the database engine from MariaDB to PostgreSQL.';
+          echo '[UPDATE] Your existing MariaDB data volume is kept (not deleted) once the migration succeeds, as a safety net.';
+
+          cp docker-compose-prod-image.yml docker-compose-prod-image.yml.mariadb-backup;
+
+          OLD_DB_CONTAINER=$$(docker compose -f docker-compose-prod-image.yml ps -q db 2>/dev/null);
+          if [ -z \"$$OLD_DB_CONTAINER\" ]; then
+            echo '[UPDATE] ERROR: Could not find the currently running MariaDB container to migrate from.';
+            exit 1;
+          fi;
+          NETWORK=$$(docker inspect --format '{{range $$k, $$v := .NetworkSettings.Networks}}{{$$k}}{{end}}' \"$$OLD_DB_CONTAINER\");
+          PG_VOLUME=$$(docker compose -f docker-compose-prod-image.yml.new config --format json | jq -r '.volumes.db_data_pg.name');
+
+          DB_NAME=$$(grep '^DB_NAME=' $$ENV_FILE | cut -d'=' -f2-);
+          DB_USER=$$(grep '^DB_USER=' $$ENV_FILE | cut -d'=' -f2-);
+          DB_PASSWORD=$$(grep '^DB_PASSWORD=' $$ENV_FILE | cut -d'=' -f2-);
+
+          cleanup_failed_migration() {
+            echo '[UPDATE] Cleaning up the failed migration attempt (your MariaDB data was not touched)...';
+            docker rm -f pg_migration_tmp >/dev/null 2>&1 || true;
+            docker volume rm \"$$PG_VOLUME\" >/dev/null 2>&1 || true;
+          };
+
+          echo '[UPDATE] Starting a temporary PostgreSQL instance for the migration...';
+          docker volume create \"$$PG_VOLUME\" >/dev/null;
+          docker run -d --name pg_migration_tmp --network \"$$NETWORK\" -e POSTGRES_DB=\"$$DB_NAME\" -e POSTGRES_USER=\"$$DB_USER\" -e POSTGRES_PASSWORD=\"$$DB_PASSWORD\" -v \"$${PG_VOLUME}:/var/lib/postgresql/data\" postgres:17-alpine >/dev/null;
+
+          echo '[UPDATE] Waiting for the temporary PostgreSQL instance to become ready...';
+          READY=false;
+          for i in $$(seq 1 30); do
+            if docker exec pg_migration_tmp pg_isready -U \"$$DB_USER\" -d \"$$DB_NAME\" >/dev/null 2>&1; then
+              READY=true;
+              break;
+            fi;
+            sleep 2;
+          done;
+          if [ \"$$READY\" != true ]; then
+            echo '[UPDATE] ERROR: Temporary PostgreSQL instance did not become ready in time.';
+            cleanup_failed_migration;
+            exit 1;
+          fi;
+
+          echo '[UPDATE] Running the database migration tool (copies all data - this can take a while for large databases)...';
+          if ! docker run --rm --network \"$$NETWORK\" -e SOURCE_CONNECTION_STRING=\"server=db;database=$${DB_NAME};user=$${DB_USER};password=$${DB_PASSWORD}\" -e TARGET_CONNECTION_STRING=\"Host=pg_migration_tmp;Database=$${DB_NAME};Username=$${DB_USER};Password=$${DB_PASSWORD}\" \"$${DB_MIGRATOR_IMAGE}:$${TAG}\"; then
+            echo '[UPDATE] ERROR: Database migration failed. Your MariaDB installation was not touched.';
+            cleanup_failed_migration;
+            exit 1;
+          fi;
+
+          echo '[UPDATE] Migration succeeded. Stopping the old MariaDB container (its data volume is kept as a safety net)...';
+          docker stop \"$$OLD_DB_CONTAINER\" >/dev/null;
+          docker rm -f pg_migration_tmp >/dev/null 2>&1 || true;
+          echo '[UPDATE] To roll back manually if needed: restore docker-compose-prod-image.yml.mariadb-backup as docker-compose-prod-image.yml, reset VERSION in .env, and run \"docker compose -f docker-compose-prod-image.yml up -d\" again - your MariaDB data volume was kept untouched.';
+          echo '[UPDATE] Once you have verified everything works on PostgreSQL, remove the old MariaDB volume manually to reclaim disk space (find it via \"docker volume ls\").';
+        fi;
+
+        mv docker-compose-prod-image.yml.new docker-compose-prod-image.yml;
 
         echo \"[UPDATE] Setting VERSION=$$TAG in .env...\";
         sed -i '/^VERSION=/d' $$ENV_FILE;
@@ -68,6 +150,11 @@ services:
 
         echo '[UPDATE] Restarting stack on the new version...';
         docker compose -f docker-compose-prod-image.yml up -d --remove-orphans;
+
+        if [ -f docker-compose-prod-image.yml.mariadb-backup ]; then
+          echo '[UPDATE] Update successful - removing the temporary docker-compose-prod-image.yml.mariadb-backup (the MariaDB data volume itself remains as the safety net).';
+          rm -f docker-compose-prod-image.yml.mariadb-backup;
+        fi;
 
         echo \"[UPDATE] Done. Now running version $$TAG.\";
       "
