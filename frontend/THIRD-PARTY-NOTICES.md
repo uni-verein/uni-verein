@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-07-28
+Generated automatically on 2026-08-05
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -303,7 +303,7 @@ Generated automatically on 2026-07-28
 | fast-equals@5.4.0 | - | MIT |
 | fast-json-stable-stringify@2.1.0 | - | MIT |
 | fast-levenshtein@2.0.6 | - | MIT |
-| fast-uri@3.1.4 | - | BSD-3-Clause |
+| fast-uri@3.1.5 | - | BSD-3-Clause |
 | fdir@6.5.0 | - | MIT |
 | fetch-cookie@2.2.0 | - | Unlicense |
 | file-entry-cache@8.0.0 | - | MIT |
