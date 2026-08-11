@@ -255,7 +255,7 @@ public class ImportController : ControllerBase
     }
 
     [HttpGet("example")]
-    public async Task<IActionResult> ExampleCsvAsync()
+    public async Task<ActionResult<byte[]>> ExampleCsvAsync()
     {
         Log.Information("ImportController: ExportCsvAsync -> Try to generate member data example");
 
@@ -263,16 +263,16 @@ public class ImportController : ControllerBase
         {
             MemberNumber = 1,
             Gender = $"{Gender.MALE}",
-            Name = "Mustermann",
-            FirstName = "Max",
+            Name = "Doe",
+            FirstName = "John",
             MiddleName = "",
             Birthday = DateTimeOffset.ParseExact("01.01.2000", "dd.MM.yyyy", null),
             PhoneNummer = "+49 172 12345678",
-            EMail = "max.mustermann@gmail.com",
+            EMail = "john.doe@gmail.com",
             BulkMail = "ALLOWED",
-            StreetAndNumber = "Musterstraße 1",
+            StreetAndNumber = "Example Street 1",
             Zip = "12345",
-            City = "Musterstadt",
+            City = "Example City",
             CountryCode = "DE",
             StudyStart = DateTimeOffset.ParseExact("01.10.2015", "dd.MM.yyyy", null),
             StudyEnd = null,
@@ -310,7 +310,7 @@ public class ImportController : ControllerBase
     }
 
     [HttpGet("export")]
-    public async Task<IActionResult> ExportCsvAsync()
+    public async Task<ActionResult<byte[]>> ExportCsvAsync()
     {
         Log.Information("ImportController: ExportCsvAsync -> Try to export member data");
 
@@ -360,7 +360,7 @@ public class ImportController : ControllerBase
         await using StreamWriter streamWriter =
             new(memoryStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         await using CsvWriter csvWriter = new(streamWriter, config);
-        var converter = new GermanDateConverter();
+        GermanDateConverter converter = new();
         csvWriter.Context.TypeConverterCache.AddConverter<DateTimeOffset>(converter);
         csvWriter.Context.TypeConverterCache.AddConverter<DateTimeOffset?>(converter);
         await csvWriter.WriteRecordsAsync(data);

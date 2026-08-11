@@ -5,6 +5,8 @@ using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UniVerein.Api.Services;
+using UniVerein.DAL.Entities;
 using Xunit;
 
 namespace UniVerein.IntegrationTests.Infrastructure;
@@ -42,6 +44,30 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
             HandleCookies = false
         });
     }
+    
+    protected async Task<(HttpClient Client, Guid UserId)> CreateUserAndClientAsync(UserRole role, string username)
+    {
+        Guid userId = Guid.NewGuid();
+        AppDbContext db = GetService<AppDbContext>();
+        db.Users.Add(new UserEntity
+        {
+            Id = userId,
+            Username = username,
+            PasswordHash = CryptoService.HashPassword("Test1234!"),
+            Role = role
+        });
+        await db.SaveChangesAsync();
+
+        IConfiguration configuration = GetService<IConfiguration>();
+        HttpClient client = role switch
+        {
+            UserRole.ADMIN => CreateClient().AsAdmin(configuration, userId),
+            UserRole.FINANCIAL_MANAGER => CreateClient().AsFinancialUser(configuration, userId),
+            _ => CreateClient().AsUser(configuration, userId)
+        };
+        
+        return (client, userId);
+    }
 
     protected HttpClient CreateAdminClient()
     {
@@ -63,8 +89,8 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
 
     protected async Task WithDbContext(Func<AppDbContext, Task> action)
     {
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        using IServiceScope scope = Factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await action(db);
     }
 

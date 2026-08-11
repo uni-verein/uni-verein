@@ -69,7 +69,7 @@ public class SepaServiceTests : IntegrationTestBase
         await CreateDueContributionAsync(member);
 
         // Act
-        var (xml, amount, count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+        (string? xml, decimal amount, int count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
 
         // Assert
         xml.ShouldNotBeNullOrWhiteSpace();
@@ -88,7 +88,7 @@ public class SepaServiceTests : IntegrationTestBase
         await CreateDueContributionAsync(member2, DefaultExportId, 60m);
 
         // Act
-        var (xml, amount, count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+        (string? xml, decimal amount, int count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
 
         // Assert
         amount.ShouldBe(180m);
@@ -240,7 +240,7 @@ public class SepaServiceTests : IntegrationTestBase
         await CreateDueContributionAsync(member2, Guid.NewGuid(), 50m);
 
         // Act
-        var (_, amount, count) = await _sepaService.GenerateXml(ValidCreditor, contribution.ExportId);
+        (string _, decimal amount, int count) = await _sepaService.GenerateXml(ValidCreditor, contribution.ExportId);
 
         // Assert
         count.ShouldBe(1);
@@ -303,7 +303,7 @@ public class SepaServiceTests : IntegrationTestBase
 
         // Assert
         List<string> instrIds = ExtractTagValues(xml, "InstrId").ToList();
-        foreach (var id in instrIds)
+        foreach (string id in instrIds)
             id.Length.ShouldBeLessThanOrEqualTo(35, $"InstrId '{id}' exceeds max length of 35");
     }
 

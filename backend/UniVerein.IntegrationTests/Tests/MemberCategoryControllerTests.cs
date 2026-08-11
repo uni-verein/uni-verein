@@ -73,7 +73,7 @@ public class MemberCategoryControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
@@ -114,7 +114,7 @@ public class MemberCategoryControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(role);
         List<MemberCategoryEntity> memberCategories = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             memberCategories.Add(await CreateMemberCategoryEntity(name: index.ToString()));
 
         // Act
@@ -162,7 +162,7 @@ public class MemberCategoryControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
@@ -304,7 +304,7 @@ public class MemberCategoryControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
@@ -524,7 +524,7 @@ public class MemberCategoryControllerTests : IntegrationTestBase
         MemberCategoryEntity memberCategoryEntity = await CreateMemberCategoryEntity();
 
         // Act
-        var response = await client.DeleteAsync($"/member-categories/{memberCategoryEntity.Id}");
+        HttpResponseMessage response = await client.DeleteAsync($"/member-categories/{memberCategoryEntity.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

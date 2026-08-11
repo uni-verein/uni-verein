@@ -8,7 +8,7 @@ ENV VITE_APP_VERSION=$VITE_APP_VERSION
 ENV VITE_APP_DEMO=$VITE_APP_DEMO
 
 COPY package*.json ./
-RUN npm install || (echo "npm install failed, retrying..." && sleep 5 && npm install)
+RUN npm ci || (echo "npm ci failed, retrying..." && sleep 5 && npm ci)
 
 COPY . .
 RUN npm run build

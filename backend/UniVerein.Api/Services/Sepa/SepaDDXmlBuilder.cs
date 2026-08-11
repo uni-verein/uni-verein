@@ -25,7 +25,7 @@ public class SepaDdXmlBuilder
             NewLineOnAttributes = false
         };
 
-        using (var writer = XmlWriter.Create(ms, settings))
+        using (XmlWriter writer = XmlWriter.Create(ms, settings))
             xDoc.Save(writer);
 
         return ms.ToArray();

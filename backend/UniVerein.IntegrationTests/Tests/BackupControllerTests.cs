@@ -1,5 +1,8 @@
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
+using UniVerein.Api.Services;
 using UniVerein.DAL.Entities.Enums;
 using UniVerein.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -106,6 +109,42 @@ public class BackupControllerTests : IntegrationTestBase
         ContentDispositionHeaderValue? contentDisposition = response.Content.Headers.ContentDisposition;
         contentDisposition.ShouldNotBeNull();
         contentDisposition.FileNameStar.ShouldBe(expectedFileName);
+    }
+
+    [Fact]
+    public async Task GetBackup_Full_ReturnsZipWithDatabaseAndReceiptFiles_WhenAdmin()
+    {
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        ReceiptService receiptService = GetService<ReceiptService>();
+        Directory.CreateDirectory(receiptService.StoragePath);
+        string testFilePath = Path.Combine(receiptService.StoragePath, $"{Guid.NewGuid()}.pdf");
+        await File.WriteAllTextAsync(testFilePath,
+            "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF");
+
+        try
+        {
+            // Act
+            HttpResponseMessage response = await client.GetAsync("/backup?full=true");
+            byte[] zipBytes = await response.Content.ReadAsByteArrayAsync();
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/zip");
+            response.Content.Headers.ContentDisposition?.FileNameStar
+                .ShouldBe($"backup_full_{DateTime.Now:yyyyMMdd}.zip");
+
+            using MemoryStream memoryStream = new(zipBytes);
+            using ZipArchive archive = new(memoryStream, ZipArchiveMode.Read);
+
+            archive.GetEntry("database.sql").ShouldNotBeNull();
+            archive.Entries.Any(e => e.FullName.StartsWith("receipts/") && e.FullName.EndsWith(".pdf"))
+                .ShouldBeTrue();
+        }
+        finally
+        {
+            File.Delete(testFilePath);
+        }
     }
 
     [Fact]

@@ -32,6 +32,8 @@ services:
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
       Version: ${VERSION}
+    volumes:
+      - ./receipts:/app/receipts
     depends_on:
       db:
         condition: service_healthy

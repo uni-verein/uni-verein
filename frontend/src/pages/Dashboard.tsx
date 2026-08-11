@@ -25,6 +25,8 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import EmailIcon from '@mui/icons-material/Email';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import EuroIcon from '@mui/icons-material/Euro';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -51,6 +53,9 @@ const Audit = lazy(() => import('./Audit'));
 const CreditorConfig = lazy(() => import('./CreditorConfig'));
 const GeneralConfig = lazy(() => import('./GeneralConfig'));
 const MemberCategoryConfig = lazy(() => import('./MemberCategoryConfig'));
+const Receipts = lazy(() => import('./Receipts'));
+const ReceiptCategoryConfig = lazy(() => import('./ReceiptCategoryConfig'));
+const ReceiptAnalytics = lazy(() => import('./ReceiptAnalytics'));
 
 const drawerWidthExpanded = 280;
 const drawerWidthCollapsed = 64;
@@ -191,6 +196,18 @@ export default function Dashboard({
       label: t('pages.dashboard.pageNames.contributions'),
       icon: <EuroIcon />,
       roles: [Role.ADMIN, Role.USER, Role.FINANCIAL_MANAGER],
+    },
+    {
+      id: 'receipts',
+      label: t('pages.dashboard.pageNames.receipts'),
+      icon: <ReceiptLongIcon />,
+      roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
+    },
+    {
+      id: 'receipt-analytics',
+      label: t('pages.dashboard.pageNames.receiptAnalytics'),
+      icon: <QueryStatsIcon />,
+      roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
   ];
 
@@ -449,6 +466,8 @@ export default function Dashboard({
               {page === 'mail' && <Mail />}
               {page === 'sepa' && <Sepa />}
               {page === 'contributions' && <Contributions role={user.role} />}
+              {page === 'receipts' && <Receipts role={user.role} userId={user.id} />}
+              {page === 'receipt-analytics' && <ReceiptAnalytics />}
               {page === 'user' && <UserManagement accountView={true} userId={user.id} />}
               {page === 'users' && <UserManagement accountView={false} userId={user.id} />}
               {page === 'email-config' && <EmailConfig />}
@@ -459,6 +478,7 @@ export default function Dashboard({
               {page === 'creditor-config' && <CreditorConfig />}
               {page === 'general-config' && <GeneralConfig />}
               {page === 'member-category-config' && <MemberCategoryConfig />}
+              {page === 'receipt-category-config' && <ReceiptCategoryConfig />}
             </Suspense>
           </Paper>
         </Container>

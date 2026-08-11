@@ -29,7 +29,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
+    public async Task<ActionResult<LoginApiResult>> LoginAsync([FromBody] LoginRequest request)
     {
         UserEntity? user = await _db.Users.FirstOrDefaultAsync(x => x.Username == request.Username);
         if (user == null)

@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-08-05
+Generated automatically on 2026-08-09
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -112,7 +112,7 @@ Generated automatically on 2026-08-05
 | @emotion/use-insertion-effect-with-fallbacks@1.2.0 | - | MIT |
 | @emotion/utils@1.4.2 | - | MIT |
 | @emotion/weak-memoize@0.4.0 | - | MIT |
-| @esbuild/linux-x64@0.27.7 | - | MIT |
+| @esbuild/linux-x64@0.28.2 | - | MIT |
 | @eslint-community/eslint-utils@4.9.1 | - | MIT |
 | @eslint-community/regexpp@4.12.2 | - | MIT |
 | @eslint/config-array@0.23.5 | - | Apache-2.0 |
@@ -149,8 +149,14 @@ Generated automatically on 2026-08-05
 | @mui/system@7.3.8 | - | MIT |
 | @mui/types@7.4.11 | - | MIT |
 | @mui/utils@7.3.8 | - | MIT |
+| @mui/x-charts-vendor@8.29.0 | - | MIT AND ISC |
+| @mui/x-charts@8.29.2 | - | MIT |
 | @mui/x-date-pickers@8.27.2 | - | MIT |
+| @mui/x-internal-gestures@0.5.0 | - | MIT |
 | @mui/x-internals@8.26.0 | - | MIT |
+| @mui/x-internals@8.29.2 | - | MIT |
+| @napi-rs/canvas-linux-x64-gnu@0.1.100 | - | MIT |
+| @napi-rs/canvas@0.1.100 | - | MIT |
 | @pkgr/core@0.2.9 | - | MIT |
 | @playwright/test@1.58.2 | - | Apache-2.0 |
 | @popperjs/core@2.11.8 | - | MIT |
@@ -200,6 +206,16 @@ Generated automatically on 2026-08-05
 | @types/babel__generator@7.27.0 | - | MIT |
 | @types/babel__template@7.4.4 | - | MIT |
 | @types/babel__traverse@7.28.0 | - | MIT |
+| @types/d3-array@3.2.2 | - | MIT |
+| @types/d3-color@3.1.3 | - | MIT |
+| @types/d3-format@3.0.4 | - | MIT |
+| @types/d3-interpolate@3.0.4 | - | MIT |
+| @types/d3-path@3.1.1 | - | MIT |
+| @types/d3-scale@4.0.9 | - | MIT |
+| @types/d3-shape@3.1.8 | - | MIT |
+| @types/d3-time-format@4.0.3 | - | MIT |
+| @types/d3-time@3.0.4 | - | MIT |
+| @types/d3-timer@3.0.2 | - | MIT |
 | @types/esrecurse@4.3.1 | - | MIT |
 | @types/estree@1.0.9 | - | MIT |
 | @types/json-schema@7.0.15 | - | MIT |
@@ -233,7 +249,9 @@ Generated automatically on 2026-08-05
 | babel-plugin-polyfill-regenerator@0.6.8 | - | MIT |
 | balanced-match@4.0.4 | - | MIT |
 | baseline-browser-mapping@2.10.38 | - | Apache-2.0 |
-| brace-expansion@5.0.8 | - | MIT |
+| bezier-easing@2.1.0 | - | MIT |
+| bmp-js@0.1.0 | - | MIT |
+| brace-expansion@5.0.9 | - | MIT |
 | browserslist@4.28.2 | - | MIT |
 | buffer-from@1.1.2 | - | MIT |
 | cac@6.7.14 | - | MIT |
@@ -254,6 +272,16 @@ Generated automatically on 2026-08-05
 | cross-spawn@7.0.6 | - | MIT |
 | crypto-random-string@2.0.0 | - | MIT |
 | csstype@3.2.3 | - | MIT |
+| d3-array@3.2.4 | - | ISC |
+| d3-color@3.1.0 | - | ISC |
+| d3-format@3.1.2 | - | ISC |
+| d3-interpolate@3.0.1 | - | ISC |
+| d3-path@3.1.0 | - | ISC |
+| d3-scale@4.0.2 | - | ISC |
+| d3-shape@3.2.0 | - | ISC |
+| d3-time-format@4.1.0 | - | ISC |
+| d3-time@3.1.0 | - | ISC |
+| d3-timer@3.0.1 | - | ISC |
 | data-view-buffer@1.0.2 | - | MIT |
 | data-view-byte-length@1.0.2 | - | MIT |
 | data-view-byte-offset@1.0.1 | - | MIT |
@@ -280,7 +308,7 @@ Generated automatically on 2026-08-05
 | es-object-atoms@1.1.2 | - | MIT |
 | es-set-tostringtag@2.1.0 | - | MIT |
 | es-to-primitive@1.3.4 | - | MIT |
-| esbuild@0.27.7 | - | MIT |
+| esbuild@0.28.2 | - | MIT |
 | escalade@3.2.0 | - | MIT |
 | escape-string-regexp@4.0.0 | - | MIT |
 | eslint-config-prettier@10.1.8 | - | MIT |
@@ -311,6 +339,7 @@ Generated automatically on 2026-08-05
 | find-root@1.1.0 | - | MIT |
 | find-up@5.0.0 | - | MIT |
 | flat-cache@4.0.1 | - | MIT |
+| flatqueue@3.1.0 | - | ISC |
 | flatted@3.4.2 | - | ISC |
 | for-each@0.3.5 | - | MIT |
 | foreground-child@3.3.1 | - | ISC |
@@ -341,11 +370,13 @@ Generated automatically on 2026-08-05
 | i18next-browser-languagedetector@8.2.1 | - | MIT |
 | i18next@26.0.3 | - | MIT |
 | ico-endec@0.1.6 | - | MPL-2.0 |
+| idb-keyval@6.3.0 | - | Apache-2.0 |
 | idb@7.1.1 | - | ISC |
 | ignore@5.3.2 | - | MIT |
 | import-fresh@3.3.1 | - | MIT |
 | imurmurhash@0.1.4 | - | MIT |
 | internal-slot@1.1.0 | - | MIT |
+| internmap@2.0.3 | - | ISC |
 | is-array-buffer@3.0.5 | - | MIT |
 | is-arrayish@0.2.1 | - | MIT |
 | is-async-function@2.1.1 | - | MIT |
@@ -356,6 +387,7 @@ Generated automatically on 2026-08-05
 | is-data-view@1.0.2 | - | MIT |
 | is-date-object@1.1.0 | - | MIT |
 | is-document.all@1.0.0 | - | MIT |
+| is-electron@2.2.2 | - | MIT |
 | is-extglob@2.1.1 | - | MIT |
 | is-finalizationregistry@1.1.1 | - | MIT |
 | is-generator-function@1.1.2 | - | MIT |
@@ -373,6 +405,7 @@ Generated automatically on 2026-08-05
 | is-string@1.1.1 | - | MIT |
 | is-symbol@1.1.1 | - | MIT |
 | is-typed-array@1.1.15 | - | MIT |
+| is-url@1.2.4 | - | MIT |
 | is-weakmap@2.0.2 | - | MIT |
 | is-weakref@1.1.1 | - | MIT |
 | is-weakset@2.0.4 | - | MIT |
@@ -409,7 +442,7 @@ Generated automatically on 2026-08-05
 | minimatch@5.1.9 | - | ISC |
 | minipass@7.1.3 | - | BlueOak-1.0.0 |
 | ms@2.1.3 | - | MIT |
-| nanoid@3.3.16 | - | MIT |
+| nanoid@3.3.18 | - | MIT |
 | natural-compare@1.4.0 | - | MIT |
 | node-fetch@2.7.0 | - | MIT |
 | node-releases@2.0.48 | - | MIT |
@@ -417,6 +450,7 @@ Generated automatically on 2026-08-05
 | object-inspect@1.13.4 | - | MIT |
 | object-keys@1.1.1 | - | MIT |
 | object.assign@4.1.7 | - | MIT |
+| opencollective-postinstall@2.0.3 | - | MIT |
 | optionator@0.9.4 | - | MIT |
 | orderedmap@2.1.1 | - | MIT |
 | own-keys@1.0.1 | - | MIT |
@@ -430,6 +464,7 @@ Generated automatically on 2026-08-05
 | path-parse@1.0.7 | - | MIT |
 | path-scurry@2.0.2 | - | BlueOak-1.0.0 |
 | path-type@4.0.0 | - | MIT |
+| pdfjs-dist@4.10.38 | - | Apache-2.0 |
 | picocolors@1.1.1 | - | ISC |
 | picomatch@4.0.4 | - | MIT |
 | playwright-core@1.58.2 | - | Apache-2.0 |
@@ -468,6 +503,7 @@ Generated automatically on 2026-08-05
 | reflect.getprototypeof@1.0.10 | - | MIT |
 | regenerate-unicode-properties@10.2.2 | - | MIT |
 | regenerate@1.4.2 | - | MIT |
+| regenerator-runtime@0.13.11 | - | MIT |
 | regexp.prototype.flags@1.5.4 | - | MIT |
 | regexpu-core@6.4.0 | - | MIT |
 | regjsgen@0.8.0 | - | MIT |
@@ -518,6 +554,8 @@ Generated automatically on 2026-08-05
 | temp-dir@2.0.0 | - | MIT |
 | tempy@0.6.0 | - | MIT |
 | terser@5.49.0 | - | BSD-2-Clause |
+| tesseract.js-core@5.1.1 | - | Apache-2.0 |
+| tesseract.js@5.1.1 | - | Apache-2.0 |
 | tinyglobby@0.2.17 | - | MIT |
 | to-data-view@1.1.0 | - | MIT |
 | tough-cookie@4.1.4 | - | BSD-3-Clause |
@@ -549,9 +587,10 @@ Generated automatically on 2026-08-05
 | use-sync-external-store@1.6.0 | - | MIT |
 | uuid@13.0.2 | - | MIT |
 | vite-plugin-pwa@1.3.0 | - | MIT |
-| vite@7.3.5 | - | MIT |
+| vite@7.3.6 | - | MIT |
 | void-elements@3.1.0 | - | MIT |
 | w3c-keyname@2.2.8 | - | MIT |
+| wasm-feature-detect@1.8.0 | - | Apache-2.0 |
 | webidl-conversions@3.0.1 | - | BSD-2-Clause |
 | webidl-conversions@4.0.2 | - | BSD-2-Clause |
 | whatwg-url@5.0.0 | - | MIT |
@@ -582,3 +621,4 @@ Generated automatically on 2026-08-05
 | yallist@3.1.1 | - | ISC |
 | yaml@1.10.3 | - | ISC |
 | yocto-queue@0.1.0 | - | MIT |
+| zlibjs@0.3.1 | - | MIT |

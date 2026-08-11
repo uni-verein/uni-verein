@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UniVerein.DAL.Entities;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace UniVerein.DAL.Data;
 
@@ -33,6 +35,9 @@ public class AppDbContext : DbContext
     public DbSet<MemberCategoryEntity> MemberCategories => Set<MemberCategoryEntity>();
     public DbSet<FirmwareVersionEntity> FirmwareVersions => Set<FirmwareVersionEntity>();
     public DbSet<FirmwareVersionNotificationEntity> FirmwareVersionNotifications => Set<FirmwareVersionNotificationEntity>();
+    public DbSet<ReceiptEntity> Receipts => Set<ReceiptEntity>();
+    public DbSet<ReceiptCategoryEntity> ReceiptCategories => Set<ReceiptCategoryEntity>();
+    public DbSet<ReceiptFileEntity> ReceiptFiles => Set<ReceiptFileEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,9 +96,28 @@ public class AppDbContext : DbContext
             .HasForeignKey(n => n.FirmwareVersionId);
 
 
+        modelBuilder.Entity<ReceiptEntity>()
+            .Property(x => x.PaymentMethod)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<ReceiptEntity>()
+            .HasMany(r => r.Files)
+            .WithOne(i => i.Receipt)
+            .HasForeignKey(i => i.ReceiptId);
+        
+        modelBuilder.Entity<ReceiptEntity>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .IsRequired(false);
+
+        modelBuilder.Entity<ReceiptCategoryEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
         {
-            var converter = new ValueConverter<DateTimeOffset?, long?>(
+            ValueConverter<DateTimeOffset?, long?> converter = new ValueConverter<DateTimeOffset?, long?>(
                 v => v.HasValue ? v.Value.ToUnixTimeMilliseconds() : null,
                 v => v.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(v.Value) : null
             );
@@ -105,6 +129,10 @@ public class AppDbContext : DbContext
             modelBuilder.Entity<ContributionEntity>()
                 .Property(x => x.DeletedAt)
                 .HasConversion(converter);
+
+            modelBuilder.Entity<ReceiptEntity>()
+                .Property(x => x.Paid)
+                .HasConversion(converter);
         }
     }
 
@@ -113,13 +141,13 @@ public class AppDbContext : DbContext
         if (SuppressAutoTimestamps)
             return await base.SaveChangesAsync(cancellationToken);
 
-        var entries = ChangeTracker
+        IEnumerable<EntityEntry> entries = ChangeTracker
             .Entries()
             .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Deleted));
 
-        foreach (var entityEntry in entries)
+        foreach (EntityEntry? entityEntry in entries)
         {
-            var entity = (BaseEntity)entityEntry.Entity;
+            BaseEntity entity = (BaseEntity)entityEntry.Entity;
 
             if (entityEntry.State == EntityState.Added)
             {
@@ -137,7 +165,7 @@ public class AppDbContext : DbContext
 
     public async Task<int> ForceSaveChangesAsync()
     {
-        var result = await base.SaveChangesAsync();
+        int result = await base.SaveChangesAsync();
         ChangeTracker.Clear();
         return result;
     }

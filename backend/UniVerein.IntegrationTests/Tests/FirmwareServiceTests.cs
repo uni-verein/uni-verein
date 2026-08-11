@@ -48,12 +48,12 @@ public class FirmwareServiceTests : IntegrationTestBase
             await db.ForceSaveChangesAsync();
         });
 
-        var options = new SmtpServerOptionsBuilder()
+        ISmtpServerOptions options = new SmtpServerOptionsBuilder()
             .ServerName("localhost")
             .Port(2522)
             .Build();
 
-        var serviceProvider = new ServiceCollection()
+        ServiceProvider serviceProvider = new ServiceCollection()
             .AddSingleton<IMessageStore>(new TestMessageStore(_receivedMails))
             .BuildServiceProvider();
 

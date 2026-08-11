@@ -43,7 +43,7 @@ public class FirmwareService
 
     public async Task CheckLatestFirmwareAsync(CancellationToken cancellationToken)
     {
-        var currentVersionRaw = _configuration["Version"];
+        string? currentVersionRaw = _configuration["Version"];
         
         if (string.IsNullOrWhiteSpace(currentVersionRaw)) 
         { 
@@ -55,13 +55,13 @@ public class FirmwareService
         if (release == null)
             return;
         
-        if (!Version.TryParse(currentVersionRaw, out var currentVersion)) 
+        if (!Version.TryParse(currentVersionRaw, out Version? currentVersion)) 
         { 
             Log.Error($"FirmwareService: Current version '{currentVersionRaw}' could not be parsed."); 
             return;
         }
         
-        if (!Version.TryParse(release.Name?.TrimStart('v'), out var latestVersion)) 
+        if (!Version.TryParse(release.Name?.TrimStart('v'), out Version? latestVersion)) 
         { 
             Log.Error($"FirmwareService: GitHub version '{release.Name}' could not be parsed."); 
             return;
@@ -138,7 +138,7 @@ public class FirmwareService
     
     private static EmailRequest BuildEmailRequest(FirmwareVersionEntity firmware)
     {
-        var releaseNotesHtml = MarkdownHelper.ToHtml(firmware.ReleaseNotes);
+        string releaseNotesHtml = MarkdownHelper.ToHtml(firmware.ReleaseNotes);
 
         string body = $"""
                 <!DOCTYPE html>

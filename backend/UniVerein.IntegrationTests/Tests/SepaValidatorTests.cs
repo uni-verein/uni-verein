@@ -11,7 +11,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig();
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -23,7 +23,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(name: name);
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
         Assert.Contains("Name", ex.Message);
     }
 
@@ -32,7 +32,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(name: "Muster AG");
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -48,7 +48,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(iban: iban);
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
         Assert.Contains("Iban", ex.Message);
     }
 
@@ -61,7 +61,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(iban: iban);
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -77,7 +77,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(bic: bic!);
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
         Assert.Contains("Bic", ex.Message);
     }
 
@@ -89,7 +89,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(bic: bic);
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -101,7 +101,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(creditorId: creditorId);
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
         Assert.Contains("CreditorId", ex.Message);
     }
 
@@ -110,7 +110,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(creditorId: "DE98ZZZ09999999999");
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -122,7 +122,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(townName: townName);
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
         Assert.Contains("TownName", ex.Message);
     }
 
@@ -131,7 +131,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(townName: "Kiel");
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -145,7 +145,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(country: country);
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Contains("Country", ex.Message);
     }
@@ -158,7 +158,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(country: country);
 
-        var exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
+        Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Null(exception);
     }
@@ -168,7 +168,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(bic: "INVALID123");
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Contains("INVALID123", ex.Message);
     }
@@ -178,7 +178,7 @@ public class SepaValidatorTests
     {
         CreditorConfig config = CreateValidCreditorConfig(bic: "BADBIC");
 
-        var ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
+        ArgumentException ex = Assert.Throws<ArgumentException>(() => SepaValidator.ValidateCreditorConfig(config));
 
         Assert.Contains("BADBIC", ex.Message);
     }

@@ -59,6 +59,7 @@ services:
       Version: ${VERSION}
     volumes:
       - ./logs:/app/logs
+      - ./receipts:/app/receipts
     depends_on:
       db:
         condition: service_healthy

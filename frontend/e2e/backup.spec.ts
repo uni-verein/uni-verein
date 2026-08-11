@@ -120,7 +120,7 @@ test.describe('Backup page', () => {
         page.getByRole('button', { name: /Sicherung jetzt herunterladen/i }).click(),
       ]);
 
-      expect(download.suggestedFilename()).toMatch(/Verein_Backup_\d{4}-\d{2}-\d{2}\.sql/);
+      expect(download.suggestedFilename()).toMatch(/backup_\d{8}\.sql/);
 
       const downloadPath = await download.path();
       const stats = fs.statSync(downloadPath!);
@@ -154,6 +154,69 @@ test.describe('Backup page', () => {
       });
 
       fs.unlinkSync(backupPath);
+    });
+
+    test('Download full backup with receipts from backend', async ({ page }) => {
+      await openDashboard(page, tc.get().token);
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.getByRole('button', { name: 'Backup', exact: true }).click();
+
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.getByRole('button', { name: /Sicherung mit Belegen herunterladen/i }).click(),
+      ]);
+
+      expect(download.suggestedFilename()).toMatch(/backup_full_\d{8}\.zip/);
+
+      const downloadPath = await download.path();
+      const stats = fs.statSync(downloadPath!);
+      expect(stats.size).toBeGreaterThan(0);
+
+      await expect(page.getByText('Download erfolgreich.')).toBeVisible();
+    });
+
+    test('Full backup restore preserves a receipt and its PDF file', async ({ page }) => {
+      const pdfBytes = Buffer.from(
+        '%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF',
+        'utf-8',
+      );
+      const receipt = await backend.createTestReceiptWithPdf(tc.get().token, pdfBytes);
+      const fileId = receipt.files[0].id;
+
+      try {
+        await openDashboard(page, tc.get().token);
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.getByRole('button', { name: 'Backup', exact: true }).click();
+
+        const [download] = await Promise.all([
+          page.waitForEvent('download'),
+          page.getByRole('button', { name: /Sicherung mit Belegen herunterladen/i }).click(),
+        ]);
+        await expect(page.getByText('Download erfolgreich.')).toBeVisible();
+        const backupPath = path.join(os.tmpdir(), download.suggestedFilename());
+        await download.saveAs(backupPath);
+
+        await backend.deleteAllReceipts();
+        const deleted = await backend.getReceiptFile(tc.get().token, receipt.id, fileId);
+        expect(deleted.status).toBe(404);
+
+        const fileInput = page.locator('input[type="file"]').first();
+        await fileInput.setInputFiles(backupPath);
+        await expect(page.getByText(/ACHTUNG/i)).toBeVisible();
+        await page.getByRole('button', { name: /System wiederherstellen/i }).click();
+        await expect(page.getByText('System erfolgreich wiederhergestellt.')).toBeVisible({
+          timeout: 15000,
+        });
+
+        const restored = await backend.getReceiptFile(tc.get().token, receipt.id, fileId);
+        expect(restored.status).toBe(200);
+        expect(restored.contentType).toBe('application/pdf');
+        expect(restored.body.equals(pdfBytes)).toBe(true);
+
+        fs.unlinkSync(backupPath);
+      } finally {
+        await backend.deleteAllReceipts();
+      }
     });
 
     test('Cancel restore dialog', async ({ page }) => {
@@ -224,15 +287,15 @@ test.describe('Backup page', () => {
       const firstDataRow = lines[1].split(';');
       expect(firstDataRow).toContain('1');
       expect(firstDataRow).toContain('MALE');
-      expect(firstDataRow).toContain('Mustermann');
-      expect(firstDataRow).toContain('Max');
+      expect(firstDataRow).toContain('Doe');
+      expect(firstDataRow).toContain('John');
       expect(firstDataRow).toContain('01.01.2000');
       expect(firstDataRow).toContain('+49 172 12345678');
       expect(firstDataRow).toContain('ALLOWED');
-      expect(firstDataRow).toContain('max.mustermann@gmail.com');
-      expect(firstDataRow).toContain('Musterstraße 1');
+      expect(firstDataRow).toContain('john.doe@gmail.com');
+      expect(firstDataRow).toContain('Example Street 1');
       expect(firstDataRow).toContain('12345');
-      expect(firstDataRow).toContain('Musterstadt');
+      expect(firstDataRow).toContain('Example City');
       expect(firstDataRow).toContain('01.10.2015');
       expect(firstDataRow).toContain('b.sc.');
       expect(firstDataRow).toContain('Informatics');

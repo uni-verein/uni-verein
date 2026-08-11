@@ -70,7 +70,7 @@ public class MemberControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(role);
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             await CreateMemberEntity(index);
 
         // Act
@@ -93,7 +93,7 @@ public class MemberControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(role);
         List<MemberEntity> members = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             members.Add(await CreateMemberEntity(index));
 
         // Act
@@ -131,7 +131,7 @@ public class MemberControllerTests : IntegrationTestBase
         // Arrange
         string testName = Guid.NewGuid().ToString();
         HttpClient client = CreateClient(role);
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             await CreateMemberEntity(index);
 
         Guid? memberCategoryId = string.IsNullOrWhiteSpace(memberCategory) ? null : Guid.Parse(memberCategory);
@@ -164,7 +164,7 @@ public class MemberControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(UserRole.USER);
         List<MemberEntity> members = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             members.Add(await CreateMemberEntity(index));
 
         MemberQuery memberQuery = new()
@@ -249,7 +249,7 @@ public class MemberControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(role);
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             await CreateMemberEntity(index);
 
         // Act
@@ -272,7 +272,7 @@ public class MemberControllerTests : IntegrationTestBase
         Guid testCategory = Guid.Parse(Program.MemberCategoriesAlumni);
         HttpClient client = CreateClient(role);
         await CreateMemberEntity(10, memberCategory: testCategory);
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             await CreateMemberEntity(index, memberCategory: Guid.Parse(Program.MemberCategoriesStudent));
 
         // Act

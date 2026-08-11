@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +6,8 @@ using UniVerein.Api.Services;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Net.Http.Headers;
 using Serilog;
 
 namespace UniVerein.Api.Controllers;
@@ -25,24 +26,36 @@ public class BackupController : ControllerBase
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     [HttpGet]
-    public async Task<IActionResult> GetBackup()
+    public async Task<IActionResult> GetBackup([FromQuery] bool full = false)
     {
+        Log.Information($"BackupController: Start backup-creation (full={full})");
+
         try
         {
-            Log.Information("BackupController: Start backup-creation");
-            var path = await _backup.CreateBackupAsync();
-
-            if (!System.IO.File.Exists(path))
+            if (full)
             {
-                Log.Error("BackupController: Backup-file couldn't be found.");
-                return NotFound("Backup-file couldn't be found.");
+                IHttpBodyControlFeature? bodyControlFeature = HttpContext.Features.Get<IHttpBodyControlFeature>();
+                if (bodyControlFeature != null)
+                    bodyControlFeature.AllowSynchronousIO = true;
+
+                ContentDispositionHeaderValue contentDisposition = new("attachment");
+                contentDisposition.SetHttpFileName($"backup_full_{DateTime.Now:yyyyMMdd}.zip");
+                Response.ContentType = "application/zip";
+                Response.Headers.ContentDisposition = contentDisposition.ToString();
+
+                await _backup.WriteFullBackupZipAsync(Response.Body);
+                Log.Information($"BackupController: Full backup backup_full_{DateTime.Now:yyyyMMdd}.zip created");
+                return new EmptyResult();
             }
 
-            FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
-                FileOptions.DeleteOnClose);
+            ContentDispositionHeaderValue sqlContentDisposition = new("attachment");
+            sqlContentDisposition.SetHttpFileName($"backup_{DateTime.Now:yyyyMMdd}.sql");
+            Response.ContentType = "application/sql";
+            Response.Headers.ContentDisposition = sqlContentDisposition.ToString();
 
+            await _backup.WritePgDumpAsync(Response.Body);
             Log.Information($"BackupController: Backup backup_{DateTime.Now:yyyyMMdd}.sql created");
-            return File(stream, "application/sql", $"backup_{DateTime.Now:yyyyMMdd}.sql");
+            return new EmptyResult();
         }
         catch (Exception ex)
         {
@@ -58,8 +71,15 @@ public class BackupController : ControllerBase
         Log.Information($"BackupController: Try to restore {file.FileName}");
         try
         {
-            if (await _backup.RestoreBackupAsync(file))
-                Log.Information($"BackupController: Restoring of backup completed");
+            bool isZip = file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
+                file.ContentType is "application/zip" or "application/x-zip-compressed";
+
+            bool restored = isZip
+                ? await _backup.RestoreFullBackupAsync(file)
+                : await _backup.RestoreBackupAsync(file);
+
+            if (restored)
+                Log.Information("BackupController: Restoring of backup completed");
         }
         catch (Exception ex)
         {

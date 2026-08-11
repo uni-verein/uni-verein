@@ -26,7 +26,7 @@ export function DemoDialog() {
         </Typography>
       </Box>
 
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+      <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.68)', mb: 2 }}>
         {t('pages.login.demo.caption')}
       </Typography>
 
@@ -35,7 +35,7 @@ export function DemoDialog() {
       <Typography
         variant="caption"
         sx={{
-          color: 'text.secondary',
+          color: 'rgba(0,0,0,0.68)',
           textTransform: 'uppercase',
           fontWeight: 600,
           letterSpacing: 0.5,
@@ -65,7 +65,7 @@ export function DemoDialog() {
             }}
           >
             <PersonIcon sx={{ fontSize: 16, color: 'warning.dark' }} />
-            <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.87)', fontWeight: 500 }}>
               {item.label}
             </Typography>
           </Box>

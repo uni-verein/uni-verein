@@ -23,9 +23,9 @@
 - [Screenshots](#-screenshots)
 - [Demo](#-demo)
 - [Getting Started](#-getting-started)
-- [Usage](#️-usage)
+- [Usage](#-usage)
 - [Contributing](#-contributing)
-- [Roadmap](#️-roadmap)
+- [Roadmap](#-roadmap)
 - [License](#-license)
 - [Contact](#-contact)
 
@@ -75,9 +75,9 @@ Make sure you have the following installed:
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.4.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.4.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.4.0/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.5.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.5.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.5.0/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**

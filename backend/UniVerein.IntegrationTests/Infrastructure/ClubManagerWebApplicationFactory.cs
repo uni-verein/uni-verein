@@ -34,7 +34,7 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, config) =>
         {
-            var settingsPath = Path.Combine(TestDirectory, "appsettings.Testing.json");
+            string settingsPath = Path.Combine(TestDirectory, "appsettings.Testing.json");
             config.AddJsonFile(settingsPath, optional: false, reloadOnChange: false);
         });
 
@@ -59,8 +59,8 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
 
     public async Task InitializeAsync()
     {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        using IServiceScope scope = Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         await db.Database.EnsureCreatedAsync();
         await SeedDatabaseAsync(db);

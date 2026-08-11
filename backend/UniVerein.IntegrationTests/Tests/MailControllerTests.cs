@@ -55,12 +55,12 @@ public class MailControllerTests : IntegrationTestBase
             await db.ForceSaveChangesAsync();
         });
 
-        var options = new SmtpServerOptionsBuilder()
+        ISmtpServerOptions options = new SmtpServerOptionsBuilder()
             .ServerName("localhost")
             .Port(2520)
             .Build();
 
-        var serviceProvider = new ServiceCollection()
+        ServiceProvider serviceProvider = new ServiceCollection()
             .AddSingleton<IMessageStore>(new TestMessageStore(_receivedMails))
             .BuildServiceProvider();
 
@@ -76,7 +76,7 @@ public class MailControllerTests : IntegrationTestBase
             .WithUrl($"http://localhost/emailProgress", httpConnectionOptions =>
             {
                 IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-                var expiredToken = JwtTestHelper.CreateToken(
+                string expiredToken = JwtTestHelper.CreateToken(
                     configuration,
                     userId: Guid.NewGuid(),
                     username: "admin",
@@ -135,17 +135,17 @@ public class MailControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
             role: role,
             lifetime: TimeSpan.FromMinutes(-5));
 
-        var client = CreateClient().WithBearerToken(expiredToken);
+        HttpClient client = CreateClient().WithBearerToken(expiredToken);
 
         // Act
-        var response = await client.GetAsync("/mail/recipients");
+        HttpResponseMessage response = await client.GetAsync("/mail/recipients");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -459,17 +459,17 @@ public class MailControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
             role: role,
             lifetime: TimeSpan.FromMinutes(-5));
 
-        var client = CreateClient().WithBearerToken(expiredToken);
+        HttpClient client = CreateClient().WithBearerToken(expiredToken);
 
         // Act
-        var response = await client.GetAsync("/mail");
+        HttpResponseMessage response = await client.GetAsync("/mail");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -563,7 +563,7 @@ public class MailControllerTests : IntegrationTestBase
     public async Task CreateMailSetting_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         MailSettingsRequest request = CreateMailSettingRequest();
 
         // Act
@@ -592,12 +592,12 @@ public class MailControllerTests : IntegrationTestBase
     public async Task UpdateMailSetting_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         await CreateMailSettingsEntity();
         MailSettingsRequest request = CreateMailSettingRequest();
 
         // Act
-        var response = await client.PutAsJsonAsync($"/mail", request);
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/mail", request);
         MailSettingsResult? result =
             await response.Content.ReadFromJsonAsync<MailSettingsResult>(_jsonSerializerOptions);
 
@@ -672,7 +672,7 @@ public class MailControllerTests : IntegrationTestBase
         MailSettingsEntity mailSettingsEntity = await CreateMailSettingsEntity();
 
         // Act
-        var response = await client.DeleteAsync($"/mail/{mailSettingsEntity.Id}");
+        HttpResponseMessage response = await client.DeleteAsync($"/mail/{mailSettingsEntity.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -703,17 +703,17 @@ public class MailControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
             role: role,
             lifetime: TimeSpan.FromMinutes(-5));
 
-        var client = CreateClient().WithBearerToken(expiredToken);
+        HttpClient client = CreateClient().WithBearerToken(expiredToken);
 
         // Act
-        var response = await client.PostAsJsonAsync("/mail/test", new { });
+        HttpResponseMessage response = await client.PostAsJsonAsync("/mail/test", new { });
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -732,7 +732,7 @@ public class MailControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await client.PostAsJsonAsync($"/mail/test", request);
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/mail/test", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -874,7 +874,7 @@ public class MailControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await client.PostAsJsonAsync($"/mail/send", request);
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/mail/send", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -917,7 +917,7 @@ public class MailControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await client.PostAsJsonAsync($"/mail/send", request);
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/mail/send", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -979,7 +979,7 @@ public class MailControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await client.PostAsJsonAsync($"/mail/send", request);
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/mail/send", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -1006,7 +1006,7 @@ public class MailControllerTests : IntegrationTestBase
     // ---------------------------------------------------------------
     private async Task WaitForMailsAsync(int expectedCount, int timeoutMs = 15000)
     {
-        var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        DateTime deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
         while (DateTime.UtcNow < deadline)
         {
             if (_receivedMails.Count >= expectedCount)

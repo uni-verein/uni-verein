@@ -69,17 +69,17 @@ public class UsersControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
             role: role,
             lifetime: TimeSpan.FromMinutes(-5));
 
-        var client = CreateClient().WithBearerToken(expiredToken);
+        HttpClient client = CreateClient().WithBearerToken(expiredToken);
 
         // Act
-        var response = await client.GetAsync("/users");
+        HttpResponseMessage response = await client.GetAsync("/users");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -119,7 +119,7 @@ public class UsersControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
         List<UserEntity> users = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             users.Add(await CreateUserEntity(username: index.ToString()));
 
         // Act
@@ -161,17 +161,17 @@ public class UsersControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
             role: role,
             lifetime: TimeSpan.FromMinutes(-5));
 
-        var client = CreateClient().WithBearerToken(expiredToken);
+        HttpClient client = CreateClient().WithBearerToken(expiredToken);
 
         // Act
-        var response = await client.GetAsync("/users/account");
+        HttpResponseMessage response = await client.GetAsync("/users/account");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -330,12 +330,12 @@ public class UsersControllerTests : IntegrationTestBase
     [Fact]
     public async Task CreateUser_WithDuplicateUsername_Conflict()
     {
-        var client = CreateAdminClient();
+        HttpClient client = CreateAdminClient();
         UserEntity userEntity = await CreateUserEntity();
         UserRequest userRequest = CreateUserRequest(userEntity.Username);
 
         // Act
-        var response = await client.PostAsJsonAsync("/users", userRequest);
+        HttpResponseMessage response = await client.PostAsJsonAsync("/users", userRequest);
         ErrorDetailsResult? result =
             await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
 
@@ -350,11 +350,11 @@ public class UsersControllerTests : IntegrationTestBase
     public async Task CreateUser_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         UserRequest request = CreateUserRequest();
 
         // Act
-        var response = await client.PostAsJsonAsync("/users", request);
+        HttpResponseMessage response = await client.PostAsJsonAsync("/users", request);
         UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
 
         // Assert
@@ -510,12 +510,12 @@ public class UsersControllerTests : IntegrationTestBase
     public async Task UpdateUser_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         UserEntity userEntity = await CreateUserEntity();
         UserUpdateRequest request = CreateUpdateUserRequest();
 
         // Act
-        var response = await client.PatchAsJsonAsync($"/users/{userEntity.Id}", request);
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{userEntity.Id}", request);
         UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
 
         // Assert
@@ -648,12 +648,12 @@ public class UsersControllerTests : IntegrationTestBase
     public async Task UpdateAccountUser_Success(UserRole role)
     {
         // Arrange
-        var client = CreateClient(role);
+        HttpClient client = CreateClient(role);
         await CreateUserEntity(id: UserId);
         UserUpdateRequest request = CreateUpdateUserRequest();
 
         // Act
-        var response = await client.PatchAsJsonAsync($"/users/account", request);
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/account", request);
         UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
 
         // Assert
@@ -672,12 +672,12 @@ public class UsersControllerTests : IntegrationTestBase
     public async Task UpdateAccountUser_RoleShouldBeNotChanged_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         await CreateUserEntity(id: UserId, role: UserRole.ADMIN);
         UserUpdateRequest request = CreateUpdateUserRequest();
 
         // Act
-        var response = await client.PatchAsJsonAsync($"/users/account", request);
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/account", request);
         UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
 
         // Assert
@@ -751,7 +751,7 @@ public class UsersControllerTests : IntegrationTestBase
         UserEntity userEntity = await CreateUserEntity();
 
         // Act
-        var response = await client.DeleteAsync($"/users/{userEntity.Id}");
+        HttpResponseMessage response = await client.DeleteAsync($"/users/{userEntity.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

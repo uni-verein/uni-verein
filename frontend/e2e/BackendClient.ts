@@ -440,4 +440,115 @@ export class BackendClient {
     await ctx.dispose();
     return body;
   }
+
+  async createReceiptCategory(name = 'playwright_test_category'): Promise<any> {
+    const ctx = await this.ctx();
+    const res = await ctx.post('/api/receipt-categories', { data: { name } });
+    if (!res.ok()) {
+      throw new Error(`Receipt category creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  async deleteAllReceiptCategories(): Promise<any> {
+    const ctx = await this.ctx();
+    const res = await ctx.get('/api/receipt-categories');
+    if (res.ok()) {
+      const result = await res.json();
+      for (const category of result.items) {
+        await ctx.delete(`/api/receipt-categories/${category.id}`);
+      }
+    }
+    await ctx.dispose();
+  }
+
+  async createTestReceipt(token: string, overrides: Record<string, string> = {}): Promise<any> {
+    const ctx = await request.newContext({
+      baseURL: API_BASE,
+      extraHTTPHeaders: { Authorization: `Bearer ${token}` },
+    });
+    const fields = {
+      amount: '19.99',
+      receiptDate: '2026-01-15T00:00:00.000Z',
+      vendor: 'Playwright Testhaendler',
+      ...overrides,
+    };
+
+    const res = await ctx.post('/api/receipts', { multipart: fields });
+    if (!res.ok()) {
+      throw new Error(`Receipt creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  async createTestReceiptWithPdf(
+    token: string,
+    pdfBytes: Buffer,
+    overrides: Record<string, string> = {},
+  ): Promise<any> {
+    const ctx = await request.newContext({
+      baseURL: API_BASE,
+      extraHTTPHeaders: { Authorization: `Bearer ${token}` },
+    });
+    const fields = {
+      amount: '19.99',
+      receiptDate: '2026-01-15T00:00:00.000Z',
+      vendor: 'Playwright Testhaendler',
+      ...overrides,
+    };
+
+    const res = await ctx.post('/api/receipts', {
+      multipart: {
+        ...fields,
+        files: { name: 'receipt.pdf', mimeType: 'application/pdf', buffer: pdfBytes },
+      },
+    });
+    if (!res.ok()) {
+      throw new Error(`Receipt creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  async getReceiptFile(
+    token: string,
+    receiptId: string,
+    fileId: string,
+  ): Promise<{ status: number; contentType: string | undefined; body: Buffer }> {
+    const ctx = await this.userCtx(token);
+    const res = await ctx.get(`/api/receipts/${receiptId}/files/${fileId}`);
+    const status = res.status();
+    const contentType = res.headers()['content-type'];
+    const body = await res.body();
+    await ctx.dispose();
+    return { status, contentType, body };
+  }
+
+  async deleteAllReceipts(): Promise<any> {
+    const ctx = await this.ctx();
+    const res = await ctx.get('/api/receipts?limit=300');
+    if (res.ok()) {
+      const result = await res.json();
+      for (const receipt of result.items) {
+        await ctx.delete('/api/receipts/' + receipt.id + '/hard');
+      }
+    }
+    await ctx.dispose();
+  }
+
+  async payReceipt(token: string, receiptId: string, paymentMethod?: string): Promise<any> {
+    const ctx = await this.userCtx(token);
+    const res = await ctx.post(`/api/receipts/${receiptId}/pay`, {
+      data: { paymentMethod: paymentMethod ?? null },
+    });
+    if (!res.ok()) {
+      throw new Error(`Marking receipt as paid failed: ${res.status()} ${await res.text()}`);
+    }
+    await ctx.dispose();
+  }
 }

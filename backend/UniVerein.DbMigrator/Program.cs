@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 
-var sourceConnectionString = Environment.GetEnvironmentVariable("SOURCE_CONNECTION_STRING");
-var targetConnectionString = Environment.GetEnvironmentVariable("TARGET_CONNECTION_STRING");
+string? sourceConnectionString = Environment.GetEnvironmentVariable("SOURCE_CONNECTION_STRING");
+string? targetConnectionString = Environment.GetEnvironmentVariable("TARGET_CONNECTION_STRING");
 
 if (string.IsNullOrWhiteSpace(sourceConnectionString) || string.IsNullOrWhiteSpace(targetConnectionString))
 {
@@ -16,16 +16,16 @@ const int batchSize = 500;
 
 try
 {
-    var sourceOptions = new DbContextOptionsBuilder<AppDbContext>()
+    DbContextOptions<AppDbContext> sourceOptions = new DbContextOptionsBuilder<AppDbContext>()
         .UseMySql(sourceConnectionString, ServerVersion.AutoDetect(sourceConnectionString))
         .Options;
 
-    var targetOptions = new DbContextOptionsBuilder<AppDbContext>()
+    DbContextOptions<AppDbContext> targetOptions = new DbContextOptionsBuilder<AppDbContext>()
         .UseNpgsql(targetConnectionString)
         .Options;
 
-    await using var source = new AppDbContext(sourceOptions, TimeProvider.System);
-    await using var target = new AppDbContext(targetOptions, TimeProvider.System);
+    await using AppDbContext source = new AppDbContext(sourceOptions, TimeProvider.System);
+    await using AppDbContext target = new AppDbContext(targetOptions, TimeProvider.System);
 
     Console.WriteLine("Applying PostgreSQL schema migrations to target database...");
     await target.Database.MigrateAsync();
@@ -66,18 +66,18 @@ static async Task CopyTableAsync<TEntity>(
     Console.WriteLine($"Copying {tableName}...");
 
     // IgnoreQueryFilters: soft-deleted rows (DeletedAt != null) must be migrated too, not just active ones.
-    var rows = await sourceSet.IgnoreQueryFilters().AsNoTracking().ToListAsync();
+    List<TEntity> rows = await sourceSet.IgnoreQueryFilters().AsNoTracking().ToListAsync();
 
     // MariaDB has no timezone concept, so Pomelo returns plain DateTime columns (e.g. Contribution.DueDate)
     // with Kind=Unspecified. Npgsql refuses to write those into "timestamp with time zone" columns; the
     // app stores these as UTC instants, so tag them as such before inserting.
-    var dateTimeProperties = typeof(TEntity).GetProperties()
+    PropertyInfo[] dateTimeProperties = typeof(TEntity).GetProperties()
         .Where(p => p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
         .ToArray();
 
-    foreach (var row in rows)
+    foreach (TEntity? row in rows)
     {
-        foreach (var property in dateTimeProperties)
+        foreach (PropertyInfo? property in dateTimeProperties)
         {
             if (property.GetValue(row) is DateTime { Kind: not DateTimeKind.Utc } value)
             {
@@ -86,14 +86,14 @@ static async Task CopyTableAsync<TEntity>(
         }
     }
 
-    for (var i = 0; i < rows.Count; i += batchSize)
+    for (int i = 0; i < rows.Count; i += batchSize)
     {
         target.Set<TEntity>().AddRange(rows.Skip(i).Take(batchSize));
         await target.SaveChangesAsync();
         target.ChangeTracker.Clear();
     }
 
-    var targetCount = await target.Set<TEntity>().IgnoreQueryFilters().CountAsync();
+    int targetCount = await target.Set<TEntity>().IgnoreQueryFilters().CountAsync();
     if (targetCount != rows.Count)
     {
         throw new InvalidOperationException(

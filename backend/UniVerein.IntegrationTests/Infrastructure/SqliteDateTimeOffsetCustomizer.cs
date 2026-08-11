@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace UniVerein.IntegrationTests.Infrastructure;
@@ -14,18 +15,18 @@ public class SqliteDateTimeOffsetCustomizer : ModelCustomizer
     {
         base.Customize(modelBuilder, context);
 
-        var converter = new ValueConverter<DateTimeOffset, long>(
+        ValueConverter<DateTimeOffset, long> converter = new ValueConverter<DateTimeOffset, long>(
             v => v.ToUnixTimeMilliseconds(),
             v => DateTimeOffset.FromUnixTimeMilliseconds(v)
         );
 
-        var nullableConverter = new ValueConverter<DateTimeOffset?, long?>(
+        ValueConverter<DateTimeOffset?, long?> nullableConverter = new ValueConverter<DateTimeOffset?, long?>(
             v => v.HasValue ? v.Value.ToUnixTimeMilliseconds() : null,
             v => v.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(v.Value) : null
         );
 
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        foreach (var property in entityType.GetProperties()
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
+        foreach (IMutableProperty? property in entityType.GetProperties()
                      .Where(p => p.ClrType == typeof(DateTimeOffset)))
         {
             property.SetValueConverter(converter);
