@@ -76,7 +76,7 @@ public class MailService
             FirstName = mailSettings.Username
         }, request, mailSettings, preparedAttachments);
 
-        foreach (var bcc in bccRecipients)
+        foreach (Recipient bcc in bccRecipients)
             message.Bcc.Add(new MailboxAddress($"{bcc.FirstName} {bcc.LastName}", bcc.Email));
 
         await SendBccMessageAsync(message, mailSettings, connectionId);
@@ -84,7 +84,7 @@ public class MailService
 
     private async Task SendBccMessageAsync(MimeMessage message, MailSettingsEntity settings, string connectionId)
     {
-        using var smtpClient = new SmtpClient();
+        using SmtpClient smtpClient = new SmtpClient();
 
         try
         {
@@ -162,7 +162,7 @@ public class MailService
 
         const int connectionCount = 3;
 
-        var chunks = Enumerable.Range(0, connectionCount)
+        List<List<Recipient>> chunks = Enumerable.Range(0, connectionCount)
             .Select(i => recipients.Where((_, index) => index % connectionCount == i).ToList())
             .Where(chunk => chunk.Count > 0)
             .ToList();
@@ -334,7 +334,7 @@ public class MailService
             bodyBuilder.LinkedResources.Add(part);
         }
 
-        foreach (var att in preparedAttachments.Where(a => !a.IsInline))
+        foreach (PreparedAttachment? att in preparedAttachments.Where(a => !a.IsInline))
         {
             bodyBuilder.Attachments.Add(att.FileName, new MemoryStream(att.Bytes), ContentType.Parse(att.ContentType));
         }

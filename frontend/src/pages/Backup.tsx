@@ -51,30 +51,28 @@ export default function Backup() {
     load(null);
   }, []);
 
-  const download = async () => {
-    setLoading(true);
-    try {
-      const res = await apiFile('/backup', { method: 'GET' });
-      if (!res.ok)
-        setSnackbar({ status: 'error', message: ti('pages.backup.snackbar.downloadError') });
+  const triggerDownload = (query: string, filename: string) => {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams(query);
+    if (token) params.set('access_token', token);
 
-      if (res.status === 200) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Verein_Backup_${new Date().toISOString().split('T')[0]}.sql`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setSnackbar({ status: 'success', message: ti('pages.backup.snackbar.downloadSuccess') });
-      }
-    } catch (e) {
-      console.error(e);
-      setSnackbar({ status: 'error', message: ti('pages.backup.snackbar.downloadError') });
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const a = document.createElement('a');
+    a.href = `/api/backup?${params.toString()}`;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setSnackbar({ status: 'success', message: ti('pages.backup.snackbar.downloadSuccess') });
+    setLoading(false);
+  };
+
+  const download = () => {
+    triggerDownload('', `Verein_Backup_${new Date().toISOString().split('T')[0]}.sql`);
+  };
+
+  const downloadFull = () => {
+    triggerDownload('full=true', `Verein_Backup_Full_${new Date().toISOString().split('T')[0]}.zip`);
   };
 
   const restore = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,15 +228,26 @@ export default function Backup() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {ti('pages.backup.systemBackup.description')}
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<CloudDownloadIcon />}
-                onClick={download}
-                disabled={loading}
-                fullWidth
-              >
-                {ti('pages.backup.systemBackup.button')}
-              </Button>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Button
+                  variant="contained"
+                  startIcon={<CloudDownloadIcon />}
+                  onClick={download}
+                  disabled={loading}
+                  fullWidth
+                >
+                  {ti('pages.backup.systemBackup.button')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudDownloadIcon />}
+                  onClick={downloadFull}
+                  disabled={loading}
+                  fullWidth
+                >
+                  {ti('pages.backup.systemBackup.buttonFull')}
+                </Button>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
@@ -263,7 +272,7 @@ export default function Backup() {
                 fullWidth
               >
                 {ti('pages.backup.systemRestore.button')}
-                <input type="file" hidden onChange={restore} />
+                <input type="file" hidden accept=".sql,.zip" onChange={restore} />
               </Button>
             </CardContent>
           </Card>

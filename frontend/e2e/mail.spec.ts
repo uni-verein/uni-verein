@@ -127,9 +127,13 @@ test.describe('E-Mail – Configure and send e-mail', () => {
       await page.getByRole('textbox', { name: 'Empfänger-E-Mail' }).fill('test@example.de');
       await expect(page.getByRole('button', { name: 'Test-E-Mail senden' })).toBeVisible();
       await page.getByRole('button', { name: 'Test-E-Mail senden' }).click();
+      
+      await expect(
+        page.getByRole('alert').filter({ hasText: 'Testmail erfolgreich versendet' }),
+      ).toBeVisible();
 
       await page.goto('http://localhost:8080');
-      await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible({ timeout: 10000 });
       await page.getByText('Test mail from noreply@test.de a few seconds ago').click();
       await expect(page.getByText('Test mail from noreply@test.de', { exact: true })).toBeVisible();
       await expect(

@@ -122,6 +122,59 @@
         "cancel": "Cancel",
         "save": "Save"
       }
+    },
+    "receiptForm": {
+      "title": {
+        "view": "View receipt",
+        "new": "New receipt",
+        "edit": "Edit receipt"
+      },
+      "fields": {
+        "submittedBy": "Submitted by",
+        "amount": "Amount",
+        "receiptDate": "Receipt date",
+        "category": "Category",
+        "noCategory": "No category",
+        "paymentMethod": "Payment method",
+        "noPaymentMethod": "Not specified",
+        "paymentMethodOptions": {
+          "cash": "Cash",
+          "bankTransfer": "Bank transfer",
+          "card": "Card",
+          "sepaDirectDebit": "SEPA direct debit",
+          "paypal": "PayPal",
+          "other": "Other"
+        },
+        "vendor": "Vendor",
+        "description": "Description",
+        "files": "Files",
+        "noFiles": "No files available.",
+        "scanning": "Scanning receipt…"
+      },
+      "buttons": {
+        "addFiles": "Add files",
+        "remove": "Remove",
+        "close": "Close",
+        "cancel": "Cancel",
+        "save": "Save",
+        "useCamera": "Camera",
+        "openPdf": "Open PDF"
+      },
+      "validation": {
+        "amountInvalid": "Amount must be greater than 0.",
+        "receiptDateRequired": "Receipt date is required."
+      },
+      "alerts": {
+        "saveFailed": "Save failed. Please try again."
+      }
+    },
+    "markReceiptPaidDialog": {
+      "title": "Mark receipt as paid",
+      "paymentMethodRequired": "Please select a payment method to mark this receipt as paid.",
+      "confirm": "Mark as paid",
+      "cancel": "Cancel",
+      "saveFailed": "Save failed. Please try again.",
+      "alreadyPaid": "This receipt has already been marked as paid."
     }
   },
   "pages": {
@@ -149,7 +202,8 @@
       "systemBackup": {
         "heading": "System backup",
         "description": "Creates a full backup of the database. All members, contributions and settings are saved in a .bak file.",
-        "button": "Download backup now"
+        "button": "Download backup now",
+        "buttonFull": "Download backup with receipts"
       },
       "systemRestore": {
         "heading": "Restore system",
@@ -682,11 +736,11 @@
         "customLabel": "custom"
       },
       "tabLabel": {
-        "editor": "✏\uFE0F Editor",
-        "recipient": "\uD83D\uDC65 Recipient",
+        "editor": "✏️ Editor",
+        "recipient": "👥 Recipient",
         "sending": "⏳ Status",
         "done": "✅ Status",
-        "idle": "\uD83D\uDCCA Status"
+        "idle": "📊 Status"
       },
       "signalNotConnected": "No mail service connection! Please reload the page.",
       "noRecipient": "No recipient selected!",
@@ -781,7 +835,8 @@
         "memberCategoryConfig": "Configure member categories",
         "creditorConfig": "Configure bank details",
         "generalConfig": "Website settings",
-        "profileSettings": "Profile settings"
+        "profileSettings": "Profile settings",
+        "receiptCategoryConfig": "Manage receipt categories"
       },
       "pageNames": {
         "members": "Member management",
@@ -790,7 +845,9 @@
         "sepa": "SEPA export",
         "contributions": "Membership fees",
         "audit": "Audit",
-        "backup": "Backup"
+        "backup": "Backup",
+        "receipts": "Receipts",
+        "receiptAnalytics": "Receipt analytics"
       },
       "notifications": {
         "label": "Notifications",
@@ -943,6 +1000,133 @@
       "confirm": {
         "deleteMessage": "Really delete user?",
         "deleteButton": "Delete"
+      }
+    },
+    "receipts": {
+      "title": "Receipt management",
+      "addReceipt": "Add receipt",
+      "refresh": "Refresh",
+      "deletedUser": "Deleted user",
+      "filter": {
+        "dateFrom": "From",
+        "dateTo": "To",
+        "category": "Category",
+        "allCategories": "All categories",
+        "status": "Status",
+        "all": "All",
+        "open": "Open",
+        "paid": "Paid",
+        "showDeleted": "Show deleted",
+        "resetFilter": "Reset filter"
+      },
+      "table": {
+        "colDate": "Date",
+        "colAmount": "Amount",
+        "colCategory": "Category",
+        "colVendor": "Vendor",
+        "colStatus": "Status",
+        "colSubmittedBy": "Submitted by",
+        "colActions": "Actions",
+        "noReceipts": "No receipts found.",
+        "rowsPerPage": "Rows per page",
+        "ariaLabel": "Receipt table"
+      },
+      "status": {
+        "paid": "Paid",
+        "open": "Open"
+      },
+      "actions": {
+        "view": "View",
+        "edit": "Edit",
+        "delete": "Delete",
+        "hardDelete": "Delete permanently",
+        "restore": "Restore",
+        "markAsPaid": "Mark as paid"
+      },
+      "confirmDialog": {
+        "deleteQuestion": "Really delete this receipt?",
+        "delete": "Delete",
+        "hardDeleteQuestion": "WARNING: This receipt and its files will be permanently and irrevocably deleted. Continue?",
+        "hardDelete": "Delete permanently",
+        "restoreQuestion": "Really restore this receipt?",
+        "restore": "Restore"
+      },
+      "responseMessages": {
+        "deleted": "Receipt successfully deleted.",
+        "deleteError": "Deletion failed. Please try again.",
+        "hardDeleted": "Receipt permanently deleted.",
+        "hardDeleteError": "Permanent deletion failed. Please try again.",
+        "restored": "Receipt successfully restored.",
+        "restoreError": "Failed to restore the receipt.",
+        "updated": "Receipt successfully updated.",
+        "exportError": "Export failed. Please try again.",
+        "exportSuccess": "Export successful.",
+        "markedPaid": "Receipt marked as paid."
+      },
+      "exportZip": "Export as ZIP"
+    },
+    "receiptCategoryConfig": {
+      "title": "Manage receipt categories",
+      "newButton": "New receipt category",
+      "table": {
+        "name": "Name",
+        "actions": "Actions"
+      },
+      "tooltip": {
+        "delete": "Delete"
+      },
+      "dialog": {
+        "titleCreate": "New receipt category",
+        "nameLabel": "Name",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "validation": {
+        "nameEmpty": "Name must not be empty.",
+        "nameTooLong": "Name must be at most 50 characters long."
+      },
+      "snackbar": {
+        "createSuccess": "Receipt category successfully created.",
+        "createExists": "Receipt category already exists.",
+        "saveFailed": "Save failed. Please try again.",
+        "deleteSuccess": "Receipt category successfully deleted.",
+        "deleteFailed": "Deletion failed. Please try again.",
+        "deleteFailedInUse": "Receipt category cannot be deleted because it is assigned to a receipt."
+      },
+      "apiError": {
+        "createExists": "Cannot create receipt category. Receipt category already exists.",
+        "saveFailed": "Save failed. Please try again.",
+        "deleteFailed": "Deletion failed. Please try again.",
+        "deleteFailedInUse": "Receipt category cannot be deleted because it is assigned to a receipt."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete this receipt category?",
+        "deleteButton": "Delete"
+      }
+    },
+    "receiptAnalytics": {
+      "title": "Receipt analytics",
+      "year": "Year",
+      "byMonth": "Expenses per month ({{year}})",
+      "byCategory": "Expenses per category ({{year}})",
+      "byYear": "Expenses per year",
+      "amountLabel": "Amount (€)",
+      "total": "Total",
+      "noData": "No data to display",
+      "noCategory": "No category",
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Dec"
       }
     }
   }

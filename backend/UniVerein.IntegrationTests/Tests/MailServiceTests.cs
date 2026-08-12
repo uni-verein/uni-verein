@@ -29,12 +29,12 @@ public class MailServiceTests : IntegrationTestBase
     {
         await base.InitializeAsync();
 
-        var options = new SmtpServerOptionsBuilder()
+        ISmtpServerOptions options = new SmtpServerOptionsBuilder()
             .ServerName("localhost")
             .Port(2521)
             .Build();
 
-        var serviceProvider = new ServiceCollection()
+        ServiceProvider serviceProvider = new ServiceCollection()
             .AddSingleton<IMessageStore>(new TestMessageStore(_receivedMails))
             .BuildServiceProvider();
 

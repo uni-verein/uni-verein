@@ -10,7 +10,7 @@ public class RecipientQuery : QueryBase
 
     public string GetQueryString()
     {
-        var queryParams = new List<string>();
+        List<string> queryParams = new List<string>();
 
         if (!string.IsNullOrWhiteSpace(Name))
             queryParams.Add($"name={Uri.EscapeDataString(Name)}");

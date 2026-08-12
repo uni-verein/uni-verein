@@ -115,7 +115,7 @@ public class ContributionServiceTests : IntegrationTestBase
     public async Task GenerateDueContributions_ExportAlreadyCreatedToday_DoesNothing()
     {
         // Arrange
-        var today = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset today = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
         Factory.FakeTime.SetUtcNow(today);
         ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
         await CreateMemberEntityAsync(Interval.MONTHLY);
@@ -137,7 +137,7 @@ public class ContributionServiceTests : IntegrationTestBase
     public async Task GenerateDueContributions_MonthlyContribution_CreatesContributionAndExport()
     {
         // Arrange
-        var today = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset today = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
         Factory.FakeTime.SetUtcNow(today);
         ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
         MemberEntity memberEntity = await CreateMemberEntityAsync(Interval.MONTHLY);
@@ -169,7 +169,7 @@ public class ContributionServiceTests : IntegrationTestBase
     public async Task GenerateDueContributions_YearlyContribution_SkipsNonJanuaryMonths(int year, int month, int day)
     {
         // Arrange
-        var today = new DateTimeOffset(year, month, day, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset today = new DateTimeOffset(year, month, day, 0, 0, 0, TimeSpan.Zero);
         Factory.FakeTime.SetUtcNow(today);
         ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
         await CreateMemberEntityAsync(Interval.YEARLY);
@@ -189,7 +189,7 @@ public class ContributionServiceTests : IntegrationTestBase
     public async Task GenerateDueContributions_YearlyContribution_ProcessedInJanuary()
     {
         // Arrange
-        var january = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset january = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         Factory.FakeTime.SetUtcNow(january);
         ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
         MemberEntity memberEntity = await CreateMemberEntityAsync(Interval.YEARLY);
@@ -211,7 +211,7 @@ public class ContributionServiceTests : IntegrationTestBase
     public async Task GenerateDueContributions_MixedIntervals_OnlyProcessesCorrectOnes()
     {
         // Arrange
-        var march = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset march = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
         Factory.FakeTime.SetUtcNow(march);
         ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
         MemberEntity memberEntity = await CreateMemberEntityAsync(Interval.MONTHLY);

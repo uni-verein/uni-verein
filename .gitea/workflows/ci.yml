@@ -130,7 +130,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ${{ env.BASE_WORKDIR }}/frontend-src/frontend
-        run: npm ci
+        run: npm ci --cache ${{ env.BASE_WORKDIR }}/frontend-src/.npm-cache-ci
 
       - name: Install Playwright browsers
         working-directory: ${{ env.BASE_WORKDIR }}/frontend-src/frontend

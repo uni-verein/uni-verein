@@ -39,7 +39,7 @@ public class MailController : ControllerBase
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     [HttpPost("test")]
-    public async Task<IActionResult> SendTestAsync([FromBody] TestMailRequest request)
+    public async Task<ActionResult<string>> SendTestAsync([FromBody] TestMailRequest request)
     {
         Log.Information(
             $"MailController: SendTestAsync -> Try to send test mail. Request: {JsonSerializer.Serialize(request)}");

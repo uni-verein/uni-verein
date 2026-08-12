@@ -35,7 +35,7 @@ public class SepaController : ControllerBase
 
     [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
     [HttpGet("export/{id}")]
-    public async Task<IActionResult> Export(Guid id)
+    public async Task<ActionResult<byte[]>> Export(Guid id)
     {
         CreditorConfigEntity? creditorConfig = await _db.CreditorConfigs.FirstOrDefaultAsync(x => x.DeletedAt == null);
         if (creditorConfig == null)

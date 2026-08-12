@@ -27,6 +27,7 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+                globIgnores: ['tesseract/**', 'pdfjs/**'],
                 maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
                 navigateFallback: '/index.html',
                 navigateFallbackDenylist: [/^\/api\//, /^\/emailProgress/],
@@ -41,6 +42,22 @@ export default defineConfig({
                     {
                         urlPattern: ({ url }) => url.pathname.startsWith('/emailProgress'),
                         handler: 'NetworkOnly',
+                    },
+                    {
+                        urlPattern: ({ url }) => url.pathname.startsWith('/tesseract/'),
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'tesseract-ocr-assets',
+                            expiration: { maxEntries: 10 },
+                        },
+                    },
+                    {
+                        urlPattern: ({ url }) => url.pathname.startsWith('/pdfjs/'),
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'pdfjs-assets',
+                            expiration: { maxEntries: 10 },
+                        },
                     },
                 ],
             },

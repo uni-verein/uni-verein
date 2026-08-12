@@ -17,7 +17,7 @@ public class GermanDateConverter : DefaultTypeConverter
             return null;
 
         if (DateTimeOffset.TryParseExact(text, Formats, CultureInfo.GetCultureInfo("de-DE"), DateTimeStyles.None,
-                out var date))
+                out DateTimeOffset date))
             return date;
 
         return base.ConvertFromString(text, row, memberMapData);
@@ -25,8 +25,11 @@ public class GermanDateConverter : DefaultTypeConverter
 
     public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
     {
-        if (value is DateTimeOffset date)
-            return date.ToLocalTime().ToString(WriteFormat, CultureInfo.GetCultureInfo("de-DE"));
+        if (value is DateTimeOffset offset)
+            return offset.ToLocalTime().ToString(WriteFormat, CultureInfo.GetCultureInfo("de-DE"));
+
+        if (value is DateTime date)
+            return date.ToString(WriteFormat, CultureInfo.GetCultureInfo("de-DE"));
 
         return base.ConvertToString(value, row, memberMapData);
     }

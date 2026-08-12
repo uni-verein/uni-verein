@@ -23,6 +23,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import GroupIcon from '@mui/icons-material/Group';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import EmailIcon from '@mui/icons-material/Email';
 import EuroIcon from '@mui/icons-material/Euro';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -400,6 +401,11 @@ export function SidebarContent({
                     id: 'member-category-config',
                     icon: <GroupIcon fontSize="small" />,
                     label: t('pages.dashboard.settings.memberCategoryConfig'),
+                  },
+                  {
+                    id: 'receipt-category-config',
+                    icon: <ReceiptLongIcon fontSize="small" />,
+                    label: t('pages.dashboard.settings.receiptCategoryConfig'),
                   },
                   {
                     id: 'creditor-config',

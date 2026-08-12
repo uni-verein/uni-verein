@@ -21,8 +21,8 @@ public class TestMessageStore : MessageStore
         ReadOnlySequence<byte> buffer,
         CancellationToken cancellationToken)
     {
-        using var stream = new MemoryStream(buffer.ToArray());
-        var message = await MimeMessage.LoadAsync(stream, cancellationToken);
+        using MemoryStream stream = new MemoryStream(buffer.ToArray());
+        MimeMessage message = await MimeMessage.LoadAsync(stream, cancellationToken);
         lock (_messages)
         {
             _messages.Add(message);

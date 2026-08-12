@@ -77,7 +77,7 @@ public class AuditControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             await CreateAuditLogEntity(index.ToString());
 
         // Act
@@ -97,7 +97,7 @@ public class AuditControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
         List<AuditLogEntity> auditLogs = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             auditLogs.Add(await CreateAuditLogEntity(index.ToString()));
 
         // Act
@@ -124,7 +124,7 @@ public class AuditControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
         List<AuditLogEntity> auditLogs = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
         {
             auditLogs.Add(await CreateAuditLogEntity(index.ToString()));
             Factory.FakeTime.SetUtcNow(DateTimeOffset.UtcNow.AddSeconds(index));
