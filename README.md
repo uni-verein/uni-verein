@@ -154,8 +154,12 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of co
 - [x] Contribution management
 - [x] Sepa exports
 - [x] Mobile web app (iOS & Android)
-- [ ] Receipt management
-- [ ] Event planning (kalender)
+- [x] Receipt management
+- [ ] Receipt notification
+- [ ] Event planning (calendar)
+- [ ] File management
+- [ ] Multi-factor authentication (MFA)
+- [ ] Chat system
 
 ---
 
