@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using UniVerein.DAL.Data;
 using Microsoft.AspNetCore.Http;
@@ -13,17 +14,17 @@ public class BackupService
 {
     private readonly IConfiguration _config;
     private readonly AppDbContext _context;
+    private readonly ReceiptService _receiptService;
 
-    public BackupService(IConfiguration config, AppDbContext context)
+    public BackupService(IConfiguration config, AppDbContext context, ReceiptService receiptService)
     {
         _config = config;
         _context = context;
+        _receiptService = receiptService;
     }
 
-    public virtual async Task<string> CreateBackupAsync()
+    public virtual async Task WritePgDumpAsync(Stream output)
     {
-        string filePath = Path.Combine("/tmp", $"backup_{DateTime.Now:yyyyMMddHHmm}.sql");
-
         ProcessStartInfo psi = new()
         {
             FileName = "pg_dump",
@@ -39,9 +40,7 @@ public class BackupService
         using Process process = new() { StartInfo = psi };
         process.Start();
 
-        await using FileStream fileStream = File.Create(filePath);
-
-        Task copyTask = process.StandardOutput.BaseStream.CopyToAsync(fileStream);
+        Task copyTask = process.StandardOutput.BaseStream.CopyToAsync(output);
         Task<string> errorTask = process.StandardError.ReadToEndAsync();
 
         await Task.WhenAll(copyTask, errorTask);
@@ -49,8 +48,6 @@ public class BackupService
 
         if (process.ExitCode != 0)
             throw new Exception($"Backup failed: {await errorTask}");
-
-        return filePath;
     }
 
     public virtual async Task<bool> RestoreBackupAsync(IFormFile file)
@@ -95,5 +92,83 @@ public class BackupService
         await _context.Database.MigrateAsync();
 
         return true;
+    }
+
+    public virtual async Task WriteFullBackupZipAsync(Stream output)
+    {
+        string receiptsStoragePath = _receiptService.StoragePath;
+
+        await using (ZipArchive archive = new(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            ZipArchiveEntry sqlEntry = archive.CreateEntry("database.sql");
+            await using (Stream entryStream = sqlEntry.Open())
+                await WritePgDumpAsync(entryStream);
+
+            if (Directory.Exists(receiptsStoragePath))
+            {
+                foreach (string filePath in Directory.GetFiles(receiptsStoragePath, "*", SearchOption.AllDirectories))
+                {
+                    string entryName = "receipts/" +
+                        Path.GetRelativePath(receiptsStoragePath, filePath).Replace('\\', '/');
+                    await archive.CreateEntryFromFileAsync(filePath, entryName);
+                }
+            }
+        }
+    }
+
+    public virtual async Task<bool> RestoreFullBackupAsync(IFormFile zipFile)
+    {
+        if (zipFile == null || zipFile.Length == 0)
+            throw new ArgumentException("Invalid file");
+
+        string tempZipPath = Path.Combine("/tmp", $"restore_full_{Guid.NewGuid()}.zip");
+        await using (FileStream fileStream = File.Create(tempZipPath))
+        {
+            await zipFile.CopyToAsync(fileStream);
+        }
+
+        string extractDir = Path.Combine("/tmp", $"restore_full_{Guid.NewGuid()}");
+        await ZipFile.ExtractToDirectoryAsync(tempZipPath, extractDir);
+
+        try
+        {
+            string sqlPath = Path.Combine(extractDir, "database.sql");
+            if (!File.Exists(sqlPath))
+                throw new ArgumentException("Zip archive does not contain a database.sql file.");
+
+            await using (FileStream sqlStream = File.OpenRead(sqlPath))
+            {
+                FormFile sqlFormFile = new(sqlStream, 0, sqlStream.Length, "file", "database.sql");
+                await RestoreBackupAsync(sqlFormFile);
+            }
+
+            string receiptsExtractDir = Path.Combine(extractDir, "receipts");
+            if (Directory.Exists(receiptsExtractDir))
+            {
+                string receiptsStoragePath = _receiptService.StoragePath;
+                Directory.CreateDirectory(receiptsStoragePath);
+
+                // Clear existing contents without removing the directory itself, since it may be a mount point.
+                foreach (string existingFile in Directory.GetFiles(receiptsStoragePath, "*", SearchOption.AllDirectories))
+                    File.Delete(existingFile);
+                foreach (string existingDir in Directory.GetDirectories(receiptsStoragePath))
+                    Directory.Delete(existingDir, recursive: true);
+
+                foreach (string filePath in Directory.GetFiles(receiptsExtractDir, "*", SearchOption.AllDirectories))
+                {
+                    string relative = Path.GetRelativePath(receiptsExtractDir, filePath);
+                    string destination = Path.Combine(receiptsStoragePath, relative);
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                    File.Copy(filePath, destination, overwrite: true);
+                }
+            }
+
+            return true;
+        }
+        finally
+        {
+            File.Delete(tempZipPath);
+            Directory.Delete(extractDir, recursive: true);
+        }
     }
 }

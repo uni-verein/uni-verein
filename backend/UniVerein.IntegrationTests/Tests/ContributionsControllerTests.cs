@@ -72,7 +72,7 @@ public class ContributionsControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(role);
         List<(MemberEntity, ContributionEntity)> members = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             members.Add(await CreateContributionEntity(index.ToString(), index.ToString()));
         decimal amount = members.Select(x => x.Item2.Amount).Sum();
 
@@ -114,7 +114,7 @@ public class ContributionsControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(role);
         List<(MemberEntity, ContributionEntity)> members = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             members.Add(await CreateContributionEntity(index.ToString(), index.ToString()));
 
         // Act
@@ -142,7 +142,7 @@ public class ContributionsControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(UserRole.USER);
         List<(MemberEntity, ContributionEntity)> members = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             members.Add(await CreateContributionEntity(index.ToString(), index.ToString()));
 
         ContributionsQuery contributionsQuery = new()
@@ -174,7 +174,7 @@ public class ContributionsControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.USER);
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             await CreateContributionEntity(index.ToString(), index.ToString());
         (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity("test", "test", true);
 

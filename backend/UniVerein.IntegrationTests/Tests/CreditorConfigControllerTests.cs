@@ -62,17 +62,17 @@ public class CreditorConfigControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
             role: role,
             lifetime: TimeSpan.FromMinutes(-5));
 
-        var client = CreateClient().WithBearerToken(expiredToken);
+        HttpClient client = CreateClient().WithBearerToken(expiredToken);
 
         // Act
-        var response = await client.GetAsync("/creditor-config");
+        HttpResponseMessage response = await client.GetAsync("/creditor-config");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -178,11 +178,11 @@ public class CreditorConfigControllerTests : IntegrationTestBase
     public async Task CreateCreditorConfig_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         CreditorConfigRequest request = CreateCreditorConfigRequest();
 
         // Act
-        var response = await client.PutAsJsonAsync("/creditor-config", request);
+        HttpResponseMessage response = await client.PutAsJsonAsync("/creditor-config", request);
         CreditorConfigResult? result = await response.Content.ReadFromJsonAsync<CreditorConfigResult>();
 
         // Assert
@@ -202,12 +202,12 @@ public class CreditorConfigControllerTests : IntegrationTestBase
     public async Task UpdateCreditorConfig_Success()
     {
         // Arrange
-        var client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(UserRole.ADMIN);
         await CreateCreditorConfigEntity();
         CreditorConfigRequest request = CreateCreditorConfigRequest();
 
         // Act
-        var response = await client.PutAsJsonAsync("/creditor-config", request);
+        HttpResponseMessage response = await client.PutAsJsonAsync("/creditor-config", request);
         CreditorConfigResult? result = await response.Content.ReadFromJsonAsync<CreditorConfigResult>();
 
         // Assert
@@ -279,7 +279,7 @@ public class CreditorConfigControllerTests : IntegrationTestBase
         CreditorConfigEntity creditorConfigEntity = await CreateCreditorConfigEntity();
 
         // Act
-        var response = await client.DeleteAsync($"/creditor-config/{creditorConfigEntity.Id}");
+        HttpResponseMessage response = await client.DeleteAsync($"/creditor-config/{creditorConfigEntity.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

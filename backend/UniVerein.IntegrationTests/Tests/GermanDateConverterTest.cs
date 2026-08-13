@@ -25,13 +25,13 @@ public class GermanDateConverterTest
     public void ConvertFromString_ShouldHandleVariousFormats(string input, bool shouldConvert)
     {
         // Arrange
-        var row = new CsvReader(new StringReader(""), new CsvConfiguration(CultureInfo.InvariantCulture));
-        var memberMapData = new MemberMapData(null);
+        CsvReader row = new CsvReader(new StringReader(""), new CsvConfiguration(CultureInfo.InvariantCulture));
+        MemberMapData memberMapData = new MemberMapData(null);
 
         // Act
         if (shouldConvert)
         {
-            var result = _converter.ConvertFromString(input, row, memberMapData);
+            object? result = _converter.ConvertFromString(input, row, memberMapData);
             Assert.NotNull(result);
             Assert.IsType<DateTimeOffset>(result);
         }
@@ -39,7 +39,7 @@ public class GermanDateConverterTest
         {
             if (input == "NULL" || string.IsNullOrWhiteSpace(input))
             {
-                var result = _converter.ConvertFromString(input, row, memberMapData);
+                object? result = _converter.ConvertFromString(input, row, memberMapData);
                 Assert.Null(result);
             }
             else
@@ -55,11 +55,11 @@ public class GermanDateConverterTest
     public void ConvertFromString_ShouldReturnNullForNullInput()
     {
         // Arrange
-        var row = new CsvReader(new StringReader(""), new CsvConfiguration(CultureInfo.InvariantCulture));
-        var memberMapData = new MemberMapData(null);
+        CsvReader row = new CsvReader(new StringReader(""), new CsvConfiguration(CultureInfo.InvariantCulture));
+        MemberMapData memberMapData = new MemberMapData(null);
 
         // Act
-        var result = _converter.ConvertFromString(null, row, memberMapData);
+        object? result = _converter.ConvertFromString(null, row, memberMapData);
 
         // Assert
         Assert.Null(result);
@@ -69,13 +69,13 @@ public class GermanDateConverterTest
     public void ConvertFromString_ShouldParseCorrectDates()
     {
         // Arrange
-        var row = new CsvReader(new StringReader(""), new CsvConfiguration(CultureInfo.InvariantCulture));
-        var memberMapData = new MemberMapData(null);
+        CsvReader row = new CsvReader(new StringReader(""), new CsvConfiguration(CultureInfo.InvariantCulture));
+        MemberMapData memberMapData = new MemberMapData(null);
 
         // Act
-        var result1 = _converter.ConvertFromString("01.01.23", row, memberMapData) as DateTimeOffset?;
-        var result2 = _converter.ConvertFromString("01.01.2023", row, memberMapData) as DateTimeOffset?;
-        var result3 = _converter.ConvertFromString("1.1.23", row, memberMapData) as DateTimeOffset?;
+        DateTimeOffset? result1 = _converter.ConvertFromString("01.01.23", row, memberMapData) as DateTimeOffset?;
+        DateTimeOffset? result2 = _converter.ConvertFromString("01.01.2023", row, memberMapData) as DateTimeOffset?;
+        DateTimeOffset? result3 = _converter.ConvertFromString("1.1.23", row, memberMapData) as DateTimeOffset?;
 
         // Assert
         Assert.Equal(new DateTime(2023, 1, 1), result1?.DateTime);

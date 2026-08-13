@@ -29,8 +29,8 @@ public class AuditService
 
     public async Task LogAsync(AuditLogActions action, string entity, object? data)
     {
-        var userIdClaim = _http.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        string? userIdClaim = _http.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out Guid userId))
             return;
 
         UserEntity? user = await  _db.Users.FirstOrDefaultAsync(u => u.Id == userId);

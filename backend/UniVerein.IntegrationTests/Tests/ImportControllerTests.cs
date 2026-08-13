@@ -41,10 +41,10 @@ public class ImportControllerTests : IntegrationTestBase
     private static MultipartFormDataContent CreateCsvFormFile(string csvContent, string fileName = "test.csv")
     {
         byte[] bytes = Encoding.UTF8.GetBytes(csvContent);
-        var stream = new MemoryStream(bytes);
-        var fileContent = new StreamContent(stream);
+        MemoryStream stream = new MemoryStream(bytes);
+        StreamContent fileContent = new StreamContent(stream);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
-        var content = new MultipartFormDataContent();
+        MultipartFormDataContent content = new MultipartFormDataContent();
         content.Add(fileContent, "file", fileName);
 
         return content;
@@ -121,7 +121,7 @@ public class ImportControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
         await CreateMemberAsync();
-        using var content = CreateCsvFormFile(BuildValidCsvContent());
+        using MultipartFormDataContent content = CreateCsvFormFile(BuildValidCsvContent());
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -139,7 +139,7 @@ public class ImportControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile("");
+        using MultipartFormDataContent content = CreateCsvFormFile("");
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -157,7 +157,7 @@ public class ImportControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(BuildValidCsvContent());
+        using MultipartFormDataContent content = CreateCsvFormFile(BuildValidCsvContent());
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -176,7 +176,7 @@ public class ImportControllerTests : IntegrationTestBase
         string firstName = Guid.NewGuid().ToString();
         string csv = BuildValidCsvContent(memberNumber: 42, firstName: firstName, name: "Mustermann");
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csv);
+        using MultipartFormDataContent content = CreateCsvFormFile(csv);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -198,7 +198,7 @@ public class ImportControllerTests : IntegrationTestBase
                       "01.04.2018;;m.sc.;Mathematics;MEMBER;STUDENT;10.04.2018;;DE89370400440532013001;INGDDEFFXXX;;15";
         string csvContent = $"{_fileHeader}\n{row1}\n{row2}";
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -216,7 +216,7 @@ public class ImportControllerTests : IntegrationTestBase
         // Arrange
         string csvContent = "MemberNumber;Gender;Name\n;INVALID;";
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -247,7 +247,7 @@ public class ImportControllerTests : IntegrationTestBase
                       "01.10.2015;;b.sc..;Informatics;MEMBER_;STUDENT_;;;D89040044053201000;IGDFXXX;10.10.2015;-12";
         string csvContent = $"{_fileHeader}\n{row1}";
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -277,7 +277,7 @@ public class ImportControllerTests : IntegrationTestBase
         CryptoService cryptoService = GetService<CryptoService>();
         string firstName = Guid.NewGuid().ToString();
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(BuildValidCsvContent(firstName: firstName));
+        using MultipartFormDataContent content = CreateCsvFormFile(BuildValidCsvContent(firstName: firstName));
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -320,7 +320,7 @@ public class ImportControllerTests : IntegrationTestBase
         string firstName = Guid.NewGuid().ToString();
         string csvContent = BuildValidCsvContent(firstName: firstName, bulkMail: bulkMail.ToString());
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -342,7 +342,7 @@ public class ImportControllerTests : IntegrationTestBase
         string firstName = Guid.NewGuid().ToString();
         string csvContent = BuildValidCsvContent(sepaConsentDate: "10.10.2015", firstName: firstName);
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -364,7 +364,7 @@ public class ImportControllerTests : IntegrationTestBase
         string firstName = Guid.NewGuid().ToString();
         string csvContent = BuildValidCsvContent(contributionAmount: 99, firstName: firstName);
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -394,7 +394,7 @@ public class ImportControllerTests : IntegrationTestBase
         string firstName = Guid.NewGuid().ToString();
         string csvContent = BuildValidCsvContent(contributionAmount: 50, firstName: firstName);
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csvContent);
+        using MultipartFormDataContent content = CreateCsvFormFile(csvContent);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -416,7 +416,7 @@ public class ImportControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(BuildValidCsvContent(memberNumber: 50, academicDegree: import));
+        using MultipartFormDataContent content = CreateCsvFormFile(BuildValidCsvContent(memberNumber: 50, academicDegree: import));
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -443,7 +443,7 @@ public class ImportControllerTests : IntegrationTestBase
         // Arrange
         string csv = BuildValidCsvContent(task: import, memberNumber: 60);
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csv);
+        using MultipartFormDataContent content = CreateCsvFormFile(csv);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -466,7 +466,7 @@ public class ImportControllerTests : IntegrationTestBase
         // Arrange
         string csv = BuildValidCsvContent(memberCategory: import, memberNumber: 70);
         HttpClient client = CreateClient(UserRole.ADMIN);
-        using var content = CreateCsvFormFile(csv);
+        using MultipartFormDataContent content = CreateCsvFormFile(csv);
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/import/upload", content);
@@ -496,8 +496,8 @@ public class ImportControllerTests : IntegrationTestBase
         csvContent.ShouldBe("\uFEFFMember number;Gender;Name;First name;Middle name;Birthday;Phone nummer;" +
                                "Bulk mail;Mail;Street and number;ZIP code;City;Country code;Study start;Study end;Academic degree;" +
                                "Course of study;Task within the club;Member category;Entry date;Exit date;IBAN;BIC;" +
-                               "Sepa consent date;Contribution amount\r\n1;MALE;Mustermann;Max;;01.01.2000;+49 172 12345678;" +
-                               "ALLOWED;max.mustermann@gmail.com;Musterstraße 1;12345;Musterstadt;DE;01.10.2015;;b.sc.;" +
+                               "Sepa consent date;Contribution amount\r\n1;MALE;Doe;John;;01.01.2000;+49 172 12345678;" +
+                               "ALLOWED;john.doe@gmail.com;Example Street 1;12345;Example City;DE;01.10.2015;;b.sc.;" +
                                "Informatics;MEMBER;STUDENT;10.10.2015;;DE89370400440532013000;INGDDEFFXXX;10.10.2015;12\r\n");
     }
 
@@ -568,7 +568,7 @@ public class ImportControllerTests : IntegrationTestBase
         response.Content.Headers.ContentType?.CharSet.ShouldBe("utf-8");
         string csvContent = Encoding.UTF8.GetString(await response.Content.ReadAsByteArrayAsync());
         csvContent.ShouldNotBeNullOrEmpty();
-        foreach (var firstName in firstNames)
+        foreach (string firstName in firstNames)
             csvContent.ShouldContain(firstName);
     }
 }

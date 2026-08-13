@@ -14,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using UniVerein.Api.Services.Firmware;
+using Microsoft.Extensions.Primitives;
+using Microsoft.AspNetCore.Http;
 
 namespace UniVerein.Api
 {
@@ -35,7 +37,7 @@ namespace UniVerein.Api
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
-            var connectionString = _configuration.GetConnectionString("Default");
+            string? connectionString = _configuration.GetConnectionString("Default");
 
             if (!string.IsNullOrEmpty(connectionString))
             {
@@ -56,6 +58,7 @@ namespace UniVerein.Api
             services.AddScoped<AuditService>();
             services.AddScoped<BackupService>();
             services.AddScoped<ContributionService>();
+            services.AddScoped<ReceiptService>();
 
             services.AddHostedService<ContributionBackgroundService>();
             services.AddHttpClient<FirmwareService>();
@@ -64,7 +67,7 @@ namespace UniVerein.Api
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
+                    byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
@@ -79,11 +82,13 @@ namespace UniVerein.Api
                     {
                         OnMessageReceived = context =>
                         {
-                            var accessToken = context.Request.Query["access_token"];
-                            var path = context.HttpContext.Request.Path;
+                            StringValues accessToken = context.Request.Query["access_token"];
+                            PathString path = context.HttpContext.Request.Path;
 
                             if (!string.IsNullOrEmpty(accessToken) &&
-                                path.StartsWithSegments("/emailProgress"))
+                                (path.StartsWithSegments("/emailProgress") ||
+                                 path.StartsWithSegments("/receipts/export") ||
+                                 path.StartsWithSegments("/backup")))
                             {
                                 context.Token = accessToken;
                             }
@@ -104,7 +109,7 @@ namespace UniVerein.Api
                     policy
                         .SetIsOriginAllowed(origin =>
                         {
-                            var uri = new Uri(origin);
+                            Uri uri = new Uri(origin);
                             return uri.Host == "localhost";
                         })
                         .AllowAnyHeader()

@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.5.0] UV-7
+
+### Added
+- Receipt management: any user can submit a receipt (amount, date, optional category/vendor/description, and one or more photo/PDF attachments) from the new "Receipts" page; Admins and Financial Managers see and manage everyone's receipts (with a "submitted by" column), can set/confirm the payment method, mark receipts as paid, and soft-delete/restore/permanently delete them, while regular users can only edit or delete their own unpaid receipt within 15 minutes of submitting it. The list supports filtering by date range, category, and paid/open status (plus showing deleted receipts for Admins), and privileged roles can export the currently filtered receipts as a ZIP containing a CSV plus all attached files.
+- On-device OCR when attaching a receipt photo or PDF: the amount and date fields are auto-filled by scanning the attachment locally in the browser (German amount/date recognition, no server round-trip) if they haven't already been filled in manually on installed PWAs a dedicated camera-capture button is offered alongside the regular file picker.
+- Receipt categories: a new "Receipt categories" settings page (Admin) to create and delete the categories used to tag and group receipts, a category can't be deleted while still assigned to an active receipt.
+- Receipt analytics page (Admin/Financial Manager): year-scoped charts of spending broken down by category a stacked monthly bar chart, a category breakdown pie chart with the yearly total in the center, and a year-over-year totals chart.
+- Full system backup: the Backup page can now also download a full backup (`Verein_Backup_Full_<date>.zip`) containing both the database dump and every uploaded receipt file, and restore accepts either a plain `.sql` dump or such a full `.zip` backup.
+
+### Changed
+- Backup downloads are now streamed directly to the response instead of being written to a temporary file first and served afterwards.
+- `nginx.conf`'s `client_max_body_size` was raised from 50M to 10G and proxy buffering/timeouts were relaxed, to allow the new large receipt exports/full backups to pass through; access logs now strip the query string so the download link's access token isn't written to disk.
+- `docker-compose*.yml` gained a `./receipts:/app/receipts` volume so uploaded receipt files persist across container restarts/updates.
+
+### Fixed
+- The demo-login dialog's helper text and account labels were using the theme's `text.secondary`/`text.primary` tokens, which turn light-colored in dark mode and became illegible against the dialog's always-light amber background; they're now fixed dark colors matching that background.
+
 ## [v1.4.0] UV-5, UV-12
 
 ### Added

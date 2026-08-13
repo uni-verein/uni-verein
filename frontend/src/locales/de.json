@@ -122,6 +122,59 @@
         "cancel": "Abbrechen",
         "save": "Speichern"
       }
+    },
+    "receiptForm": {
+      "title": {
+        "view": "Beleg ansehen",
+        "new": "Neuer Beleg",
+        "edit": "Beleg bearbeiten"
+      },
+      "fields": {
+        "submittedBy": "Eingereicht von",
+        "amount": "Betrag",
+        "receiptDate": "Belegdatum",
+        "category": "Kategorie",
+        "noCategory": "Keine Kategorie",
+        "paymentMethod": "Zahlungsart",
+        "noPaymentMethod": "Keine Angabe",
+        "paymentMethodOptions": {
+          "cash": "Bar",
+          "bankTransfer": "Überweisung",
+          "card": "Karte",
+          "sepaDirectDebit": "SEPA-Lastschrift",
+          "paypal": "PayPal",
+          "other": "Sonstige"
+        },
+        "vendor": "Händler",
+        "description": "Beschreibung",
+        "files": "Dateien",
+        "noFiles": "Keine Dateien vorhanden.",
+        "scanning": "Beleg wird gescannt…"
+      },
+      "buttons": {
+        "addFiles": "Dateien hinzufügen",
+        "remove": "Entfernen",
+        "close": "Schließen",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "useCamera": "Kamera",
+        "openPdf": "PDF öffnen"
+      },
+      "validation": {
+        "amountInvalid": "Betrag muss größer als 0 sein.",
+        "receiptDateRequired": "Belegdatum ist ein Pflichtfeld."
+      },
+      "alerts": {
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+      }
+    },
+    "markReceiptPaidDialog": {
+      "title": "Beleg als bezahlt markieren",
+      "paymentMethodRequired": "Bitte eine Zahlungsart auswählen, um den Beleg als bezahlt zu markieren.",
+      "confirm": "Als bezahlt markieren",
+      "cancel": "Abbrechen",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "alreadyPaid": "Dieser Beleg wurde bereits als bezahlt markiert."
     }
   },
   "pages": {
@@ -149,7 +202,8 @@
       "systemBackup": {
         "heading": "System-Backup",
         "description": "Erstellt eine vollständige Sicherung der Datenbank. Alle Mitglieder, Beiträge und Einstellungen werden in einer .bak Datei gespeichert.",
-        "button": "Sicherung jetzt herunterladen"
+        "button": "Sicherung jetzt herunterladen",
+        "buttonFull": "Sicherung mit Belegen herunterladen"
       },
       "systemRestore": {
         "heading": "System wiederherstellen",
@@ -682,11 +736,11 @@
         "customLabel": "benutzerdefinierte"
       },
       "tabLabel": {
-        "editor": "✏\uFE0F Editor",
-        "recipient": "\uD83D\uDC65 Empfänger",
+        "editor": "✏️ Editor",
+        "recipient": "👥 Empfänger",
         "sending": "⏳ Status",
         "done": "✅ Status",
-        "idle": "\uD83D\uDCCA Status"
+        "idle": "📊 Status"
       },
       "signalNotConnected": "Keine Verbindung zum Mail-Server! Bitte Seite neu laden.",
       "noRecipient": "Keine Empfänger ausgewählt!",
@@ -781,7 +835,8 @@
         "memberCategoryConfig": "Mitgliederkategorien verwalten",
         "creditorConfig": "Bankverbindung konfigurieren",
         "generalConfig": "Webseiteneinstellungen",
-        "profileSettings": "Profileinstellungen"
+        "profileSettings": "Profileinstellungen",
+        "receiptCategoryConfig": "Belegkategorien verwalten"
       },
       "pageNames": {
         "members": "Mitgliederverwaltung",
@@ -790,7 +845,9 @@
         "sepa": "SEPA Export",
         "contributions": "Beiträge",
         "audit": "Audit",
-        "backup": "Backup"
+        "backup": "Backup",
+        "receipts": "Belege",
+        "receiptAnalytics": "Belegauswertung"
       },
       "notifications": {
         "label": "Benachrichtigungen",
@@ -943,6 +1000,133 @@
       "confirm": {
         "deleteMessage": "Nutzer wirklich löschen?",
         "deleteButton": "Löschen"
+      }
+    },
+    "receipts": {
+      "title": "Belegsverwaltung",
+      "addReceipt": "Beleg hinzufügen",
+      "refresh": "Aktualisieren",
+      "deletedUser": "Gelöschter Nutzer",
+      "filter": {
+        "dateFrom": "Von",
+        "dateTo": "Bis",
+        "category": "Kategorie",
+        "allCategories": "Alle Kategorien",
+        "status": "Status",
+        "all": "Alle",
+        "open": "Offen",
+        "paid": "Bezahlt",
+        "showDeleted": "Gelöschte anzeigen",
+        "resetFilter": "Filter zurücksetzen"
+      },
+      "table": {
+        "colDate": "Datum",
+        "colAmount": "Betrag",
+        "colCategory": "Kategorie",
+        "colVendor": "Händler",
+        "colStatus": "Status",
+        "colSubmittedBy": "Eingereicht von",
+        "colActions": "Aktionen",
+        "noReceipts": "Keine Belege gefunden.",
+        "rowsPerPage": "Zeilen pro Seite",
+        "ariaLabel": "Belegtabelle"
+      },
+      "status": {
+        "paid": "Bezahlt",
+        "open": "Offen"
+      },
+      "actions": {
+        "view": "Ansehen",
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "hardDelete": "Endgültig löschen",
+        "restore": "Wiederherstellen",
+        "markAsPaid": "Als bezahlt markieren"
+      },
+      "confirmDialog": {
+        "deleteQuestion": "Beleg wirklich löschen?",
+        "delete": "Löschen",
+        "hardDeleteQuestion": "ACHTUNG: Dieser Beleg wird zusammen mit den zugehörigen Dateien unwiderruflich und endgültig gelöscht. Fortfahren?",
+        "hardDelete": "Endgültig löschen",
+        "restoreQuestion": "Diesen Beleg wirklich wiederherstellen?",
+        "restore": "Wiederherstellen"
+      },
+      "responseMessages": {
+        "deleted": "Beleg erfolgreich gelöscht.",
+        "deleteError": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "hardDeleted": "Beleg endgültig gelöscht.",
+        "hardDeleteError": "Endgültiges Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "restored": "Beleg erfolgreich wiederhergestellt.",
+        "restoreError": "Fehler beim Wiederherstellen des Belegs.",
+        "updated": "Beleg erfolgreich bearbeitet.",
+        "exportError": "Export fehlgeschlagen. Bitte erneut versuchen.",
+        "exportSuccess": "Export erfolgreich.",
+        "markedPaid": "Beleg als bezahlt markiert."
+      },
+      "exportZip": "Als ZIP exportieren"
+    },
+    "receiptCategoryConfig": {
+      "title": "Belegkategorien verwalten",
+      "newButton": "Neue Belegkategorie",
+      "table": {
+        "name": "Name",
+        "actions": "Aktionen"
+      },
+      "tooltip": {
+        "delete": "Löschen"
+      },
+      "dialog": {
+        "titleCreate": "Neue Belegkategorie",
+        "nameLabel": "Name",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      },
+      "validation": {
+        "nameEmpty": "Name darf nicht leer sein.",
+        "nameTooLong": "Name darf maximal 50 Zeichen lang sein."
+      },
+      "snackbar": {
+        "createSuccess": "Belegkategorie erfolgreich erstellt.",
+        "createExists": "Belegkategorie existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Belegkategorie erfolgreich gelöscht.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedInUse": "Belegkategorie kann nicht gelöscht werden, da sie einem Beleg zugewiesen ist."
+      },
+      "apiError": {
+        "createExists": "Belegkategorie kann nicht erstellt werden. Belegkategorie existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedInUse": "Belegkategorie kann nicht gelöscht werden, da sie einem Beleg zugewiesen ist."
+      },
+      "confirm": {
+        "deleteMessage": "Belegkategorie wirklich löschen?",
+        "deleteButton": "Löschen"
+      }
+    },
+    "receiptAnalytics": {
+      "title": "Belegauswertung",
+      "year": "Jahr",
+      "byMonth": "Ausgaben pro Monat ({{year}})",
+      "byCategory": "Ausgaben pro Kategorie ({{year}})",
+      "byYear": "Ausgaben pro Jahr",
+      "amountLabel": "Betrag (€)",
+      "total": "Gesamt",
+      "noData": "Keine Daten vorhanden.",
+      "noCategory": "Ohne Kategorie",
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mär",
+        "apr": "Apr",
+        "may": "Mai",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Okt",
+        "nov": "Nov",
+        "dec": "Dez"
       }
     }
   }

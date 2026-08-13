@@ -442,7 +442,7 @@ public class MembersController : ControllerBase
         _db.Update(member);
         await _db.SaveChangesAsync();
 
-        var delta = MemberAuditDelta.Compare(snapshot, member, _crypto);
+        List<MemberAuditDeltaEntry> delta = MemberAuditDelta.Compare(snapshot, member, _crypto);
         if (delta.Count > 0)
             await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(MemberEntity), new
             {

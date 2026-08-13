@@ -91,6 +91,43 @@ export interface MemberCategory {
   name: string;
 }
 
+export interface ReceiptCategory {
+  id: UUIDTypes;
+  name: string;
+}
+
+export interface ReceiptFile {
+  id: UUIDTypes;
+  contentType: string;
+  position: number;
+}
+
+export interface Receipt {
+  id: UUIDTypes;
+  userId: UUIDTypes;
+  userName: string | null;
+  amount: number;
+  receiptDate: Date;
+  categoryId: UUIDTypes | null;
+  categoryName: string | null;
+  vendor: string | null;
+  description: string | null;
+  paymentMethod: ReceiptPaymentMethod | null;
+  paid: boolean;
+  files: ReceiptFile[];
+  createdAt: Date;
+  deletedAt: Date | null;
+}
+
+export enum ReceiptPaymentMethod {
+  CASH = 'CASH',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CARD = 'CARD',
+  SEPA_DIRECT_DEBIT = 'SEPA_DIRECT_DEBIT',
+  PAYPAL = 'PAYPAL',
+  OTHER = 'OTHER',
+}
+
 export enum Interval {
   YEARLY = 'YEARLY',
   MONTHLY = 'MONTHLY',

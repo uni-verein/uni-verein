@@ -4,6 +4,7 @@ using UniVerein.DAL.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using UniVerein.DAL.Entities;
 
 namespace UniVerein.IntegrationTests.Infrastructure;
 
@@ -11,24 +12,24 @@ public class SqliteBackupService : BackupService
 {
     private readonly AppDbContext _db;
 
-    public SqliteBackupService(AppDbContext db, IConfiguration config) : base(config, db)
+    public SqliteBackupService(AppDbContext db, IConfiguration config, ReceiptService receiptService)
+        : base(config, db, receiptService)
     {
         _db = db;
     }
 
-    public override async Task<string> CreateBackupAsync()
+    public override async Task WritePgDumpAsync(Stream output)
     {
-        string filePath = Path.Combine(Path.GetTempPath(), $"backup_{DateTime.Now:yyyyMMddHHmm}.sql");
-        var sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
         sb.AppendLine("BEGIN TRANSACTION;");
         sb.AppendLine("DELETE FROM Members;");
 
         try
         {
-            var members = await _db.Members.IgnoreQueryFilters().ToListAsync();
+            List<MemberEntity> members = await _db.Members.IgnoreQueryFilters().ToListAsync();
 
-            foreach (var m in members)
+            foreach (MemberEntity? m in members)
             {
                 sb.AppendLine(
                     $"INSERT INTO Members (id, created_at, deleted_at, mandate_id, member_number, gender, " +
@@ -50,28 +51,27 @@ public class SqliteBackupService : BackupService
 
             sb.AppendLine("COMMIT;");
 
-            await File.WriteAllTextAsync(filePath, sb.ToString());
+            await using StreamWriter writer = new(output, leaveOpen: true);
+            await writer.WriteAsync(sb.ToString());
         }
         catch (Exception ex)
         {
             throw new Exception($"Backup failed at member export: {ex.Message}", ex);
         }
-
-        return filePath;
     }
 
     public override async Task<bool> RestoreBackupAsync(IFormFile file)
     {
-        using var reader = new StreamReader(file.OpenReadStream());
+        using StreamReader reader = new StreamReader(file.OpenReadStream());
         string sqlContent = await reader.ReadToEndAsync();
 
         await _db.Database.ExecuteSqlRawAsync("DELETE FROM Members;");
 
-        var statements = sqlContent
+        IEnumerable<string> statements = sqlContent
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(s => s.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase));
 
-        foreach (var statement in statements)
+        foreach (string statement in statements)
         {
             await _db.Database.ExecuteSqlRawAsync(statement.TrimEnd(';'));
         }

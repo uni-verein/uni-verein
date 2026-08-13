@@ -73,7 +73,7 @@ public class ContributionPlansControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
@@ -114,7 +114,7 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         // Arrange
         HttpClient client = CreateClient(role);
         List<ContributionPlanEntity> contributionPlans = new();
-        foreach (var index in Enumerable.Range(0, 5))
+        foreach (int index in Enumerable.Range(0, 5))
             contributionPlans.Add(await CreateContributionPlanEntity(name: index.ToString()));
 
         // Act
@@ -162,7 +162,7 @@ public class ContributionPlansControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
@@ -303,7 +303,7 @@ public class ContributionPlansControllerTests : IntegrationTestBase
     {
         // Arrange
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        var expiredToken = JwtTestHelper.CreateToken(
+        string expiredToken = JwtTestHelper.CreateToken(
             configuration,
             userId: Guid.NewGuid(),
             username: "expired",
@@ -542,7 +542,7 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         ContributionPlanEntity contributionPlanEntity = await CreateContributionPlanEntity();
 
         // Act
-        var response = await client.DeleteAsync($"/contribution-plans/{contributionPlanEntity.Id}");
+        HttpResponseMessage response = await client.DeleteAsync($"/contribution-plans/{contributionPlanEntity.Id}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

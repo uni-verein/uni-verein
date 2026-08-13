@@ -55,7 +55,7 @@ public class UsersController : ControllerBase
     [HttpGet("account")]
     public async Task<ActionResult<UserResult>> GetAccountUserAsync()
     {
-        var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out Guid id))
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "User not valid."));
 
@@ -78,7 +78,7 @@ public class UsersController : ControllerBase
     [HttpPatch("account")]
     public async Task<ActionResult<UserResult>> UpdateAccountUserAsync([FromBody] UserUpdateRequest request)
     {
-        var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out Guid id))
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "User not valid."));
 

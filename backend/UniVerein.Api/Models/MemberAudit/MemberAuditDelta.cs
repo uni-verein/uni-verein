@@ -9,7 +9,7 @@ public static class MemberAuditDelta
 {
     public static List<MemberAuditDeltaEntry> Compare(MemberEntity before, MemberEntity after, CryptoService crypto)
     {
-        var delta = new List<MemberAuditDeltaEntry>();
+        List<MemberAuditDeltaEntry> delta = new List<MemberAuditDeltaEntry>();
 
         Check(delta, nameof(after.Gender), before.Gender.ToString(), after.Gender.ToString());
         Log.Error($"MemberCategory: Before: {before.MemberCategory?.Name}  After: {after.MemberCategory?.Name}");
