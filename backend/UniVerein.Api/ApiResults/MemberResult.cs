@@ -6,64 +6,64 @@ namespace UniVerein.Api.ApiResults;
 
 public class MemberResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("memberNumber")] 
+    [JsonPropertyName("memberNumber")]
     public int MemberNumber { get; set; }
 
-    [JsonPropertyName("gender")] 
+    [JsonPropertyName("gender")]
     public Gender Gender { get; set; }
 
-    [JsonPropertyName("firstName")] 
+    [JsonPropertyName("firstName")]
     public string FirstName { get; set; } = string.Empty;
 
-    [JsonPropertyName("middleName")] 
+    [JsonPropertyName("middleName")]
     public string MiddleName { get; set; } = string.Empty;
 
-    [JsonPropertyName("lastName")] 
+    [JsonPropertyName("lastName")]
     public string LastName { get; set; } = string.Empty;
 
-    [JsonPropertyName("birthday")] 
+    [JsonPropertyName("birthday")]
     public DateTimeOffset Birthday { get; set; }
 
-    [JsonPropertyName("street")] 
+    [JsonPropertyName("street")]
     public string Street { get; set; } = string.Empty;
 
-    [JsonPropertyName("postalCode")] 
+    [JsonPropertyName("postalCode")]
     public string PostalCode { get; set; } = string.Empty;
 
-    [JsonPropertyName("city")] 
+    [JsonPropertyName("city")]
     public string City { get; set; } = string.Empty;
-    
-    [JsonPropertyName("countryCode")] 
+
+    [JsonPropertyName("countryCode")]
     public string CountryCode { get; set; } = string.Empty;
-    
-    [JsonPropertyName("email")] 
+
+    [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
-    [JsonPropertyName("phone")] 
+    [JsonPropertyName("phone")]
     public string Phone { get; set; } = string.Empty;
 
-    [JsonPropertyName("bulkMail")] 
+    [JsonPropertyName("bulkMail")]
     public BulkMail BulkMail { get; set; }
 
-    [JsonPropertyName("startOfStudies")] 
+    [JsonPropertyName("startOfStudies")]
     public DateTimeOffset StartOfStudies { get; set; }
 
-    [JsonPropertyName("endOfStudies")] 
+    [JsonPropertyName("endOfStudies")]
     public DateTimeOffset? EndOfStudies { get; set; }
 
-    [JsonPropertyName("academicDegree")] 
+    [JsonPropertyName("academicDegree")]
     public AcademicDegree? AcademicDegree { get; set; }
 
-    [JsonPropertyName("courseOfStudy")] 
+    [JsonPropertyName("courseOfStudy")]
     public string CourseOfStudy { get; set; } = string.Empty;
 
     [JsonPropertyName("taskWithinTheClub")]
     public TaskWithinTheClub TaskWithinTheClub { get; set; }
 
-    [JsonPropertyName("memberCategoryId")] 
+    [JsonPropertyName("memberCategoryId")]
     public Guid? MemberCategoryId { get; set; }
 
     [JsonPropertyName("iban")]
@@ -72,18 +72,18 @@ public class MemberResult
     [JsonPropertyName("bic")]
     public string Bic { get; set; } = string.Empty;
 
-    [JsonPropertyName("sepaConsent")] 
+    [JsonPropertyName("sepaConsent")]
     public DateTimeOffset? SepaConsent { get; set; }
 
-    [JsonPropertyName("entryDate")] 
+    [JsonPropertyName("entryDate")]
     public DateTimeOffset EntryDate { get; set; }
 
-    [JsonPropertyName("exitDate")] 
+    [JsonPropertyName("exitDate")]
     public DateTimeOffset? ExitDate { get; set; }
 
     [JsonPropertyName("contributionPlanId")]
     public Guid? ContributionPlanId { get; set; }
 
-    [JsonPropertyName("deletedAt")] 
+    [JsonPropertyName("deletedAt")]
     public DateTimeOffset? DeletedAt { get; set; }
 }

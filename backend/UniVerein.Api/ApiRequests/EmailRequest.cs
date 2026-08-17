@@ -5,12 +5,12 @@ namespace UniVerein.Api.ApiRequests;
 
 public class EmailRequest
 {
-    [JsonPropertyName("subject")] 
+    [JsonPropertyName("subject")]
     public string Subject { get; set; } = string.Empty;
 
-    [JsonPropertyName("htmlBody")] 
+    [JsonPropertyName("htmlBody")]
     public string HtmlBody { get; set; } = string.Empty;
 
-    [JsonPropertyName("attachments")] 
+    [JsonPropertyName("attachments")]
     public List<EmailAttachmentRequest> Attachments { get; set; } = new();
 }

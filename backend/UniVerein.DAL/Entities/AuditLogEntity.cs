@@ -6,18 +6,18 @@ namespace UniVerein.DAL.Entities;
 [Table("AuditLogs")]
 public class AuditLogEntity : BaseEntity
 {
-    [Column("user_id")] 
+    [Column("user_id")]
     public Guid UserId { get; set; }
 
-    [ForeignKey("UserId")] 
+    [ForeignKey("UserId")]
     public required UserEntity User { get; set; }
 
-    [Column("action")] 
+    [Column("action")]
     public string Action { get; set; } = string.Empty;
 
-    [Column("entity")] 
+    [Column("entity")]
     public string Entity { get; set; } = string.Empty;
 
-    [Column("data")] 
+    [Column("data")]
     public string Data { get; set; } = string.Empty;
 }

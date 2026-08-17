@@ -248,9 +248,9 @@ public class ContributionServiceTests : IntegrationTestBase
             Id = memberId,
             FirstName = firstName ?? Guid.NewGuid().ToString(),
             LastName = lastName ?? Guid.NewGuid().ToString(),
-            BirthdayEncrypted =  string.Empty,
+            BirthdayEncrypted = string.Empty,
             City = "City",
-            StreetEncrypted =  string.Empty,
+            StreetEncrypted = string.Empty,
             PostalCode = "12345",
             CountryCode = "DE"
         };
@@ -307,10 +307,10 @@ public class ContributionServiceTests : IntegrationTestBase
             Id = memberId,
             FirstName = Guid.NewGuid().ToString(),
             LastName = Guid.NewGuid().ToString(),
-            BirthdayEncrypted =  string.Empty,
+            BirthdayEncrypted = string.Empty,
             City = string.Empty,
             CountryCode = "DE",
-            StreetEncrypted =  string.Empty,
+            StreetEncrypted = string.Empty,
             PostalCode = "12345",
             ContributionPlan = contributionPlanEntity,
             ContributionPlanId = contributionPlanEntity.Id

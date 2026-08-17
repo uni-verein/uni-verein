@@ -5,12 +5,12 @@ namespace UniVerein.Api.ApiRequests;
 
 public class ContributionPlanUpdateRequest
 {
-    [JsonPropertyName("name")] 
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
 
-    [JsonPropertyName("amount")] 
+    [JsonPropertyName("amount")]
     public decimal? Amount { get; set; }
 
-    [JsonPropertyName("interval")] 
+    [JsonPropertyName("interval")]
     public Interval? Interval { get; set; }
 }

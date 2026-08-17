@@ -5,25 +5,25 @@ namespace UniVerein.DAL.Entities;
 [Table("MailSettings")]
 public class MailSettingsEntity : BaseEntity
 {
-    [Column("smtp_server")] 
+    [Column("smtp_server")]
     public string SmtpServer { get; set; } = string.Empty;
 
-    [Column("port")] 
+    [Column("port")]
     public int Port { get; set; }
 
     [Column("username")]
     public string Username { get; set; } = string.Empty;
 
-    [Column("password")] 
+    [Column("password")]
     public string Password { get; set; } = string.Empty;
 
-    [Column("from_mail")] 
+    [Column("from_mail")]
     public string FromMail { get; set; } = string.Empty;
 
-    [Column("enable_ssl")] 
+    [Column("enable_ssl")]
     public bool EnableSsl { get; set; } = true;
 
-    [Column("imap_server")] 
+    [Column("imap_server")]
     public string ImapServer { get; set; } = string.Empty;
 
     [Column("imap_port")]

@@ -4,12 +4,12 @@ namespace UniVerein.Api.ApiResults;
 
 public class RecipientResult
 {
-    [JsonPropertyName("email")] 
+    [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
-    [JsonPropertyName("firstName")] 
+    [JsonPropertyName("firstName")]
     public string FirstName { get; set; } = string.Empty;
 
-    [JsonPropertyName("lastName")] 
+    [JsonPropertyName("lastName")]
     public string LastName { get; set; } = string.Empty;
 }

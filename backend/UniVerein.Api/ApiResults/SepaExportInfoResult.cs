@@ -7,14 +7,14 @@ public class SepaExportInfoResult
 {
     [JsonPropertyName("id")]
     public Guid Id { get; set; }
-    
-    [JsonPropertyName("name")] 
+
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("amount")]
     public required decimal Amount { get; set; }
 
-    [JsonPropertyName("exportedCases")] 
+    [JsonPropertyName("exportedCases")]
     public required int ExportedCases { get; set; }
 
     [JsonPropertyName("exportedDate")]

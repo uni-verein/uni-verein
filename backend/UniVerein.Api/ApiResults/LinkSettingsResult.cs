@@ -5,15 +5,15 @@ namespace UniVerein.Api.ApiResults;
 
 public class LinkSettingsResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("link")] 
+    [JsonPropertyName("link")]
     public string Link { get; set; } = string.Empty;
 
-    [JsonPropertyName("name")] 
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("icon")] 
+    [JsonPropertyName("icon")]
     public string Icon { get; set; } = string.Empty;
 }

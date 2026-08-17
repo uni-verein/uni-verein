@@ -5,15 +5,15 @@ namespace UniVerein.Api.ApiResults;
 
 public class SendSummaryResult
 {
-    [JsonPropertyName("total")] 
+    [JsonPropertyName("total")]
     public int Total { get; set; }
 
-    [JsonPropertyName("successful")] 
+    [JsonPropertyName("successful")]
     public int Successful { get; set; }
 
-    [JsonPropertyName("failed")] 
+    [JsonPropertyName("failed")]
     public int Failed { get; set; }
 
-    [JsonPropertyName("results")] 
+    [JsonPropertyName("results")]
     public List<EmailResult> Results { get; set; } = new();
 }

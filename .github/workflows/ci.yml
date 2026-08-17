@@ -3,7 +3,6 @@ name: CI
 on:
   push:
     branches:
-      - development
       - main
     tags:
       - '*'
@@ -12,8 +11,9 @@ on:
       - 'frontend/THIRD-PARTY-NOTICES.md'
   pull_request:
     branches:
-      - development
       - main
+    types:
+      - labeled
     paths-ignore:
       - 'backend/THIRD-PARTY-NOTICES.md'
       - 'frontend/THIRD-PARTY-NOTICES.md'
@@ -32,18 +32,68 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────
-  # ENFORCE SOURCE BRANCH (PRs against main must come from development)
+  # FRONTEND LINT
+  # Gated behind the 'ready-for-ci' label just like the jobs below: even though
+  # this needs no application secrets, `npm ci` still executes whatever code a
+  # PR's package.json/dependencies bring with them (install/postinstall
+  # scripts), so it must not run against untrusted forks before a maintainer
+  # has looked at the PR.
   # ─────────────────────────────────────────────
-  enforce-source-branch:
-    name: Enforce Source Branch
-    if: github.event_name == 'pull_request'
+  frontend-lint:
+    name: Frontend Lint & Typecheck
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
     steps:
-      - name: Only allow development -> main
-        if: github.base_ref == 'main' && github.head_ref != 'development'
-        run: |
-          echo "::error::PRs gegen main sind nur von development erlaubt."
-          exit 1
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Format check
+        working-directory: frontend
+        run: npm run format:check
+
+  # ─────────────────────────────────────────────
+  # BACKEND LINT
+  # `dotnet restore`/`build` can execute code from a PR's NuGet dependencies
+  # (MSBuild targets/tasks), so - same as frontend-lint - this stays behind the
+  # 'ready-for-ci' label rather than running unconditionally on every PR.
+  # ─────────────────────────────────────────────
+  backend-lint:
+    name: Backend Format Check
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        working-directory: backend
+        run: dotnet restore UniVerein.sln
+
+      - name: Format check
+        working-directory: backend
+        run: dotnet format UniVerein.sln --verify-no-changes
 
   # ─────────────────────────────────────────────
   # BACKEND TESTS
@@ -51,6 +101,7 @@ jobs:
   backend-test:
     name: Backend Unit Tests
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -90,6 +141,7 @@ jobs:
   frontend-test:
     name: Frontend Playwright Tests
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -106,10 +158,11 @@ jobs:
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
           CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
           HMAC_KEY: ${{ secrets.HMAC_KEY }}
-          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          VERSION: ${{ github.sha }}
+          DEMO: "false"
         run: docker compose up -d --build
 
       - name: Wait for stack (Healthcheck)
@@ -123,7 +176,7 @@ jobs:
               echo "All container ready."
               exit 0
             fi
-            echo "Noch nicht bereit... ($i/30) – unhealthy: $UNHEALTHY, starting: $STARTING"
+            echo "Not ready yet... ($i/30) - unhealthy: $UNHEALTHY, starting: $STARTING"
             sleep 5
           done
           echo "::error::Stack did not become healthy in time"
@@ -135,10 +188,10 @@ jobs:
         run: |
           for i in $(seq 1 30); do
             if curl -sf http://localhost:80 > /dev/null; then
-              echo "Frontend antwortet."
+              echo "Frontend is responding."
               exit 0
             fi
-            echo "Warte auf HTTP... ($i/30)"
+            echo "Waiting for HTTP... ($i/30)"
             sleep 5
           done
           echo "::error::Frontend did not respond on http://localhost:80 in time"
@@ -236,6 +289,50 @@ jobs:
         run: docker rmi backend-scan:ci-${{ github.run_id }} 2>/dev/null || true
 
   # ─────────────────────────────────────────────
+  # TRIVY – DB MIGRATOR
+  # ─────────────────────────────────────────────
+  trivy-db-migrator:
+    name: Trivy Scan DB Migrator
+    runs-on: ubuntu-latest
+    needs: backend-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Build DB Migrator image
+        run: |
+          docker build -t db-migrator-scan:ci-${{ github.run_id }} -f backend/UniVerein.DbMigrator/Dockerfile backend
+
+      - name: Trivy image scan DB Migrator
+        run: |
+          trivy image db-migrator-scan:ci-${{ github.run_id }} \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            --cache-dir ~/.cache/trivy
+
+      - name: Cleanup
+        if: always()
+        run: docker rmi db-migrator-scan:ci-${{ github.run_id }} 2>/dev/null || true
+
+  # ─────────────────────────────────────────────
   # TRIVY – FRONTEND
   # ─────────────────────────────────────────────
   trivy-frontend:
@@ -294,7 +391,8 @@ jobs:
   publish-backend:
     name: Publish Backend Image
     runs-on: ubuntu-latest
-    needs: [ trivy-backend, trivy-frontend ]
+    needs: [ trivy-backend, trivy-frontend, trivy-db-migrator ]
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -323,6 +421,7 @@ jobs:
           tags: |
             type=ref,event=tag
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=ref,event=tag,prefix=keep-
             type=ref,event=branch
             type=ref,event=pr
             type=sha,format=short,prefix=
@@ -345,7 +444,8 @@ jobs:
   publish-frontend:
     name: Publish Frontend Image
     runs-on: ubuntu-latest
-    needs: [ trivy-backend, trivy-frontend ]
+    needs: [ trivy-backend, trivy-frontend, trivy-db-migrator ]
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -374,6 +474,7 @@ jobs:
           tags: |
             type=ref,event=tag
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=ref,event=tag,prefix=keep-
             type=ref,event=branch
             type=ref,event=pr
             type=sha,format=short,prefix=
@@ -398,7 +499,8 @@ jobs:
   publish-db-migrator:
     name: Publish DB Migrator Image
     runs-on: ubuntu-latest
-    needs: [ trivy-backend, trivy-frontend ]
+    needs: [ trivy-backend, trivy-frontend, trivy-db-migrator ]
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -427,6 +529,7 @@ jobs:
           tags: |
             type=ref,event=tag
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=ref,event=tag,prefix=keep-
             type=ref,event=branch
             type=ref,event=pr
             type=sha,format=short,prefix=
@@ -443,3 +546,28 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # ─────────────────────────────────────────────
+  # CI GATE (the only required status check on PRs)
+  # ─────────────────────────────────────────────
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs: [ frontend-lint, backend-lint, backend-test, frontend-test, trivy-backend, trivy-frontend, trivy-db-migrator ]
+    steps:
+      - name: Require ready-for-ci label
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ready-for-ci') }}
+        run: |
+          echo "::error::Label 'ready-for-ci' is missing - the pipeline was not run. Add the label to trigger the pipeline on this PR."
+          exit 1
+
+      - name: Require all pipeline jobs green
+        if: contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
+        run: |
+          for r in "${{ needs.frontend-lint.result }}" "${{ needs.backend-lint.result }}" "${{ needs.backend-test.result }}" "${{ needs.frontend-test.result }}" "${{ needs.trivy-backend.result }}" "${{ needs.trivy-frontend.result }}" "${{ needs.trivy-db-migrator.result }}"; do
+            if [ "$r" != "success" ]; then
+              echo "::error::At least one pipeline job did not succeed (status: $r)."
+              exit 1
+            fi
+          done

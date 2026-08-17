@@ -5,9 +5,9 @@ namespace UniVerein.Api.ApiResults;
 
 public class AllLinkSettingsResults
 {
-    [JsonPropertyName("items")] 
+    [JsonPropertyName("items")]
     public List<LinkSettingsResult> Items { get; set; } = new();
 
-    [JsonPropertyName("total")] 
+    [JsonPropertyName("total")]
     public int Total { get; set; }
 }

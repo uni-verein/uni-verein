@@ -5,9 +5,9 @@ namespace UniVerein.Api.ApiResults;
 
 public class ErrorResultTranslation
 {
-    [JsonPropertyName("translationKey")] 
+    [JsonPropertyName("translationKey")]
     public string TranslationKey { get; set; } = string.Empty;
 
-    [JsonPropertyName("values")] 
+    [JsonPropertyName("values")]
     public List<string> Values { get; set; } = new();
 }

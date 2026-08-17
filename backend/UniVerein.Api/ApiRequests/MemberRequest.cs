@@ -15,7 +15,7 @@ public class MemberRequest
     [JsonPropertyName("firstName")]
     public required string FirstName { get; set; }
 
-    [JsonPropertyName("middleName")] 
+    [JsonPropertyName("middleName")]
     public string MiddleName { get; set; } = string.Empty;
 
     [Required(AllowEmptyStrings = false)]
@@ -37,7 +37,7 @@ public class MemberRequest
     [Required(AllowEmptyStrings = false)]
     [JsonPropertyName("city")]
     public required string City { get; set; }
-    
+
     [Required(AllowEmptyStrings = false)]
     [JsonPropertyName("countryCode")]
     public required string CountryCode { get; set; }
@@ -46,7 +46,7 @@ public class MemberRequest
     [JsonPropertyName("email")]
     public required string Email { get; set; }
 
-    [JsonPropertyName("phone")] 
+    [JsonPropertyName("phone")]
     public string Phone { get; set; } = string.Empty;
 
     [Required]
@@ -57,13 +57,13 @@ public class MemberRequest
     [JsonPropertyName("startOfStudies")]
     public DateTimeOffset StartOfStudies { get; set; }
 
-    [JsonPropertyName("endOfStudies")] 
+    [JsonPropertyName("endOfStudies")]
     public DateTimeOffset? EndOfStudies { get; set; }
 
-    [JsonPropertyName("academicDegree")] 
+    [JsonPropertyName("academicDegree")]
     public AcademicDegree? AcademicDegree { get; set; }
 
-    [JsonPropertyName("courseOfStudy")] 
+    [JsonPropertyName("courseOfStudy")]
     public string CourseOfStudy { get; set; } = string.Empty;
 
     [Required]
@@ -74,20 +74,20 @@ public class MemberRequest
     [JsonPropertyName("memberCategoryId")]
     public Guid MemberCategoryId { get; set; }
 
-    [JsonPropertyName("iban")] 
+    [JsonPropertyName("iban")]
     public string IBAN { get; set; } = string.Empty;
 
-    [JsonPropertyName("bic")] 
+    [JsonPropertyName("bic")]
     public string Bic { get; set; } = string.Empty;
 
-    [JsonPropertyName("sepaConsent")] 
+    [JsonPropertyName("sepaConsent")]
     public DateTimeOffset? SepaConsent { get; set; }
 
     [Required]
     [JsonPropertyName("entryDate")]
     public DateTimeOffset EntryDate { get; set; }
 
-    [JsonPropertyName("exitDate")] 
+    [JsonPropertyName("exitDate")]
     public DateTimeOffset? ExitDate { get; set; }
 
     [JsonPropertyName("contributionPlanId")]

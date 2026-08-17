@@ -6,9 +6,9 @@ namespace UniVerein.DAL.Entities;
 [Table("FirmwareVersionNotifications")]
 public class FirmwareVersionNotificationEntity : BaseEntity
 {
-    [Column("user_id")] 
+    [Column("user_id")]
     public Guid UserId { get; set; }
-    
+
     [ForeignKey("UserId")]
     public required UserEntity User { get; set; }
 

@@ -4,9 +4,9 @@ namespace UniVerein.Api.ApiResults;
 
 public class ContributionInfoResult
 {
-    [JsonPropertyName("openPayments")] 
+    [JsonPropertyName("openPayments")]
     public int OpenPayments { get; set; }
 
-    [JsonPropertyName("openAmount")] 
+    [JsonPropertyName("openAmount")]
     public decimal OpenAmount { get; set; }
 }

@@ -277,7 +277,7 @@ export class BackendClient {
 
   async updateWebPageSettings(): Promise<string> {
     const ctx = await this.ctx();
-    let pageName = 'Test web page';
+    const pageName = 'Test web page';
     const res = await ctx.put('/api/web-page-config', {
       data: {
         pageName,

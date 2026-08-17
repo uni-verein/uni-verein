@@ -5,12 +5,12 @@ namespace UniVerein.Api.ApiResults;
 
 public class SidebarResult
 {
-    [JsonPropertyName("showSepa")] 
+    [JsonPropertyName("showSepa")]
     public required bool ShowSepa { get; set; }
 
     [JsonPropertyName("showMail")]
     public required bool ShowMail { get; set; }
 
-    [JsonPropertyName("links")] 
+    [JsonPropertyName("links")]
     public List<LinkResult> Links { get; set; } = new();
 }

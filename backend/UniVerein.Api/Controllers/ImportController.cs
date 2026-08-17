@@ -159,7 +159,7 @@ public class ImportController : ControllerBase
                 if (record is null)
                 {
                     importErrors.Add(new()
-                        { TranslationKey = "validator.import.invalid", Values = [rowNumber.ToString()] });
+                    { TranslationKey = "validator.import.invalid", Values = [rowNumber.ToString()] });
                     continue;
                 }
 

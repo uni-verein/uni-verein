@@ -56,14 +56,14 @@ export function MemberCategoryDialog({
   const handleSave = async () => {
     if (!validate()) return;
 
-    let data = {
+    const data = {
       name: formData.name,
       category: formData.category,
     };
 
     try {
       if (memberCategory) {
-        let response = await api(`/member-categories/${memberCategory.id}`, {
+        const response = await api(`/member-categories/${memberCategory.id}`, {
           method: 'PUT',
           body: JSON.stringify(data),
         });
@@ -80,7 +80,7 @@ export function MemberCategoryDialog({
           });
         }
       } else {
-        let response = await api('/member-categories', {
+        const response = await api('/member-categories', {
           method: 'POST',
           body: JSON.stringify(data),
         });
@@ -97,7 +97,7 @@ export function MemberCategoryDialog({
           });
         }
       }
-    } catch (error) {
+    } catch {
       onError(t('pages.memberCategoryConfig.apiError.saveFailed'));
       setMemberCategoryChange({
         status: 'error',

@@ -495,9 +495,7 @@ test.describe('Receipt payment method & paid status', () => {
     await expect(page.getByLabel('Bearbeiten')).toHaveCount(0);
   });
 
-  test('Marking as paid requires selecting a payment method when none is set', async ({
-    page,
-  }) => {
+  test('Marking as paid requires selecting a payment method when none is set', async ({ page }) => {
     await tc.setup(Role.ADMIN);
     await backend.createTestReceipt(tc.get().token, { amount: '8.00', vendor: 'No method yet' });
 
@@ -547,7 +545,7 @@ test.describe('Receipt payment method & paid status', () => {
     await expect(page.getByRole('cell', { name: 'Paid receipt' })).not.toBeVisible();
   });
 
-  test('ADMIN cannot edit another user\'s receipt but can still mark it as paid', async ({
+  test("ADMIN cannot edit another user's receipt but can still mark it as paid", async ({
     page,
   }) => {
     const otherUser = await backend.createUser(Role.USER);

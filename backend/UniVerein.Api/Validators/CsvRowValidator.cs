@@ -42,7 +42,7 @@ public class CsvRowValidator
             errors.Add(new() { TranslationKey = $"validator.birthday.required", Values = [rowNumber.ToString()] });
         else if (row.Birthday > DateTimeOffset.UtcNow)
             errors.Add(new()
-                { TranslationKey = $"validator.birthday.invalid", Values = [rowNumber.ToString(), $"{row.Birthday}"] });
+            { TranslationKey = $"validator.birthday.invalid", Values = [rowNumber.ToString(), $"{row.Birthday}"] });
 
         if (string.IsNullOrWhiteSpace(row.City))
             errors.Add(new() { TranslationKey = $"validator.city.required", Values = [rowNumber.ToString()] });
@@ -79,7 +79,7 @@ public class CsvRowValidator
             errors.Add(new() { TranslationKey = $"validator.mail.required", Values = [rowNumber.ToString()] });
         else if (!EmailRegex.IsMatch(row.EMail))
             errors.Add(new()
-                { TranslationKey = $"validator.mail.invalid", Values = [rowNumber.ToString(), $"{row.EMail}"] });
+            { TranslationKey = $"validator.mail.invalid", Values = [rowNumber.ToString(), $"{row.EMail}"] });
 
         if (!string.IsNullOrWhiteSpace(row.AcademicDegree) &&
             !_academicDegreeMapping.ContainsKey(row.AcademicDegree.ToLower()))
@@ -123,7 +123,7 @@ public class CsvRowValidator
             string ibanNormalized = row.Iban.Replace(" ", "").ToUpper();
             if (!IbanRegex.IsMatch(ibanNormalized))
                 errors.Add(new()
-                    { TranslationKey = $"validator.iban.invalid", Values = [rowNumber.ToString(), $"{row.Iban}"] });
+                { TranslationKey = $"validator.iban.invalid", Values = [rowNumber.ToString(), $"{row.Iban}"] });
         }
 
         if (!string.IsNullOrWhiteSpace(row.Bic))
@@ -131,7 +131,7 @@ public class CsvRowValidator
             string bicNormalized = row.Bic.Replace(" ", "").ToUpper();
             if (!BicRegex.IsMatch(bicNormalized))
                 errors.Add(new()
-                    { TranslationKey = $"validator.bic.invalid", Values = [rowNumber.ToString(), $"{row.Bic}"] });
+                { TranslationKey = $"validator.bic.invalid", Values = [rowNumber.ToString(), $"{row.Bic}"] });
         }
 
         if (row.ContributionAmount != null && row.ContributionAmount < 0)

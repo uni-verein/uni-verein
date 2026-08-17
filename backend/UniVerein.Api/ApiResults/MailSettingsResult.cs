@@ -5,30 +5,30 @@ namespace UniVerein.Api.ApiResults;
 
 public class MailSettingsResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("smtpServer")] 
+    [JsonPropertyName("smtpServer")]
     public string SmtpServer { get; set; } = "";
 
-    [JsonPropertyName("port")] 
+    [JsonPropertyName("port")]
     public int Port { get; set; }
 
-    [JsonPropertyName("imapServer")] 
+    [JsonPropertyName("imapServer")]
     public string ImapServer { get; set; } = "";
 
-    [JsonPropertyName("imapPort")] 
+    [JsonPropertyName("imapPort")]
     public int ImapPort { get; set; }
 
-    [JsonPropertyName("username")] 
+    [JsonPropertyName("username")]
     public string Username { get; set; } = "";
 
-    [JsonPropertyName("password")] 
+    [JsonPropertyName("password")]
     public string Password { get; set; } = "";
 
-    [JsonPropertyName("fromMail")] 
+    [JsonPropertyName("fromMail")]
     public string FromMail { get; set; } = "";
 
-    [JsonPropertyName("enableSsl")] 
+    [JsonPropertyName("enableSsl")]
     public bool EnableSsl { get; set; } = true;
 }

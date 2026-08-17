@@ -4,10 +4,10 @@ namespace UniVerein.DAL.Entities.Enums;
 
 public enum UserRole
 {
-    [Display(Name = "ADMIN")] 
+    [Display(Name = "ADMIN")]
     ADMIN,
-    [Display(Name = "USER")] 
+    [Display(Name = "USER")]
     USER,
-    [Display(Name = "FINANCIAL_MANAGER")] 
+    [Display(Name = "FINANCIAL_MANAGER")]
     FINANCIAL_MANAGER
 }

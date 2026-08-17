@@ -52,7 +52,7 @@ const AMOUNT_KEYWORDS = [
 // thousands-separators are blindly stripped.
 const AMOUNT_DECIMAL = '\\d{1,3}(?:\\.\\d{3})*,\\d{2}';
 const AMOUNT_REGEX = new RegExp(`(${AMOUNT_DECIMAL})\\s*(?:€|eur)?`, 'gi');
-const DATE_REGEX = /(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/;
+const DATE_REGEX = /(\d{1,2})[./](\d{1,2})[./](\d{2,4})/;
 
 const NON_AMOUNT_LINE = /\b(tse|bon-?nr|kassen(?:nummer)?|markt|seriennummer|barcode)\b/i;
 

@@ -70,7 +70,7 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
     {
         await _keepAliveConnection.DisposeAsync();
     }
-    
+
     public async Task ResetDatabaseAsync()
     {
         using IServiceScope scope = Services.CreateScope();

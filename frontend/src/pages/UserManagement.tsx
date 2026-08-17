@@ -55,7 +55,7 @@ export default function UserManagement({ userId, accountView }: UserManagementPr
       } else {
         setUsers([data]);
       }
-    } catch (e) {
+    } catch {
       setApiError(t('pages.userManagement.apiError.loadFailed'));
     }
   };
@@ -86,7 +86,7 @@ export default function UserManagement({ userId, accountView }: UserManagementPr
           message: t('pages.userManagement.snackbar.deleteSuccess'),
         });
         await loadUsers();
-      } catch (e) {
+      } catch {
         setApiError(t('pages.userManagement.apiError.deleteFailed'));
         setUserCreateOrUpdate({
           status: 'error',

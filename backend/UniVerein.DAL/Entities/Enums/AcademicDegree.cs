@@ -4,13 +4,13 @@ namespace UniVerein.DAL.Entities.Enums;
 
 public enum AcademicDegree
 {
-    [Display(Name = "B.A.")] 
+    [Display(Name = "B.A.")]
     BA,
 
-    [Display(Name = "B.Sc.")] 
+    [Display(Name = "B.Sc.")]
     BSC,
 
-    [Display(Name = "B.Eng.")] 
+    [Display(Name = "B.Eng.")]
     BENG,
 
     [Display(Name = "LL.B.")]
@@ -22,100 +22,100 @@ public enum AcademicDegree
     [Display(Name = "BBA")]
     BBA,
 
-    [Display(Name = "B.F.A.")] 
+    [Display(Name = "B.F.A.")]
     BFA,
 
-    [Display(Name = "B.Mus.")] 
+    [Display(Name = "B.Mus.")]
     BMUS,
 
-    [Display(Name = "B.Arch.")] 
+    [Display(Name = "B.Arch.")]
     BARCH,
 
-    [Display(Name = "B.N.")] 
+    [Display(Name = "B.N.")]
     BN,
 
     [Display(Name = "B.S.W.")]
     BSW,
 
-    [Display(Name = "B.Th.")] 
+    [Display(Name = "B.Th.")]
     BTH,
 
-    [Display(Name = "B.Phil.")] 
+    [Display(Name = "B.Phil.")]
     BPHIL,
 
-    [Display(Name = "B.C.S.")] 
+    [Display(Name = "B.C.S.")]
     BCS,
 
-    [Display(Name = "B.Ec.")] 
+    [Display(Name = "B.Ec.")]
     BEC,
 
-    [Display(Name = "M.A.")] 
+    [Display(Name = "M.A.")]
     MA,
 
     [Display(Name = "M.Sc.")]
     MSC,
 
-    [Display(Name = "M.Eng.")] 
+    [Display(Name = "M.Eng.")]
     MENG,
 
-    [Display(Name = "LL.M.")] 
+    [Display(Name = "LL.M.")]
     LLM,
 
     [Display(Name = "M.Ed.")]
     MED,
 
-    [Display(Name = "MBA")] 
+    [Display(Name = "MBA")]
     MBA,
 
-    [Display(Name = "M.F.A.")] 
+    [Display(Name = "M.F.A.")]
     MFA,
 
-    [Display(Name = "M.Mus.")] 
+    [Display(Name = "M.Mus.")]
     MMUS,
 
-    [Display(Name = "M.Arch.")] 
+    [Display(Name = "M.Arch.")]
     MARCH,
 
-    [Display(Name = "MPH")] 
+    [Display(Name = "MPH")]
     MPH,
 
     [Display(Name = "M.S.W.")]
     MSW,
 
-    [Display(Name = "MPA")] 
+    [Display(Name = "MPA")]
     MPA,
 
-    [Display(Name = "M.Phil.")] 
+    [Display(Name = "M.Phil.")]
     MPHIL,
 
-    [Display(Name = "M.Th.")] 
+    [Display(Name = "M.Th.")]
     MTH,
 
     [Display(Name = "M.C.S.")]
     MCS,
 
-    [Display(Name = "M.Ec.")] 
+    [Display(Name = "M.Ec.")]
     MEC,
 
-    [Display(Name = "M.Fin.")] 
+    [Display(Name = "M.Fin.")]
     MFIN,
 
-    [Display(Name = "M.I.R.")] 
+    [Display(Name = "M.I.R.")]
     MIR,
 
-    [Display(Name = "M.Res.")] 
+    [Display(Name = "M.Res.")]
     MRES,
 
-    [Display(Name = "Ph.D.")] 
+    [Display(Name = "Ph.D.")]
     PHD,
 
-    [Display(Name = "M.D.")] 
+    [Display(Name = "M.D.")]
     MD,
 
-    [Display(Name = "LL.D.")] 
+    [Display(Name = "LL.D.")]
     LLD,
 
-    [Display(Name = "D.Sc.")] 
+    [Display(Name = "D.Sc.")]
     DSC,
 
     [Display(Name = "D.Eng.")]
@@ -124,84 +124,84 @@ public enum AcademicDegree
     [Display(Name = "Ed.D.")]
     EDD,
 
-    [Display(Name = "DBA")] 
+    [Display(Name = "DBA")]
     DBA,
 
-    [Display(Name = "D.Th.")] 
+    [Display(Name = "D.Th.")]
     DTH,
 
-    [Display(Name = "D.F.A.")] 
+    [Display(Name = "D.F.A.")]
     DFA,
 
-    [Display(Name = "D.Mus.")] 
+    [Display(Name = "D.Mus.")]
     DMUS,
 
     [Display(Name = "Dr.P.H.")]
     DRPH,
 
-    [Display(Name = "Psy.D.")] 
+    [Display(Name = "Psy.D.")]
     PSYD,
 
-    [Display(Name = "D.Arch.")] 
+    [Display(Name = "D.Arch.")]
     DARCH,
 
-    [Display(Name = "DNP")] 
+    [Display(Name = "DNP")]
     DNP,
 
-    [Display(Name = "D.S.W.")] 
+    [Display(Name = "D.S.W.")]
     DSW,
 
     [Display(Name = "J.D.")]
     JD,
 
-    [Display(Name = "Dr.")] 
+    [Display(Name = "Dr.")]
     DR,
 
-    [Display(Name = "Habil.")] 
+    [Display(Name = "Habil.")]
     HABIL,
 
-    [Display(Name = "Dr. habil.")] 
+    [Display(Name = "Dr. habil.")]
     DRHABIL,
 
-    [Display(Name = "Dr. h.c.")] 
+    [Display(Name = "Dr. h.c.")]
     DRHC,
 
-    [Display(Name = "Dr. h.c. mult.")] 
+    [Display(Name = "Dr. h.c. mult.")]
     DRHCMULT,
 
-    [Display(Name = "Diplom")] 
+    [Display(Name = "Diplom")]
     DIPLOM,
 
-    [Display(Name = "Magister")] 
+    [Display(Name = "Magister")]
     MAGISTER,
 
-    [Display(Name = "Staatsexamen")] 
+    [Display(Name = "Staatsexamen")]
     STAATSEXAMEN,
 
-    [Display(Name = "Licence")] 
+    [Display(Name = "Licence")]
     LICENCE,
 
     [Display(Name = "Maîtrise")]
     MAITRISE,
 
-    [Display(Name = "Ingénieur")] 
+    [Display(Name = "Ingénieur")]
     INGENIEUR,
 
     [Display(Name = "Laurea")]
     LAUREA,
 
-    [Display(Name = "Laurea Magistrale")] 
+    [Display(Name = "Laurea Magistrale")]
     LAUREAMAGISTRALE,
 
-    [Display(Name = "Licenciatura")] 
+    [Display(Name = "Licenciatura")]
     LICENCIATURA,
 
     [Display(Name = "Título de Grado")]
     TITULODEGRADO,
 
-    [Display(Name = "Kandidát věd")] 
+    [Display(Name = "Kandidát věd")]
     KANDIDATVIED,
 
-    [Display(Name = "Docent")] 
+    [Display(Name = "Docent")]
     DOCENT
 }

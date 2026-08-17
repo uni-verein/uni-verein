@@ -12,6 +12,7 @@ import {
   TableCell,
   TableBody,
   TableContainer,
+  CircularProgress,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -89,7 +90,7 @@ export default function Sepa() {
   };
 
   const debouncedFetch = useCallback(
-    // @ts-ignore
+    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
     debounce((...args: any) => fetchData(...args), 500),
     [],
   );
@@ -118,7 +119,7 @@ export default function Sepa() {
         a.click();
         a.remove();
       }
-    } catch (error) {
+    } catch {
       setApiError(t('pages.sepa.apiError.serverError'));
     } finally {
       setLoading(false);
@@ -145,7 +146,12 @@ export default function Sepa() {
       )}
 
       {isMobile ? (
-        <Box>
+        <Box sx={{ position: 'relative' }}>
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <CircularProgress />
+            </Box>
+          )}
           {data.length === 0 ? (
             <Typography align="center" color="text.secondary" sx={{ py: 3 }}>
               {t('pages.sepa.table.noSepa')}
@@ -202,6 +208,20 @@ export default function Sepa() {
           elevation={0}
           sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
         >
+          {loading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+
           <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>

@@ -56,7 +56,7 @@ public class ReceiptsControllerTests : IntegrationTestBase
         _db.Receipts.RemoveRange(_db.Receipts.IgnoreQueryFilters());
         _db.ReceiptCategories.RemoveRange(_db.ReceiptCategories.IgnoreQueryFilters());
         await _db.ForceSaveChangesAsync();
-        
+
         _db.Users.Add(new UserEntity
         {
             Id = UserId,
@@ -97,14 +97,14 @@ public class ReceiptsControllerTests : IntegrationTestBase
             { new StringContent(amount.ToString(CultureInfo.InvariantCulture)), "amount" },
             { new StringContent(receiptDate.ToString("O")), "receiptDate" }
         };
-        
+
         if (categoryId != null)
             content.Add(new StringContent(categoryId.Value.ToString()), "categoryId");
 
         HttpResponseMessage response = await client.PostAsync("/receipts", content);
         ReceiptResult? result = await response.Content.ReadFromJsonAsync<ReceiptResult>();
         result.ShouldNotBeNull();
-        
+
         return result;
     }
 
@@ -1000,7 +1000,7 @@ public class ReceiptsControllerTests : IntegrationTestBase
         HttpClient client = CreateClient(UserRole.ADMIN);
         ReceiptCategoryEntity categoryA = await CreateReceiptCategoryAsync("Eat");
         ReceiptCategoryEntity categoryB = await CreateReceiptCategoryAsync("Travel expenses");
-        
+
         await CreateReceiptAsync(client, 30m, new DateTime(2026, 4, 10, 0, 0, 0, DateTimeKind.Utc), categoryA.Id);
         await CreateReceiptAsync(client, 20m, new DateTime(2026, 4, 12, 0, 0, 0, DateTimeKind.Utc), categoryB.Id);
 

@@ -11,7 +11,7 @@ public static class EnumExtensions
         FieldInfo? field = value.GetType().GetField(value.ToString());
 
         DisplayAttribute? attribute = field?.GetCustomAttribute<DisplayAttribute>();
-        
+
         return attribute?.Name ?? value.ToString();
     }
 }

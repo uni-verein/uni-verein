@@ -8,9 +8,9 @@ public class MemberCategoryResult
     [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("category")] 
+    [JsonPropertyName("category")]
     public string Category { get; set; } = string.Empty;
 
-    [JsonPropertyName("name")] 
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 }

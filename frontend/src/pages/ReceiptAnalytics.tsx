@@ -228,7 +228,14 @@ export default function ReceiptAnalytics() {
         <Grid container spacing={3} alignItems="stretch">
           <Grid size={{ xs: 12, md: 7 }}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  mb: 1,
+                }}
+              >
                 <Typography variant="subtitle1" fontWeight={600}>
                   {t('pages.receiptAnalytics.byMonth', { year })}
                 </Typography>
@@ -246,7 +253,14 @@ export default function ReceiptAnalytics() {
           </Grid>
           <Grid size={{ xs: 12, md: 5 }}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  mb: 1,
+                }}
+              >
                 <Typography variant="subtitle1" fontWeight={600}>
                   {t('pages.receiptAnalytics.byCategory', { year })}
                 </Typography>
@@ -257,7 +271,14 @@ export default function ReceiptAnalytics() {
                 )}
               </Box>
               {data.byCategory.length === 0 ? (
-                <Box sx={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box
+                  sx={{
+                    height: 320,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <Typography variant="body2" color="text.secondary">
                     {t('pages.receiptAnalytics.noData')}
                   </Typography>
@@ -296,7 +317,10 @@ export default function ReceiptAnalytics() {
                 margin={{ top: 30 }}
                 localeText={{ noData: t('pages.receiptAnalytics.noData') }}
               >
-                <YearTotalLabels years={data.byYear.map((y) => y.year.toString())} totals={data.byYear.map((y) => y.total)} />
+                <YearTotalLabels
+                  years={data.byYear.map((y) => y.year.toString())}
+                  totals={data.byYear.map((y) => y.total)}
+                />
               </BarChart>
             </Paper>
           </Grid>

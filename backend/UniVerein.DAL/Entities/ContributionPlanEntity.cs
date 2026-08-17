@@ -6,12 +6,12 @@ namespace UniVerein.DAL.Entities;
 [Table("ContributionPlans")]
 public class ContributionPlanEntity : BaseEntity
 {
-    [Column("name")] 
+    [Column("name")]
     public string Name { get; set; } = "";
 
-    [Column("amount")] 
+    [Column("amount")]
     public decimal Amount { get; set; }
 
-    [Column("interval")] 
+    [Column("interval")]
     public Interval Interval { get; set; } = Interval.YEARLY;
 }

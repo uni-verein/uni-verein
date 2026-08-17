@@ -65,7 +65,7 @@ public class CryptoService
     {
         if (string.IsNullOrWhiteSpace(encrypted))
             return null;
-        
+
         string plainText = Decrypt(encrypted)!;
         return DateTimeOffset.Parse(plainText);
     }

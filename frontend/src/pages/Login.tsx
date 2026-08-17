@@ -15,9 +15,7 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
-import PersonIcon from '@mui/icons-material/Person';
 import { login } from '../api';
 import { useTranslation } from 'react-i18next';
 import { usePageConfig } from '../components/PageConfigContext';
@@ -158,7 +156,11 @@ export default function Login({
           </Typography>
 
           {isOffline && (
-            <Alert severity="warning" icon={<WifiOffIcon fontSize="inherit" />} sx={{ width: '100%', mb: 2 }}>
+            <Alert
+              severity="warning"
+              icon={<WifiOffIcon fontSize="inherit" />}
+              sx={{ width: '100%', mb: 2 }}
+            >
               {t('pages.login.offline')}
             </Alert>
           )}

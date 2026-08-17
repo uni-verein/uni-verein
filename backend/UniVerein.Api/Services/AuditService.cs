@@ -33,7 +33,7 @@ public class AuditService
         if (!Guid.TryParse(userIdClaim, out Guid userId))
             return;
 
-        UserEntity? user = await  _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        UserEntity? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
             return;
 

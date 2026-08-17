@@ -94,9 +94,9 @@ test.describe('Receipt category config page', () => {
     await page.getByRole('button', { name: 'Speichern' }).click();
 
     await expect(
-      page
-        .getByRole('alert')
-        .filter({ hasText: 'Belegkategorie kann nicht erstellt werden. Belegkategorie existiert bereits.' }),
+      page.getByRole('alert').filter({
+        hasText: 'Belegkategorie kann nicht erstellt werden. Belegkategorie existiert bereits.',
+      }),
     ).toBeVisible();
   });
 

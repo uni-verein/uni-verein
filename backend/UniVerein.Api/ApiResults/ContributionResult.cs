@@ -5,10 +5,10 @@ namespace UniVerein.Api.ApiResults;
 
 public class ContributionResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("name")] 
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("amount")]
@@ -17,6 +17,6 @@ public class ContributionResult
     [JsonPropertyName("dueDate")]
     public DateTime DueDate { get; set; }
 
-    [JsonPropertyName("paid")] 
+    [JsonPropertyName("paid")]
     public bool Paid { get; set; } = false;
 }

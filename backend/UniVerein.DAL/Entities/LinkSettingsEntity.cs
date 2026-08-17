@@ -5,12 +5,12 @@ namespace UniVerein.DAL.Entities;
 [Table("LinkSettings")]
 public class LinkSettingsEntity : BaseEntity
 {
-    [Column("link")] 
+    [Column("link")]
     public string Link { get; set; } = string.Empty;
 
-    [Column("icon")] 
+    [Column("icon")]
     public string Icon { get; set; } = string.Empty;
 
-    [Column("name")] 
+    [Column("name")]
     public string Name { get; set; } = string.Empty;
 }

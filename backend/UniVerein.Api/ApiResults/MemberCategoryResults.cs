@@ -5,9 +5,9 @@ namespace UniVerein.Api.ApiResults;
 
 public class MemberCategoryResults
 {
-    [JsonPropertyName("items")] 
+    [JsonPropertyName("items")]
     public List<MemberCategoryResult> Items { get; set; } = new();
 
-    [JsonPropertyName("total")] 
+    [JsonPropertyName("total")]
     public int Total { get; set; }
 }

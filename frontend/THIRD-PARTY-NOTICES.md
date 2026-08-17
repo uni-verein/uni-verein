@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-08-11
+Generated automatically on 2026-08-17
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -116,10 +116,11 @@ Generated automatically on 2026-08-11
 | @eslint-community/eslint-utils@4.9.1 | - | MIT |
 | @eslint-community/regexpp@4.12.2 | - | MIT |
 | @eslint/config-array@0.23.5 | - | Apache-2.0 |
-| @eslint/config-helpers@0.6.0 | - | Apache-2.0 |
+| @eslint/config-helpers@0.7.0 | - | Apache-2.0 |
 | @eslint/core@1.2.1 | - | Apache-2.0 |
+| @eslint/js@10.0.1 | - | MIT |
 | @eslint/object-schema@3.0.5 | - | Apache-2.0 |
-| @eslint/plugin-kit@0.7.1 | - | Apache-2.0 |
+| @eslint/plugin-kit@0.7.2 | - | Apache-2.0 |
 | @floating-ui/core@1.7.5 | - | MIT |
 | @floating-ui/dom@1.7.6 | - | MIT |
 | @floating-ui/utils@0.2.11 | - | MIT |
@@ -156,6 +157,7 @@ Generated automatically on 2026-08-11
 | @mui/x-internals@8.26.0 | - | MIT |
 | @mui/x-internals@8.29.2 | - | MIT |
 | @napi-rs/canvas-linux-x64-gnu@0.1.100 | - | MIT |
+| @napi-rs/canvas-linux-x64-musl@0.1.100 | - | MIT |
 | @napi-rs/canvas@0.1.100 | - | MIT |
 | @pkgr/core@0.2.9 | - | MIT |
 | @playwright/test@1.58.2 | - | Apache-2.0 |
@@ -230,6 +232,16 @@ Generated automatically on 2026-08-11
 | @types/resolve@1.20.2 | - | MIT |
 | @types/trusted-types@2.0.7 | - | MIT |
 | @types/use-sync-external-store@0.0.6 | - | MIT |
+| @typescript-eslint/eslint-plugin@8.67.0 | - | MIT |
+| @typescript-eslint/parser@8.67.0 | - | MIT |
+| @typescript-eslint/project-service@8.67.0 | - | MIT |
+| @typescript-eslint/scope-manager@8.67.0 | - | MIT |
+| @typescript-eslint/tsconfig-utils@8.67.0 | - | MIT |
+| @typescript-eslint/type-utils@8.67.0 | - | MIT |
+| @typescript-eslint/types@8.67.0 | - | MIT |
+| @typescript-eslint/typescript-estree@8.67.0 | - | MIT |
+| @typescript-eslint/utils@8.67.0 | - | MIT |
+| @typescript-eslint/visitor-keys@8.67.0 | - | MIT |
 | @vite-pwa/assets-generator@1.0.2 | - | MIT |
 | @vitejs/plugin-react@4.7.0 | - | MIT |
 | abort-controller@3.0.0 | - | MIT |
@@ -313,10 +325,12 @@ Generated automatically on 2026-08-11
 | escape-string-regexp@4.0.0 | - | MIT |
 | eslint-config-prettier@10.1.8 | - | MIT |
 | eslint-plugin-prettier@5.5.5 | - | MIT |
+| eslint-plugin-react-hooks@7.1.1 | - | MIT |
+| eslint-plugin-react-refresh@0.5.4 | - | MIT |
 | eslint-scope@9.1.2 | - | BSD-2-Clause |
 | eslint-visitor-keys@3.4.3 | - | Apache-2.0 |
 | eslint-visitor-keys@5.0.1 | - | Apache-2.0 |
-| eslint@10.4.0 | - | MIT |
+| eslint@10.8.1 | - | MIT |
 | espree@11.2.0 | - | BSD-2-Clause |
 | esquery@1.7.0 | - | BSD-3-Clause |
 | esrecurse@4.3.0 | - | BSD-2-Clause |
@@ -355,6 +369,7 @@ Generated automatically on 2026-08-11
 | get-symbol-description@1.1.0 | - | MIT |
 | glob-parent@6.0.2 | - | ISC |
 | glob@11.1.0 | - | BlueOak-1.0.0 |
+| globals@17.11.0 | - | MIT |
 | globalthis@1.0.4 | - | MIT |
 | gopd@1.2.0 | - | MIT |
 | graceful-fs@4.2.11 | - | ISC |
@@ -364,6 +379,8 @@ Generated automatically on 2026-08-11
 | has-symbols@1.1.0 | - | MIT |
 | has-tostringtag@1.0.2 | - | MIT |
 | hasown@2.0.4 | - | MIT |
+| hermes-estree@0.25.1 | - | MIT |
+| hermes-parser@0.25.1 | - | MIT |
 | hoist-non-react-statics@3.3.2 | - | BSD-3-Clause |
 | html-parse-stringify@3.0.1 | - | MIT |
 | i18n-iso-countries@7.14.0 | - | MIT |
@@ -373,6 +390,7 @@ Generated automatically on 2026-08-11
 | idb-keyval@6.3.0 | - | Apache-2.0 |
 | idb@7.1.1 | - | ISC |
 | ignore@5.3.2 | - | MIT |
+| ignore@7.0.6 | - | MIT |
 | import-fresh@3.3.1 | - | MIT |
 | imurmurhash@0.1.4 | - | MIT |
 | internal-slot@1.1.0 | - | MIT |
@@ -561,12 +579,14 @@ Generated automatically on 2026-08-11
 | tough-cookie@4.1.4 | - | BSD-3-Clause |
 | tr46@0.0.3 | - | MIT |
 | tr46@1.0.1 | - | MIT |
+| ts-api-utils@2.5.0 | - | MIT |
 | type-check@0.4.0 | - | MIT |
 | type-fest@0.16.0 | - | (MIT OR CC0-1.0) |
 | typed-array-buffer@1.0.3 | - | MIT |
 | typed-array-byte-length@1.0.3 | - | MIT |
 | typed-array-byte-offset@1.0.4 | - | MIT |
 | typed-array-length@1.0.8 | - | MIT |
+| typescript-eslint@8.67.0 | - | MIT |
 | typescript@5.9.3 | - | Apache-2.0 |
 | unbox-primitive@1.1.0 | - | MIT |
 | unconfig-core@7.5.0 | - | MIT |
@@ -622,3 +642,5 @@ Generated automatically on 2026-08-11
 | yaml@1.10.3 | - | ISC |
 | yocto-queue@0.1.0 | - | MIT |
 | zlibjs@0.3.1 | - | MIT |
+| zod-validation-error@4.0.2 | - | MIT |
+| zod@4.4.3 | - | MIT |

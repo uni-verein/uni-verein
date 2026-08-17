@@ -16,19 +16,19 @@ public class CreateReceiptRequest
     [Required]
     [JsonPropertyName("receiptDate")]
     public DateTime ReceiptDate { get; set; }
-    
+
     [JsonPropertyName("categoryId")]
     public Guid? CategoryId { get; set; }
-    
+
     [JsonPropertyName("vendor")]
     public string? Vendor { get; set; }
-    
+
     [JsonPropertyName("description")]
     public string? Description { get; set; }
-    
+
     [JsonPropertyName("paymentMethod")]
     public ReceiptPaymentMethod? PaymentMethod { get; set; }
-    
+
     [JsonPropertyName("files")]
     public List<IFormFile>? Files { get; set; }
 }

@@ -4,6 +4,6 @@ namespace UniVerein.Api.ApiResults;
 
 public class LoginApiResult
 {
-    [JsonPropertyName("token")] 
+    [JsonPropertyName("token")]
     public string Token { get; set; } = string.Empty;
 }

@@ -5,7 +5,7 @@ namespace UniVerein.DAL.Entities;
 [Table("SepaExport")]
 public class SepaExportEntity : BaseEntity
 {
-    [Column("name")] 
+    [Column("name")]
     public required string Name { get; set; }
 
     [Column("amount")]

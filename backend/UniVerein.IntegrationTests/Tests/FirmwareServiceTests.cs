@@ -415,7 +415,7 @@ public class FirmwareServiceTests : IntegrationTestBase
         MailService mailService = new(db, _cryptoService, mockHubContext.Object, new FakeImapClient());
         return new FirmwareService(httpClient, configuration, db, mailService, _cryptoService);
     }
-    
+
     private async Task<Guid> SetSeedAdminEmailAsync()
     {
         Guid seedAdminId = Guid.Empty;

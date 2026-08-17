@@ -69,7 +69,7 @@ test.describe('Audit page', () => {
 
     await backend.deleteAllMember();
     await tc.setup(Role.USER);
-    let user = tc.get().user.username;
+    const user = tc.get().user.username;
     await backend.createMemberAsUser(
       {
         academicDegree: null,

@@ -64,7 +64,7 @@ export function ReceiptCategoryDialog({
           message: t('pages.receiptCategoryConfig.snackbar.createSuccess'),
         });
       }
-    } catch (error) {
+    } catch {
       onError(t('pages.receiptCategoryConfig.apiError.saveFailed'));
       setReceiptCategoryChange({
         status: 'error',

@@ -175,7 +175,7 @@ export default function Mail() {
         method: 'POST',
         body: JSON.stringify(request),
       });
-    } catch (err) {
+    } catch {
       setSnackbar({ status: 'error', message: t('pages.mail.sendingFailed') });
       setSendState(EmailState.IDLE);
     }

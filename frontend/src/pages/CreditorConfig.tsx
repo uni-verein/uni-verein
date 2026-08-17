@@ -73,7 +73,7 @@ export default function CreditorConfig() {
       if (data) {
         setConfig(data);
       }
-    } catch (error) {
+    } catch {
       setConfig({
         id: undefined,
         name: '',
@@ -168,7 +168,7 @@ export default function CreditorConfig() {
         status: 'success',
         message: t('pages.creditorConfig.snackbar.saveSuccess'),
       });
-    } catch (error) {
+    } catch {
       setApiError(t('pages.creditorConfig.apiError.saveFailed'));
       setCreditorConfigChange({
         status: 'error',
@@ -194,7 +194,7 @@ export default function CreditorConfig() {
           status: 'success',
           message: t('pages.creditorConfig.snackbar.deleteSuccess'),
         });
-      } catch (e) {
+      } catch {
         setApiError(t('pages.creditorConfig.apiError.deleteFailed'));
         setCreditorConfigChange({
           status: 'error',

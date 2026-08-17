@@ -5,16 +5,16 @@ namespace UniVerein.Api.ApiResults;
 
 public class AuditLogResult
 {
-    [JsonPropertyName("timestamp")] 
+    [JsonPropertyName("timestamp")]
     public DateTimeOffset Timestamp { get; set; }
 
-    [JsonPropertyName("userName")] 
+    [JsonPropertyName("userName")]
     public string UserName { get; set; } = string.Empty;
 
-    [JsonPropertyName("action")] 
+    [JsonPropertyName("action")]
     public string Action { get; set; } = string.Empty;
 
-    [JsonPropertyName("entity")] 
+    [JsonPropertyName("entity")]
     public string Entity { get; set; } = string.Empty;
 
     [JsonPropertyName("data")]

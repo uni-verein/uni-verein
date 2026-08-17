@@ -117,7 +117,7 @@ public class SepaService
             },
             DebtorAccount = new BankAccount { IBAN = _crypto.Decrypt(x.MemberEntity.IBAN_Encrypted)?.Replace(" ", "") ?? string.Empty },
             DebtorAgent = new FinancialInstitution
-                { BIC = _crypto.Decrypt(x.MemberEntity.Bic_Encrypted)?.Replace(" ", "") ?? string.Empty },
+            { BIC = _crypto.Decrypt(x.MemberEntity.Bic_Encrypted)?.Replace(" ", "") ?? string.Empty },
             RemittanceInfo =
                 $"Membership fee {(x.MemberEntity.ContributionPlan?.Interval == Interval.MONTHLY ? $"{x.DueDate:yyyy-MM}" : $"{x.DueDate:yyyy}")}"
         }).ToList();

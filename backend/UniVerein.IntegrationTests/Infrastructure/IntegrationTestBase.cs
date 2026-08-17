@@ -44,7 +44,7 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
             HandleCookies = false
         });
     }
-    
+
     protected async Task<(HttpClient Client, Guid UserId)> CreateUserAndClientAsync(UserRole role, string username)
     {
         Guid userId = Guid.NewGuid();
@@ -65,7 +65,7 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
             UserRole.FINANCIAL_MANAGER => CreateClient().AsFinancialUser(configuration, userId),
             _ => CreateClient().AsUser(configuration, userId)
         };
-        
+
         return (client, userId);
     }
 

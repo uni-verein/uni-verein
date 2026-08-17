@@ -72,7 +72,10 @@ export default function Backup() {
   };
 
   const downloadFull = () => {
-    triggerDownload('full=true', `Verein_Backup_Full_${new Date().toISOString().split('T')[0]}.zip`);
+    triggerDownload(
+      'full=true',
+      `Verein_Backup_Full_${new Date().toISOString().split('T')[0]}.zip`,
+    );
   };
 
   const restore = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,7 +121,7 @@ export default function Backup() {
         a.remove();
         setSnackbar({ status: 'success', message: ti('pages.backup.snackbar.downloadSuccess') });
       }
-    } catch (e) {
+    } catch {
       setSnackbar({ status: 'error', message: ti('pages.backup.snackbar.exampleError') });
     } finally {
       setLoading(false);
@@ -151,6 +154,7 @@ export default function Backup() {
           .catch((e) => console.log(e));
 
         if (res.status === 404) {
+          // 404 is already covered by the generic import-error message set above
         }
       } else {
         setSnackbar({ status: 'success', message: ti('pages.backup.snackbar.importSuccess') });
@@ -178,7 +182,7 @@ export default function Backup() {
         a.remove();
         setSnackbar({ status: 'success', message: ti('pages.backup.snackbar.exportSuccess') });
       }
-    } catch (e) {
+    } catch {
       setSnackbar({ status: 'error', message: ti('pages.backup.snackbar.exportError') });
     } finally {
       setLoading(false);
@@ -280,7 +284,10 @@ export default function Backup() {
 
         {memberCount === 0 ? (
           <Grid size={12}>
-            <Paper variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}>
+            <Paper
+              variant="outlined"
+              sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}
+            >
               <Grid container spacing={2} alignItems="center">
                 <Grid size={12}>
                   <Stack direction="row" spacing={2} alignItems="center">
@@ -325,7 +332,10 @@ export default function Backup() {
           </Grid>
         ) : (
           <Grid size={12}>
-            <Paper variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}>
+            <Paper
+              variant="outlined"
+              sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}
+            >
               <Grid container spacing={2} alignItems="center">
                 <Grid size={12}>
                   <Stack direction="row" spacing={2} alignItems="center">

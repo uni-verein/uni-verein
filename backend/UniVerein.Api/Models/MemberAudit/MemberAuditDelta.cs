@@ -44,7 +44,9 @@ public static class MemberAuditDelta
         if (after.SepaConsent != null && after.SepaConsent != before.SepaConsent)
             delta.Add(new MemberAuditDeltaEntry
             {
-                Field = "SepaConsentChanged", OldValue = (before.SepaConsent != null).ToString(), NewValue = "True"
+                Field = "SepaConsentChanged",
+                OldValue = (before.SepaConsent != null).ToString(),
+                NewValue = "True"
             });
 
         return delta;

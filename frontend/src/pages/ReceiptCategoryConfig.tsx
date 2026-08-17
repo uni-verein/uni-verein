@@ -50,7 +50,9 @@ export default function ReceiptCategoryConfig() {
       if (data) {
         setCategories(data.items);
       }
-    } catch (error) {}
+    } catch {
+      // best-effort: table just stays empty if this fails
+    }
   };
 
   useEffect(() => {
@@ -75,12 +77,12 @@ export default function ReceiptCategoryConfig() {
         });
 
         await loadCategories();
-        // @ts-ignore
-      } catch (error: Error) {
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
         setApiError(
           t(
             'pages.receiptCategoryConfig.apiError.' +
-              (error.message === 'Bad Request' ? 'deleteFailedInUse' : 'deleteFailed'),
+              (message === 'Bad Request' ? 'deleteFailedInUse' : 'deleteFailed'),
           ),
         );
 
@@ -88,7 +90,7 @@ export default function ReceiptCategoryConfig() {
           status: 'error',
           message: t(
             'pages.receiptCategoryConfig.snackbar.' +
-              (error.message === 'Bad Request' ? 'deleteFailedInUse' : 'deleteFailed'),
+              (message === 'Bad Request' ? 'deleteFailedInUse' : 'deleteFailed'),
           ),
         });
       }

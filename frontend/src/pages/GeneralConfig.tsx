@@ -50,7 +50,7 @@ export default function GeneralConfig() {
       if (data) {
         setConfig(data);
       }
-    } catch (error) {
+    } catch {
       setConfig({
         id: undefined,
         pageName: '',
@@ -131,7 +131,7 @@ export default function GeneralConfig() {
         status: 'success',
         message: t('pages.generalConfig.snackbar.saveSuccess'),
       });
-    } catch (error) {
+    } catch {
       setApiError(t('pages.generalConfig.apiError.saveFailed'));
       setConfigDeleteOrUpdate({
         status: 'error',
@@ -159,7 +159,7 @@ export default function GeneralConfig() {
           status: 'success',
           message: t('pages.generalConfig.snackbar.deleteSuccess'),
         });
-      } catch (e) {
+      } catch {
         setApiError(t('pages.generalConfig.apiError.deleteFailed'));
         setConfigDeleteOrUpdate({
           status: 'error',
