@@ -52,7 +52,9 @@ export default function MemberCategoryConfig() {
       if (data) {
         setMemberCategories(data.items);
       }
-    } catch (error) {}
+    } catch {
+      // best-effort: table just stays empty if this fails
+    }
   };
 
   useEffect(() => {
@@ -79,19 +81,19 @@ export default function MemberCategoryConfig() {
           message: t('pages.memberCategoryConfig.snackbar.deleteSuccess'),
         });
         await loadMemberCategories();
-        // @ts-ignore
-      } catch (error: Error) {
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
         setApiError(
           t(
             'pages.memberCategoryConfig.apiError.' +
-              (error.message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
+              (message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
           ),
         );
         setMemberCategoryChange({
           status: 'error',
           message: t(
             'pages.memberCategoryConfig.snackbar.' +
-              (error.message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
+              (message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
           ),
         });
       }

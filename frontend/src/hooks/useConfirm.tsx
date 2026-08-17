@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 
 export function useConfirm() {
   const [open, setOpen] = useState(false);
-  // @ts-ignore
+  // @ts-expect-error - useRef requires an initial value argument under strict mode
   const resolveRef = useRef<(value: boolean) => void>();
 
   const confirm = useCallback((): Promise<boolean> => {

@@ -67,7 +67,7 @@ public class ReceiptsController : ControllerBase
     public async Task<ActionResult<ReceiptAnalyticsResult>> GetAnalyticsAsync([FromQuery] int? year)
     {
         int targetYear = year ?? DateTime.UtcNow.Year;
-        
+
         List<ReceiptAnalyticsRow> receipts = await _db.Receipts
             .Where(r => r.DeletedAt == null)
             .GroupBy(r => new
@@ -528,9 +528,9 @@ public class ReceiptsController : ControllerBase
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
                 errorMessage: "Receipt not found.",
                 moreInfo: $"No receipt with the ID {id} could be found."));
-        
+
         _db.Remove(receipt);
-        
+
         if (hardDelete)
         {
             _receiptService.DeleteFiles(receipt.Files);
@@ -540,7 +540,7 @@ public class ReceiptsController : ControllerBase
         {
             await _db.SaveChangesAsync();
         }
-        
+
         await _auditService.LogAsync(hardDelete ? AuditLogActions.DELETE : AuditLogActions.SOFT_DELETE, nameof(ReceiptEntity),
             new { ReceiptId = id, receipt.Amount });
 

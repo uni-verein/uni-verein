@@ -11,9 +11,9 @@ export default function App() {
   const { config, reloadConfig } = usePageConfig();
   const { resolvedMode } = useThemeMode();
 
-  // @ts-ignore
+  // @ts-expect-error - injected at build time via Vite define, not part of ImportMetaEnv types
   const version = import.meta.env.VITE_APP_VERSION;
-  // @ts-ignore
+  // @ts-expect-error - injected at build time via Vite define, not part of ImportMetaEnv types
   const demo = import.meta.env.VITE_APP_DEMO === 'true';
 
   const theme = useMemo(

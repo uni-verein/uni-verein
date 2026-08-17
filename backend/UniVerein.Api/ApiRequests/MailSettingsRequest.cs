@@ -9,8 +9,8 @@ public class MailSettingsRequest
     [JsonPropertyName("smtpServer")]
     public required string SmtpServer { get; set; }
 
-    [Required] 
-    [JsonPropertyName("port")] 
+    [Required]
+    [JsonPropertyName("port")]
     public int Port { get; set; }
 
     [Required]
@@ -33,6 +33,6 @@ public class MailSettingsRequest
     [JsonPropertyName("fromMail")]
     public required string FromMail { get; set; }
 
-    [JsonPropertyName("enableSsl")] 
+    [JsonPropertyName("enableSsl")]
     public bool? EnableSsl { get; set; } = true;
 }

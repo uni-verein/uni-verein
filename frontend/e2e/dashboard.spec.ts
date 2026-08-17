@@ -155,7 +155,11 @@ test.describe('Dashboard – Sidebar-Texte and Navigation', () => {
 
     test('File link visible and href correct when dataLink is set.', async ({ page }) => {
       const tc = makeTestContext();
-      await tc.setup(Role.ADMIN, { showMail: true, showSepa: true, links: [{link: 'example.com/files', name: 'Dateien', icon: '', id: null}]});
+      await tc.setup(Role.ADMIN, {
+        showMail: true,
+        showSepa: true,
+        links: [{ link: 'example.com/files', name: 'Dateien', icon: '', id: null }],
+      });
       await openDashboard(page, tc.get().token);
       const link = page.getByRole('link', { name: /Dateien/i });
       await expect(link).toBeVisible();

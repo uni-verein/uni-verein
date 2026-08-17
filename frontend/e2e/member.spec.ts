@@ -1,7 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import { APP_BASE, BackendClient } from './BackendClient';
 import { generateIBAN } from './utils';
-import { BulkMail, Gender, MemberCategory, Role, TaskWithinTheClub, TestUser } from '../src/types';
+import { Role, TestUser } from '../src/types';
 
 const createdUserIds = new Set<string>();
 const backend = new BackendClient();

@@ -52,7 +52,9 @@ export default function ContributionPlanConfig() {
       if (data) {
         setContributionPlans(data.items);
       }
-    } catch (error) {}
+    } catch {
+      // best-effort: table just stays empty if this fails
+    }
   };
 
   useEffect(() => {
@@ -78,19 +80,19 @@ export default function ContributionPlanConfig() {
           message: t('pages.contributionPlanConfig.snackbar.deleteSuccess'),
         });
         await loadContributionPlans();
-        // @ts-ignore
-      } catch (error: Error) {
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
         setApiError(
           t(
             'pages.contributionPlanConfig.apiError.' +
-              (error.message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
+              (message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
           ),
         );
         setContributionChange({
           status: 'error',
           message: t(
             'pages.contributionPlanConfig.snackbar.' +
-              (error.message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
+              (message === 'Bad Request' ? 'deleteFailedMember' : 'deleteFailed'),
           ),
         });
       }

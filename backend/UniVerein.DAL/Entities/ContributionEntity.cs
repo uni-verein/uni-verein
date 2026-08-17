@@ -6,21 +6,21 @@ namespace UniVerein.DAL.Entities;
 [Table("Contributions")]
 public class ContributionEntity : BaseEntity
 {
-    [Column("member_id")] 
+    [Column("member_id")]
     public Guid MemberId { get; set; }
 
-    [ForeignKey("MemberId")] 
+    [ForeignKey("MemberId")]
     public required MemberEntity MemberEntity { get; set; }
 
-    [Column("amount")] 
+    [Column("amount")]
     public decimal Amount { get; set; }
 
     [Column("due_date")]
     public DateTime DueDate { get; set; }
 
-    [Column("paid")] 
+    [Column("paid")]
     public DateTimeOffset? Paid { get; set; }
 
-    [Column("exportId")] 
+    [Column("exportId")]
     public Guid ExportId { get; set; }
 }

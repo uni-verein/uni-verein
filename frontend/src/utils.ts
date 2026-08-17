@@ -56,7 +56,7 @@ export const isTokenValid = (token: string) => {
     if (decoded.exp == undefined) return false;
 
     return decoded.exp > Date.now() / 1000;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

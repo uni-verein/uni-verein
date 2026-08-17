@@ -188,7 +188,7 @@ test.describe('User management page', () => {
   });
 
   test('Try to create duplicate user', async ({ page }) => {
-    let user = await backend.createUser(Role.USER);
+    const user = await backend.createUser(Role.USER);
 
     await openDashboard(page, tc.get().token);
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
@@ -218,7 +218,7 @@ test.describe('User management page', () => {
   });
 
   test('edit user', async ({ page }) => {
-    let user = await backend.createUser(Role.USER);
+    const user = await backend.createUser(Role.USER);
     await openDashboard(page, tc.get().token);
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Nutzerverwaltung', exact: true }).click();

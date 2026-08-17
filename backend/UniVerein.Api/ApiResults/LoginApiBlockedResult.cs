@@ -4,9 +4,9 @@ namespace UniVerein.Api.ApiResults;
 
 public class LoginApiBlockedResult
 {
-    [JsonPropertyName("error")] 
+    [JsonPropertyName("error")]
     public string Error { get; set; } = string.Empty;
 
-    [JsonPropertyName("remainingTime")] 
+    [JsonPropertyName("remainingTime")]
     public double RemainingTime { get; set; }
 }

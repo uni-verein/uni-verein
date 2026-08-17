@@ -100,7 +100,7 @@ export default function ReceiptForm({
       originalUrl: f.isPdf ? URL.createObjectURL(f.blob) : undefined,
     }));
     setNewPreviews(urls);
-    
+
     return () =>
       urls.forEach((u) => {
         URL.revokeObjectURL(u.url);
@@ -110,7 +110,7 @@ export default function ReceiptForm({
 
   useEffect(() => {
     if (mode === 'create' || !receipt) return;
-    let objectUrls: string[] = [];
+    const objectUrls: string[] = [];
 
     const loadFiles = async () => {
       const loaded: PreviewFile[] = [];
@@ -123,7 +123,7 @@ export default function ReceiptForm({
           const url = URL.createObjectURL(previewBlob);
           const originalUrl = isPdf ? URL.createObjectURL(blob) : undefined;
           objectUrls.push(url);
-          
+
           if (originalUrl) objectUrls.push(originalUrl);
           loaded.push({ url, name: `${file.position + 1}`, isPdf, originalUrl });
         }
@@ -225,7 +225,7 @@ export default function ReceiptForm({
       } else {
         onSaved();
       }
-    } catch (e) {
+    } catch {
       setApiError(t('components.receiptForm.alerts.saveFailed'));
     } finally {
       setSaving(false);
@@ -332,7 +332,9 @@ export default function ReceiptForm({
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                   >
-                    <MenuItem value="">{t('components.receiptForm.fields.noPaymentMethod')}</MenuItem>
+                    <MenuItem value="">
+                      {t('components.receiptForm.fields.noPaymentMethod')}
+                    </MenuItem>
                     <MenuItem value={ReceiptPaymentMethod.CASH}>
                       {t('components.receiptForm.fields.paymentMethodOptions.cash')}
                     </MenuItem>

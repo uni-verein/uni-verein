@@ -6,13 +6,13 @@ namespace UniVerein.Api.ApiResults;
 
 public class ContributionPlanResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("name")] 
+    [JsonPropertyName("name")]
     public string Name { get; set; } = "";
 
-    [JsonPropertyName("amount")] 
+    [JsonPropertyName("amount")]
     public decimal Amount { get; set; }
 
     [JsonPropertyName("interval")]

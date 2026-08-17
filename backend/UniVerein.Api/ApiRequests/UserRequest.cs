@@ -18,6 +18,7 @@ public class UserRequest
     [JsonPropertyName("password")]
     public required string Password { get; set; }
 
-    [Required] [JsonPropertyName("role")] 
+    [Required]
+    [JsonPropertyName("role")]
     public required UserRole Role { get; set; }
 }

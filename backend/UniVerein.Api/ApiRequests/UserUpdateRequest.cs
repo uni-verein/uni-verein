@@ -5,15 +5,15 @@ namespace UniVerein.Api.ApiRequests;
 
 public class UserUpdateRequest
 {
-    [JsonPropertyName("username")] 
+    [JsonPropertyName("username")]
     public string? Username { get; set; }
 
-    [JsonPropertyName("password")] 
+    [JsonPropertyName("password")]
     public string? Password { get; set; }
 
-    [JsonPropertyName("email")] 
+    [JsonPropertyName("email")]
     public string? Email { get; set; }
 
-    [JsonPropertyName("role")] 
+    [JsonPropertyName("role")]
     public UserRole? Role { get; set; }
 }

@@ -19,6 +19,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -84,7 +85,7 @@ export default function Contributions({ role }: UserRoleProps) {
   };
 
   const debouncedFetch = useCallback(
-    // @ts-ignore
+    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
     debounce((...args: any) => fetchData(...args), 500),
     [],
   );
@@ -249,7 +250,12 @@ export default function Contributions({ role }: UserRoleProps) {
       </Grid>
 
       {isMobile ? (
-        <Box>
+        <Box sx={{ position: 'relative' }}>
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <CircularProgress />
+            </Box>
+          )}
           {data.map((c) => (
             <MobileListCard
               key={c.id}
@@ -320,6 +326,20 @@ export default function Contributions({ role }: UserRoleProps) {
           elevation={0}
           sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}
         >
+          {loading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+
           <Table>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>

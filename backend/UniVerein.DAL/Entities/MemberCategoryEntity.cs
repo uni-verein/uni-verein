@@ -5,9 +5,9 @@ namespace UniVerein.DAL.Entities;
 [Table("MemberCategories")]
 public class MemberCategoryEntity : BaseEntity
 {
-    [Column("category")] 
+    [Column("category")]
     public required string Category { get; set; }
 
-    [Column("name")] 
+    [Column("name")]
     public required string Name { get; set; }
 }

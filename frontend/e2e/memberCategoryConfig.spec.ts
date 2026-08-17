@@ -122,7 +122,7 @@ test.describe('Member category config page', () => {
 
   test('Try to create duplicate member category', async ({ page }) => {
     await backend.deleteTestMemberCategory();
-    let category = await backend.createTestMemberCategory();
+    const category = await backend.createTestMemberCategory();
     await openDashboard(page, tc.get().token);
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Mitgliederkategorien verwalten', exact: true }).click();
@@ -153,8 +153,8 @@ test.describe('Member category config page', () => {
 
   test('Edit member category', async ({ page }) => {
     await backend.deleteTestMemberCategory();
-    let category = await backend.createTestMemberCategory();
-    let testValue = 'main';
+    const category = await backend.createTestMemberCategory();
+    const testValue = 'main';
     await openDashboard(page, tc.get().token);
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Mitgliederkategorien verwalten', exact: true }).click();

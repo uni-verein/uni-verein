@@ -75,7 +75,7 @@ export function ContributionPlanDialog({
   const handleSave = async () => {
     if (!validate()) return;
 
-    let data = {
+    const data = {
       name: formData.name,
       amount: Number(formData.amount.replace(',', '.')),
       interval: formData.interval,
@@ -83,7 +83,7 @@ export function ContributionPlanDialog({
 
     try {
       if (contributionPlan) {
-        let response = await api(`/contribution-plans/${contributionPlan.id}`, {
+        const response = await api(`/contribution-plans/${contributionPlan.id}`, {
           method: 'PATCH',
           body: JSON.stringify(data),
         });
@@ -100,7 +100,7 @@ export function ContributionPlanDialog({
           });
         }
       } else {
-        let response = await api('/contribution-plans', {
+        const response = await api('/contribution-plans', {
           method: 'POST',
           body: JSON.stringify(data),
         });
@@ -117,7 +117,7 @@ export function ContributionPlanDialog({
           });
         }
       }
-    } catch (error) {
+    } catch {
       onError(t('pages.contributionPlanConfig.apiError.saveFailed'));
       setContributionChange({
         status: 'error',

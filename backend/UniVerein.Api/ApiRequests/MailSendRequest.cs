@@ -7,7 +7,7 @@ namespace UniVerein.Api.ApiRequests;
 
 public class MailSendRequest
 {
-    [JsonPropertyName("categoryId")] 
+    [JsonPropertyName("categoryId")]
     public Guid? CategoryId { get; set; }
 
     [Required(AllowEmptyStrings = false)]
@@ -17,6 +17,6 @@ public class MailSendRequest
     [JsonPropertyName("emailData")]
     public EmailRequest EmailData { get; set; } = new();
 
-    [JsonPropertyName("selectedEmails")] 
+    [JsonPropertyName("selectedEmails")]
     public List<string>? SelectedEmails { get; set; }
 }

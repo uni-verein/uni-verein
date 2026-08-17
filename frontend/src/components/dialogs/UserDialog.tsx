@@ -80,7 +80,7 @@ export function UserDialog({
 
     try {
       if (user) {
-        let response = await api(accountView ? `/users/account` : `/users/${user.id}`, {
+        const response = await api(accountView ? `/users/account` : `/users/${user.id}`, {
           method: 'PATCH',
           body: JSON.stringify(formData),
         });
@@ -97,7 +97,7 @@ export function UserDialog({
           });
         }
       } else {
-        let response = await api('/users', { method: 'POST', body: JSON.stringify(formData) });
+        const response = await api('/users', { method: 'POST', body: JSON.stringify(formData) });
         if (response === 409) {
           onError(t('pages.userManagement.apiError.createDuplicate'));
           setUserCreateOrUpdate({
@@ -112,7 +112,7 @@ export function UserDialog({
         }
       }
       onSaved();
-    } catch (e) {
+    } catch {
       onError(t('pages.userManagement.apiError.saveFailed'));
       setUserCreateOrUpdate({
         status: 'error',

@@ -771,14 +771,14 @@ public class MailControllerTests : IntegrationTestBase
         {
             await db.Members.AddAsync(new MemberEntity()
             {
-                MandateId =  Guid.NewGuid().ToString(),
+                MandateId = Guid.NewGuid().ToString(),
                 FirstName = "John",
                 LastName = "Doe",
                 BirthdayEncrypted = string.Empty,
                 EmailEncrypted = GetService<CryptoService>().Encrypt("test@test.de"),
                 StreetEncrypted = string.Empty,
                 City = string.Empty,
-                PostalCode =  "1234",
+                PostalCode = "1234",
                 CountryCode = "DE"
             });
             await db.SaveChangesAsync();
@@ -1048,10 +1048,10 @@ public class MailControllerTests : IntegrationTestBase
             FirstName = (string)(firstname != null ? firstname.ToString() : "John")!,
             LastName = "Doe",
             EmailEncrypted = _cryptoService.Encrypt(email ?? "test@test.de"),
-            BirthdayEncrypted =  _cryptoService.Encrypt(DateTime.UtcNow.AddHours(-1)),
-            StreetEncrypted =  _cryptoService.Encrypt("Test"),
+            BirthdayEncrypted = _cryptoService.Encrypt(DateTime.UtcNow.AddHours(-1)),
+            StreetEncrypted = _cryptoService.Encrypt("Test"),
             City = "City",
-            PostalCode =  "1234",
+            PostalCode = "1234",
             CountryCode = "DE",
             MemberCategoryId = category ?? Guid.Parse(Program.MemberCategoriesStudent),
             DeletedAt = deleted == true ? DateTime.UtcNow : null,

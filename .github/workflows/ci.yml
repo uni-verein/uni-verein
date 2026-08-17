@@ -12,11 +12,6 @@ on:
   pull_request:
     branches:
       - main
-    # Only fire when the "ready-for-ci" label is added - not on every
-    # opened/synchronize/unlabeled event. This keeps the pipeline (and
-    # the CI Gate check) from posting a failure on routine PR activity;
-    # until the label is added, the required check simply stays
-    # "Expected" (pending), which still blocks merging.
     types:
       - labeled
     paths-ignore:
@@ -37,13 +32,75 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────
+  # FRONTEND LINT
+  # Gated behind the 'ready-for-ci' label just like the jobs below: even though
+  # this needs no application secrets, `npm ci` still executes whatever code a
+  # PR's package.json/dependencies bring with them (install/postinstall
+  # scripts), so it must not run against untrusted forks before a maintainer
+  # has looked at the PR.
+  # ─────────────────────────────────────────────
+  frontend-lint:
+    name: Frontend Lint & Typecheck
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Format check
+        working-directory: frontend
+        run: npm run format:check
+
+  # ─────────────────────────────────────────────
+  # BACKEND LINT
+  # `dotnet restore`/`build` can execute code from a PR's NuGet dependencies
+  # (MSBuild targets/tasks), so - same as frontend-lint - this stays behind the
+  # 'ready-for-ci' label rather than running unconditionally on every PR.
+  # ─────────────────────────────────────────────
+  backend-lint:
+    name: Backend Format Check
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        working-directory: backend
+        run: dotnet restore UniVerein.sln
+
+      - name: Format check
+        working-directory: backend
+        run: dotnet format UniVerein.sln --verify-no-changes
+
+  # ─────────────────────────────────────────────
   # BACKEND TESTS
   # ─────────────────────────────────────────────
   backend-test:
     name: Backend Unit Tests
     runs-on: ubuntu-latest
-    # Only run on PRs when the "ready-for-ci" label is set - this way the
-    # pipeline doesn't run automatically on every commit.
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
     steps:
       - name: Checkout
@@ -96,11 +153,6 @@ jobs:
           sudo rm -rf /opt/ghc
 
       - name: Start Stack
-        # Note: for a pull_request workflow triggered by Dependabot, secrets
-        # are NOT pulled from the regular Actions secrets, but from the
-        # separate "Dependabot secrets" store (Settings -> Secrets and
-        # variables -> Dependabot). For this job to work on Dependabot PRs
-        # too, the same-named secrets must also be configured there.
         env:
           JWT_KEY: ${{ secrets.JWT_KEY }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
@@ -296,9 +348,6 @@ jobs:
     name: Publish Backend Image
     runs-on: ubuntu-latest
     needs: [ trivy-backend, trivy-frontend ]
-    # PRs (including Dependabot) should only be built/scanned, not pushed
-    # to ghcr.io - avoids unnecessary registry writes (and thus GitHub
-    # secondary rate limits) as well as PR images cluttering the registry.
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
@@ -454,18 +503,11 @@ jobs:
   # ─────────────────────────────────────────────
   # CI GATE (the only required status check on PRs)
   # ─────────────────────────────────────────────
-  # backend-test/frontend-test are skipped on PRs as long as the
-  # "ready-for-ci" label is missing. GitHub treats a skipped job as
-  # "passed" for required status checks - so the individual jobs
-  # themselves must NOT be configured as required checks. This gate job
-  # runs for real on every PR event thanks to "if: always()" and fails
-  # explicitly whenever the label is missing or any pipeline job did
-  # not succeed.
   ci-gate:
     name: CI Gate
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'pull_request'
-    needs: [ backend-test, frontend-test, trivy-backend, trivy-frontend ]
+    needs: [ frontend-lint, backend-lint, backend-test, frontend-test, trivy-backend, trivy-frontend ]
     steps:
       - name: Require ready-for-ci label
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'ready-for-ci') }}
@@ -476,7 +518,7 @@ jobs:
       - name: Require all pipeline jobs green
         if: contains(github.event.pull_request.labels.*.name, 'ready-for-ci')
         run: |
-          for r in "${{ needs.backend-test.result }}" "${{ needs.frontend-test.result }}" "${{ needs.trivy-backend.result }}" "${{ needs.trivy-frontend.result }}"; do
+          for r in "${{ needs.frontend-lint.result }}" "${{ needs.backend-lint.result }}" "${{ needs.backend-test.result }}" "${{ needs.frontend-test.result }}" "${{ needs.trivy-backend.result }}" "${{ needs.trivy-frontend.result }}"; do
             if [ "$r" != "success" ]; then
               echo "::error::At least one pipeline job did not succeed (status: $r)."
               exit 1

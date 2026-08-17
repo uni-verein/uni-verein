@@ -135,7 +135,9 @@ export default function Dashboard({
       if (settings) {
         setSideBarSettings(settings);
       }
-    } catch (e) {}
+    } catch {
+      // best-effort: sidebar keeps its default settings if this fails
+    }
   };
 
   const loadFirmwareUpdate = async () => {
@@ -144,7 +146,9 @@ export default function Dashboard({
       if (result) {
         setFirmwareUpdate(result);
       }
-    } catch (e) {}
+    } catch {
+      // best-effort: no firmware-update notification shown if this fails
+    }
   };
 
   useEffect(() => {
@@ -320,11 +324,7 @@ export default function Dashboard({
 
             {isMobile ? (
               <Tooltip title={themeModeLabel} arrow>
-                <IconButton
-                  color="inherit"
-                  onClick={cycleThemeMode}
-                  aria-label={themeModeLabel}
-                >
+                <IconButton color="inherit" onClick={cycleThemeMode} aria-label={themeModeLabel}>
                   {themeModeIcon}
                 </IconButton>
               </Tooltip>

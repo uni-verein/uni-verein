@@ -4,12 +4,12 @@ namespace UniVerein.Api.ApiResults;
 
 public class FirmwareUpdateResult
 {
-    [JsonPropertyName("newFirmwareAvailable")] 
+    [JsonPropertyName("newFirmwareAvailable")]
     public required bool NewFirmwareAvailable { get; set; }
 
-    [JsonPropertyName("currentVersion")] 
+    [JsonPropertyName("currentVersion")]
     public string? CurrentVersion { get; set; }
 
-    [JsonPropertyName("latestVersion")] 
+    [JsonPropertyName("latestVersion")]
     public string? LatestVersion { get; set; }
 }

@@ -254,7 +254,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
             PasswordHash = CryptoService.HashPassword("Test1234!"),
             Role = UserRole.ADMIN
         });
-       await _db.Receipts.AddAsync(new ReceiptEntity
+        await _db.Receipts.AddAsync(new ReceiptEntity
         {
             Id = Guid.NewGuid(),
             UserId = UserId,
@@ -310,7 +310,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
-    
+
     private async Task<ReceiptCategoryEntity> CreateReceiptCategoryAsync(string name, bool? deleted = null)
     {
         ReceiptCategoryEntity category = new()
@@ -319,7 +319,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
             Name = name,
             DeletedAt = deleted == true ? DateTimeOffset.UtcNow.AddDays(-1) : null
         };
-        
+
         await WithDbContext(async db =>
         {
             await db.ReceiptCategories.AddAsync(category);

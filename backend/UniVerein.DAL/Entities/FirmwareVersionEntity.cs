@@ -7,17 +7,17 @@ namespace UniVerein.DAL.Entities;
 [Table("FirmwareVersions")]
 public class FirmwareVersionEntity : BaseEntity
 {
-    [Column("version")] 
+    [Column("version")]
     public required string Version { get; set; }
-    
-    [Column("tag_name")] 
+
+    [Column("tag_name")]
     public required string TagName { get; set; }
-    
-    [Column("release_notes")] 
+
+    [Column("release_notes")]
     public string? ReleaseNotes { get; set; }
-    
-    [Column("published_at")] 
+
+    [Column("published_at")]
     public DateTimeOffset PublishedAt { get; set; }
 
-    public ICollection<FirmwareVersionNotificationEntity> Notifications { get; set; } = new List<FirmwareVersionNotificationEntity>();   
+    public ICollection<FirmwareVersionNotificationEntity> Notifications { get; set; } = new List<FirmwareVersionNotificationEntity>();
 }

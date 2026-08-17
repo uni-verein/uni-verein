@@ -139,7 +139,7 @@ test.describe('Contribution plan config page', () => {
 
     test('Try to create duplicate contribution plan', async ({ page }) => {
       await backend.deleteAllContributionPlans();
-      let plan = await backend.createContributionPlan();
+      const plan = await backend.createContributionPlan();
 
       await openDashboard(page, tc.get().token);
       await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
@@ -171,7 +171,7 @@ test.describe('Contribution plan config page', () => {
 
     test('Edit contribution plan', async ({ page }) => {
       await backend.deleteAllContributionPlans();
-      let plan = await backend.createContributionPlan();
+      const plan = await backend.createContributionPlan();
       await openDashboard(page, tc.get().token);
       await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
       await page.getByRole('button', { name: 'Beitragstarifverwaltung', exact: true }).click();

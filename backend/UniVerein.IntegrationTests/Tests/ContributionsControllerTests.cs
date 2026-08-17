@@ -292,10 +292,10 @@ public class ContributionsControllerTests : IntegrationTestBase
             FirstName = firstName ?? Guid.NewGuid().ToString(),
             LastName = lastName ?? Guid.NewGuid().ToString(),
             BirthdayEncrypted = string.Empty,
-            City =  "Musterstadt",
+            City = "Musterstadt",
             PostalCode = "12345",
             CountryCode = "DE",
-            StreetEncrypted =  string.Empty
+            StreetEncrypted = string.Empty
         };
 
         ContributionEntity contributionEntity = new()

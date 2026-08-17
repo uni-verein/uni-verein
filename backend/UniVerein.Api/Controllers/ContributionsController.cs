@@ -71,10 +71,10 @@ public class ContributionsController : ControllerBase
             contributionResults = await query.ToListAsync();
             JaroWinkler jaroWinkler = new();
             contributionResults = contributionResults.Select(x => new
-                {
-                    contribution = x,
-                    similarity = jaroWinkler.Similarity($"{x.Name}".ToLower(), contributionsQuery.Name.ToLower())
-                })
+            {
+                contribution = x,
+                similarity = jaroWinkler.Similarity($"{x.Name}".ToLower(), contributionsQuery.Name.ToLower())
+            })
                 .OrderBy(x => x.similarity)
                 .Where(x => x.similarity > 0.75)
                 .Select(x => x.contribution)

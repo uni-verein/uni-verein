@@ -195,7 +195,7 @@ export default function MemberForm({
 
     try {
       if (m.id === NIL_UUID) {
-        let response = await api('/members', { method: 'POST', body: JSON.stringify(m) });
+        const response = await api('/members', { method: 'POST', body: JSON.stringify(m) });
         console.log(response);
         if (response === 409) {
           setApiError(t('components.memberForm.alerts.duplicateIbanOrEmail'));
@@ -211,7 +211,10 @@ export default function MemberForm({
           onClose();
         }
       } else {
-        let response = await api(`/members/${m.id}`, { method: 'PATCH', body: JSON.stringify(m) });
+        const response = await api(`/members/${m.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(m),
+        });
         if (response === 409) {
           setApiError(t('components.memberForm.alerts.duplicateIbanOrEmail'));
           setEditOrUpdateMember({
@@ -226,7 +229,7 @@ export default function MemberForm({
           onClose();
         }
       }
-    } catch (e) {
+    } catch {
       setApiError(t('components.memberForm.alerts.saveFailed'));
       setEditOrUpdateMember({
         status: 'error',

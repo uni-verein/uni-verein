@@ -94,7 +94,7 @@ test.describe('Web page – Configure', () => {
   });
 
   test('Delete webpage settings', async ({ page }) => {
-    let pageName = await backend.updateWebPageSettings();
+    const pageName = await backend.updateWebPageSettings();
     await openDashboard(page, tc.get().token, pageName);
 
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
@@ -115,7 +115,7 @@ test.describe('Web page – Configure', () => {
   });
 
   test('Show changed webpage name', async ({ page }) => {
-    let pageName = await backend.updateWebPageSettings();
+    const pageName = await backend.updateWebPageSettings();
     await page.goto('http://localhost/');
     await expect(
       page.getByRole('heading', { name: `${pageName} Vereinsverwaltung` }),

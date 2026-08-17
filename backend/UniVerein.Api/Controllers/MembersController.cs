@@ -101,11 +101,11 @@ public class MembersController : ControllerBase
             memberResults = await memberResultQuery.ToListAsync();
             JaroWinkler jaroWinkler = new();
             memberResults = memberResults.Select(x => new
-                {
-                    member = x,
-                    similarity = jaroWinkler.Similarity($"{x.FirstName} {x.MiddleName} {x.LastName}".ToLower(),
+            {
+                member = x,
+                similarity = jaroWinkler.Similarity($"{x.FirstName} {x.MiddleName} {x.LastName}".ToLower(),
                         memberQuery.Name.ToLower())
-                })
+            })
                 .OrderBy(x => x.similarity)
                 .Where(x => x.similarity > 0.75)
                 .Select(x => x.member)
@@ -351,7 +351,7 @@ public class MembersController : ControllerBase
             StreetEncrypted = member.StreetEncrypted,
             PostalCode = member.PostalCode,
             City = member.City,
-            CountryCode =  member.CountryCode,
+            CountryCode = member.CountryCode,
             EmailEncrypted = member.EmailEncrypted,
             EmailHash = member.EmailHash,
             BulkMail = member.BulkMail,
@@ -369,12 +369,12 @@ public class MembersController : ControllerBase
             ExitDate = member.ExitDate,
             ContributionPlanId = member.ContributionPlanId
         };
-        
+
         if (snapshot.MemberCategoryId != null)
             snapshot.MemberCategory = await _db.MemberCategories.FindAsync(snapshot.MemberCategoryId);
         if (snapshot.ContributionPlanId != null)
             snapshot.ContributionPlan = await _db.ContributionPlans.FindAsync(snapshot.ContributionPlanId);
-        
+
         if (request.Gender != null)
             member.Gender = (Gender)request.Gender;
         if (request.FirstName != null)

@@ -63,7 +63,7 @@ export default function EmailConfig() {
       if (data) {
         setConfig(data);
       }
-    } catch (error) {
+    } catch {
       setConfig({
         id: undefined,
         smtpServer: '',
@@ -151,7 +151,7 @@ export default function EmailConfig() {
         status: 'success',
         message: t('pages.emailConfig.snackbar.saveSuccess'),
       });
-    } catch (error) {
+    } catch {
       setApiError(t('pages.emailConfig.apiError.saveFailed'));
       setConfigDeleteOrUpdate({
         status: 'error',
@@ -178,7 +178,7 @@ export default function EmailConfig() {
           status: 'success',
           message: t('pages.emailConfig.snackbar.deleteSuccess'),
         });
-      } catch (e) {
+      } catch {
         setApiError(t('pages.emailConfig.apiError.deleteFailed'));
         setConfigDeleteOrUpdate({
           status: 'error',
@@ -204,7 +204,7 @@ export default function EmailConfig() {
         message: t('pages.emailConfig.snackbar.testSuccess'),
       });
       setApiError(null);
-    } catch (e) {
+    } catch {
       setApiError(t('pages.emailConfig.apiError.testSendFailed'));
       setConfigDeleteOrUpdate({
         status: 'error',

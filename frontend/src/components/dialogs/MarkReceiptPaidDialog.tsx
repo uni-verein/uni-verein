@@ -44,7 +44,7 @@ export function MarkReceiptPaidDialog({
         return;
       }
       onSaved();
-    } catch (e) {
+    } catch {
       setApiError(t('components.markReceiptPaidDialog.saveFailed'));
     } finally {
       setSaving(false);
@@ -65,7 +65,9 @@ export function MarkReceiptPaidDialog({
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
           helperText={
-            methodAlreadySet ? undefined : t('components.markReceiptPaidDialog.paymentMethodRequired')
+            methodAlreadySet
+              ? undefined
+              : t('components.markReceiptPaidDialog.paymentMethodRequired')
           }
         >
           <MenuItem value={ReceiptPaymentMethod.CASH}>

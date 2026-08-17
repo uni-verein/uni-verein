@@ -124,7 +124,7 @@ export default function Members({ role }: UserRoleProps) {
   };
 
   const debouncedFetch = useCallback(
-    // @ts-ignore
+    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
     debounce((...args: any) => fetchData(...args), 500),
     [],
   );
@@ -151,7 +151,7 @@ export default function Members({ role }: UserRoleProps) {
           status: 'success',
           message: t('pages.members.responseMessages.deleted'),
         });
-      } catch (e) {
+      } catch {
         setDeleteOrUpdateMember({
           status: 'error',
           message: t('pages.members.responseMessages.deleteError'),
@@ -176,7 +176,7 @@ export default function Members({ role }: UserRoleProps) {
           status: 'success',
           message: t('pages.members.responseMessages.restored'),
         });
-      } catch (e) {
+      } catch {
         setDeleteOrUpdateMember({
           status: 'error',
           message: t('pages.members.responseMessages.restoreError'),

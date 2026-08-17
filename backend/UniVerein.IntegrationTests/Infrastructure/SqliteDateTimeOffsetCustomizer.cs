@@ -26,13 +26,13 @@ public class SqliteDateTimeOffsetCustomizer : ModelCustomizer
         );
 
         foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
-        foreach (IMutableProperty? property in entityType.GetProperties()
-                     .Where(p => p.ClrType == typeof(DateTimeOffset)))
-        {
-            property.SetValueConverter(converter);
+            foreach (IMutableProperty? property in entityType.GetProperties()
+                         .Where(p => p.ClrType == typeof(DateTimeOffset)))
+            {
+                property.SetValueConverter(converter);
 
-            if (property.ClrType == typeof(DateTimeOffset?))
-                property.SetValueConverter(nullableConverter);
-        }
+                if (property.ClrType == typeof(DateTimeOffset?))
+                    property.SetValueConverter(nullableConverter);
+            }
     }
 }

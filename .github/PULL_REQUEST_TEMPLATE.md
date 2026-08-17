@@ -1,3 +1,9 @@
+> **Note:** no CI checks (lint, tests, builds, security scans) run automatically on PRs
+> from external contributors a maintainer will review the PR first and add the
+> `ready-for-ci` label to trigger the pipeline. Please run the frontend/backend lint,
+> typecheck and test commands locally before opening this PR. See
+> [CONTRIBUTING.md](../CONTRIBUTING.md#-what-happens-after-you-open-a-pr) for details.
+
 ## Description
 <!-- Provide a general summary of your changes and why we should accept them. -->
 

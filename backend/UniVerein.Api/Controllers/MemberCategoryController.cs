@@ -69,7 +69,7 @@ public class MemberCategoriesController : ControllerBase
         }
 
         MemberCategoryEntity? memberCategory = await _db.MemberCategories.FirstOrDefaultAsync(c => c.Name == request.Name && c.Category == request.Category);
-        
+
         if (memberCategory != null && memberCategory.DeletedAt == null)
         {
             Log.Warning(
@@ -94,7 +94,7 @@ public class MemberCategoriesController : ControllerBase
 
             await _db.MemberCategories.AddAsync(memberCategory);
         }
-        
+
         await _db.SaveChangesAsync();
 
         Log.Information(

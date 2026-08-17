@@ -159,7 +159,7 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
   };
 
   const debouncedFetch = useCallback(
-    // @ts-ignore
+    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
     debounce((...args: any) => fetchData(...args), 400),
     [],
   );
@@ -183,7 +183,7 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
       try {
         await api(`/receipts/${id}`, { method: 'DELETE' });
         setSnackbar({ status: 'success', message: t('pages.receipts.responseMessages.deleted') });
-      } catch (e) {
+      } catch {
         setSnackbar({ status: 'error', message: t('pages.receipts.responseMessages.deleteError') });
       }
       reload();
@@ -205,7 +205,7 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
           status: 'success',
           message: t('pages.receipts.responseMessages.hardDeleted'),
         });
-      } catch (e) {
+      } catch {
         setSnackbar({
           status: 'error',
           message: t('pages.receipts.responseMessages.hardDeleteError'),
@@ -227,8 +227,11 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
       try {
         await api(`/receipts/${id}`, { method: 'POST' });
         setSnackbar({ status: 'success', message: t('pages.receipts.responseMessages.restored') });
-      } catch (e) {
-        setSnackbar({ status: 'error', message: t('pages.receipts.responseMessages.restoreError') });
+      } catch {
+        setSnackbar({
+          status: 'error',
+          message: t('pages.receipts.responseMessages.restoreError'),
+        });
       }
       reload();
     }
@@ -255,7 +258,11 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
   }
 
   const isFiltered =
-    dateFrom !== null || dateTo !== null || categoryId !== '' || showDeleted || paidFilter !== undefined;
+    dateFrom !== null ||
+    dateTo !== null ||
+    categoryId !== '' ||
+    showDeleted ||
+    paidFilter !== undefined;
 
   const formatAmount = (amount: number) =>
     amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
@@ -267,7 +274,9 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
           {isMobile ? (
             <MobileListCard
               primary={
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+                <Box
+                  sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 1 }}
+                >
                   <Typography sx={{ fontWeight: 600 }}>
                     {formatAmount(r.amount)} · {dayjs(r.receiptDate).format('DD.MM.YYYY')}
                   </Typography>
@@ -502,7 +511,10 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
           onClose={() => setEditReceipt(null)}
           onSaved={() => {
             setEditReceipt(null);
-            setSnackbar({ status: 'success', message: t('pages.receipts.responseMessages.updated') });
+            setSnackbar({
+              status: 'success',
+              message: t('pages.receipts.responseMessages.updated'),
+            });
             reload();
           }}
         />
@@ -514,7 +526,10 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
           onClose={() => setMarkPaidReceipt(null)}
           onSaved={() => {
             setMarkPaidReceipt(null);
-            setSnackbar({ status: 'success', message: t('pages.receipts.responseMessages.markedPaid') });
+            setSnackbar({
+              status: 'success',
+              message: t('pages.receipts.responseMessages.markedPaid'),
+            });
             reload();
           }}
         />

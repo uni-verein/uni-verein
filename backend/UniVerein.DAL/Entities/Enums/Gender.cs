@@ -4,10 +4,10 @@ namespace UniVerein.DAL.Entities.Enums;
 
 public enum Gender
 {
-    [Display(Name = "MALE")] 
+    [Display(Name = "MALE")]
     MALE,
-    [Display(Name = "FEMALE")] 
+    [Display(Name = "FEMALE")]
     FEMALE,
-    [Display(Name = "DIVERSE")] 
+    [Display(Name = "DIVERSE")]
     DIVERSE
 }

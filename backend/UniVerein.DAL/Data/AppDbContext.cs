@@ -79,13 +79,13 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<MemberCategoryEntity>()
             .HasQueryFilter(x => x.DeletedAt == null);
-        
-        
+
+
         modelBuilder.Entity<FirmwareVersionEntity>()
             .HasIndex(f => f.Version)
             .IsUnique();
 
-        
+
         modelBuilder.Entity<FirmwareVersionNotificationEntity>()
             .HasIndex(n => new { n.FirmwareVersionId, n.UserId })
             .IsUnique();
@@ -104,7 +104,7 @@ public class AppDbContext : DbContext
             .HasMany(r => r.Files)
             .WithOne(i => i.Receipt)
             .HasForeignKey(i => i.ReceiptId);
-        
+
         modelBuilder.Entity<ReceiptEntity>()
             .HasOne(r => r.User)
             .WithMany()

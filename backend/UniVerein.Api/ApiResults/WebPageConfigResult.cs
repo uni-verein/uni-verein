@@ -5,10 +5,10 @@ namespace UniVerein.Api.ApiResults;
 
 public class WebPageConfigResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("pageName")] 
+    [JsonPropertyName("pageName")]
     public string PageName { get; set; } = "";
 
     [JsonPropertyName("logo")]

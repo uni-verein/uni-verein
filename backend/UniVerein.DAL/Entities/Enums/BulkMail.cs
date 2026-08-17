@@ -4,8 +4,8 @@ namespace UniVerein.DAL.Entities.Enums;
 
 public enum BulkMail
 {
-    [Display(Name = "ALLOWED")] 
+    [Display(Name = "ALLOWED")]
     ALLOWED,
-    [Display(Name = "NOT_ALLOWED")] 
+    [Display(Name = "NOT_ALLOWED")]
     NOT_ALLOWED
 }

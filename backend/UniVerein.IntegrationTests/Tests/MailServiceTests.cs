@@ -114,8 +114,8 @@ public class MailServiceTests : IntegrationTestBase
                 BirthdayEncrypted = string.Empty,
                 EmailEncrypted = cryptoService.Encrypt("test@test.de"),
                 StreetEncrypted = string.Empty,
-                PostalCode =  "12345",
-                CountryCode =  "DE",
+                PostalCode = "12345",
+                CountryCode = "DE",
                 City = string.Empty,
             });
             await db.SaveChangesAsync();

@@ -48,7 +48,7 @@ const RecipientList: FC<RecipientListProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   const debouncedSetName = useCallback(
     debounce((value: string) => {
       setPage(0);
@@ -70,7 +70,7 @@ const RecipientList: FC<RecipientListProps> = ({
   const toggleOne = (email: string) => {
     if (filter.categoryId !== NIL_UUID) {
       onFilter({ ...filter, categoryId: NIL_UUID });
-      onChange((prev: string[]) => [email]);
+      onChange(() => [email]);
     } else {
       onChange((prev: string[]) =>
         prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email],

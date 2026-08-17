@@ -6,15 +6,15 @@ namespace UniVerein.Api.ApiResults;
 
 public class UserResult
 {
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("username")] 
+    [JsonPropertyName("username")]
     public string Username { get; set; } = "";
 
-    [JsonPropertyName("email")] 
+    [JsonPropertyName("email")]
     public string Email { get; set; } = "";
 
-    [JsonPropertyName("role")] 
+    [JsonPropertyName("role")]
     public UserRole Role { get; set; }
 }
