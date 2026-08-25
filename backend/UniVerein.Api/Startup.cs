@@ -59,6 +59,7 @@ namespace UniVerein.Api
             services.AddScoped<BackupService>();
             services.AddScoped<ContributionService>();
             services.AddScoped<ReceiptService>();
+            services.AddScoped<ReceiptNotificationService>();
 
             services.AddHostedService<ContributionBackgroundService>();
             services.AddHttpClient<FirmwareService>();

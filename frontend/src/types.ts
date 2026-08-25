@@ -1,5 +1,6 @@
 import { UUIDTypes } from 'uuid';
 import { AlertColor } from '@mui/material/Alert';
+import React from 'react';
 
 export interface ConfigContextType {
   config: { pageName: string; logo: string };
@@ -15,6 +16,7 @@ export interface UserRoleProps {
 export interface UserManagementProps {
   userId?: UUIDTypes;
   accountView: boolean;
+  role?: Role | string;
 }
 
 export interface Member {
@@ -137,6 +139,15 @@ export enum Role {
   ADMIN = 'ADMIN',
   USER = 'USER',
   FINANCIAL_MANAGER = 'FINANCIAL_MANAGER',
+}
+
+export enum UserSettingType {
+  RECEIPT_NOTIFICATION = 'RECEIPT_NOTIFICATION',
+}
+
+export interface UserSetting {
+  type: UserSettingType;
+  enabled: boolean;
 }
 
 export enum TaskWithinTheClub {

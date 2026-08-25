@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.6.0] UV-16
+
+### Added
+- Receipt notifications: Financial Managers now receive an email whenever a new receipt is submitted by a regular user or an admin, enabled by default and configurable via a new "Notification settings" tab in their own account settings (visible to every role as a placeholder for future settings, but the receipt-notification toggle itself only shows for Financial Managers). A Financial Manager is never notified about a receipt they submit themselves. Backed by a new generic per-user settings table (type + enabled flag) designed to hold further notification/preference types in the future without further schema changes.
+
 ## [v1.5.0] UV-7
 
 ### Added

@@ -40,17 +40,20 @@ public class ReceiptsController : ControllerBase
 
     private readonly AppDbContext _db;
     private readonly ReceiptService _receiptService;
+    private readonly ReceiptNotificationService _receiptNotificationService;
     private readonly AuditService _auditService;
     private readonly TimeProvider _timeProvider;
     private readonly Guid _currentUserId;
     private readonly bool _isAdmin;
     private readonly bool _isPrivileged;
 
-    public ReceiptsController(AppDbContext db, ReceiptService receiptService, AuditService auditService,
+    public ReceiptsController(AppDbContext db, ReceiptService receiptService,
+        ReceiptNotificationService receiptNotificationService, AuditService auditService,
         TimeProvider timeProvider, IHttpContextAccessor http)
     {
         _db = db;
         _receiptService = receiptService;
+        _receiptNotificationService = receiptNotificationService;
         _auditService = auditService;
         _timeProvider = timeProvider;
 
@@ -353,6 +356,8 @@ public class ReceiptsController : ControllerBase
             new { ReceiptId = receipt.Id, receipt.Amount, receipt.ReceiptDate });
 
         Log.Information($"ReceiptsController: CreateAsync -> Receipt with ID: {receipt.Id} successfully created.");
+
+        await _receiptNotificationService.NotifyFinancialManagersAsync(receipt, user);
 
         ReceiptEntity saved = await _db.Receipts
             .Include(r => r.User)

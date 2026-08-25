@@ -468,7 +468,9 @@ export default function Dashboard({
               {page === 'contributions' && <Contributions role={user.role} />}
               {page === 'receipts' && <Receipts role={user.role} userId={user.id} />}
               {page === 'receipt-analytics' && <ReceiptAnalytics />}
-              {page === 'user' && <UserManagement accountView={true} userId={user.id} />}
+              {page === 'user' && (
+                <UserManagement accountView={true} userId={user.id} role={user.role} />
+              )}
               {page === 'users' && <UserManagement accountView={false} userId={user.id} />}
               {page === 'email-config' && <EmailConfig />}
               {page === 'link-config' && <LinkConfig />}
