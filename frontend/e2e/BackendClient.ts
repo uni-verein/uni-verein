@@ -60,13 +60,13 @@ export class BackendClient {
     });
   }
 
-  async createUser(role: Role): Promise<TestUser> {
+  async createUser(role: Role, email?: string): Promise<TestUser> {
     const ctx = await this.ctx();
     const username = `playwright_${role.toLowerCase()}_${Date.now()}`;
     const password = 'Test123456!';
 
     const res = await ctx.post('/api/users', {
-      data: { username, password, role },
+      data: { username, password, role, email },
     });
     if (!res.ok()) {
       throw new Error(`User creation failed: ${res.status()} ${await res.text()}`);
@@ -537,6 +537,15 @@ export class BackendClient {
       for (const receipt of result.items) {
         await ctx.delete('/api/receipts/' + receipt.id + '/hard');
       }
+    }
+    await ctx.dispose();
+  }
+
+  async setUserSetting(token: string, type: string, enabled: boolean): Promise<any> {
+    const ctx = await this.userCtx(token);
+    const res = await ctx.put(`/api/users/account/settings/${type}`, { data: { enabled } });
+    if (!res.ok()) {
+      throw new Error(`Failed to set user setting: ${res.status()} ${await res.text()}`);
     }
     await ctx.dispose();
   }

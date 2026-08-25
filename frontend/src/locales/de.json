@@ -1000,6 +1000,18 @@
       "confirm": {
         "deleteMessage": "Nutzer wirklich löschen?",
         "deleteButton": "Löschen"
+      },
+      "tabs": {
+        "profile": "Profil",
+        "notifications": "Benachrichtigungseinstellungen"
+      },
+      "notificationSettings": {
+        "title": "Benachrichtigungseinstellungen",
+        "receiptNotification": "Bei neuem Beleg per E-Mail benachrichtigen",
+        "noSettingsAvailable": "Für Ihre Rolle sind aktuell keine Benachrichtigungseinstellungen verfügbar.",
+        "saveSuccess": "Einstellung erfolgreich gespeichert.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "loadFailed": "Einstellungen konnten nicht geladen werden."
       }
     },
     "receipts": {

@@ -1000,6 +1000,18 @@
       "confirm": {
         "deleteMessage": "Really delete user?",
         "deleteButton": "Delete"
+      },
+      "tabs": {
+        "profile": "Profile",
+        "notifications": "Notification settings"
+      },
+      "notificationSettings": {
+        "title": "Notification settings",
+        "receiptNotification": "Notify me by email when a new receipt is submitted",
+        "noSettingsAvailable": "No notification settings are currently available for your role.",
+        "saveSuccess": "Setting saved successfully.",
+        "saveFailed": "Saving failed. Please try again.",
+        "loadFailed": "Settings could not be loaded."
       }
     },
     "receipts": {

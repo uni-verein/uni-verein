@@ -38,6 +38,7 @@ public class AppDbContext : DbContext
     public DbSet<ReceiptEntity> Receipts => Set<ReceiptEntity>();
     public DbSet<ReceiptCategoryEntity> ReceiptCategories => Set<ReceiptCategoryEntity>();
     public DbSet<ReceiptFileEntity> ReceiptFiles => Set<ReceiptFileEntity>();
+    public DbSet<UserSettingEntity> UserSettings => Set<UserSettingEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -113,6 +114,20 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ReceiptCategoryEntity>()
             .HasQueryFilter(x => x.DeletedAt == null);
+
+
+        modelBuilder.Entity<UserSettingEntity>()
+            .Property(x => x.Type)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<UserSettingEntity>()
+            .HasIndex(x => new { x.UserId, x.Type })
+            .IsUnique();
+
+        modelBuilder.Entity<UserSettingEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId);
 
 
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")

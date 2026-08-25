@@ -155,7 +155,8 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of co
 - [x] Sepa exports
 - [x] Mobile web app (iOS & Android)
 - [x] Receipt management
-- [ ] Receipt notification
+- [x] Receipt notification
+- [ ] Member self registration (trade fair mode)
 - [ ] Event planning (calendar)
 - [ ] File management
 - [ ] Multi-factor authentication (MFA)
