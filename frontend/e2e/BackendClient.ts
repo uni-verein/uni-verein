@@ -352,6 +352,26 @@ export class BackendClient {
     await ctx.dispose();
   }
 
+  async setSelfEnrollmentEnabled(enabled: boolean): Promise<any> {
+    const ctx = await this.ctx();
+    let pageName = 'Test web page';
+    let logo = '';
+    const existing = await ctx.get('/api/web-page-config');
+    if (existing.ok()) {
+      const current = await existing.json();
+      pageName = current.pageName;
+      logo = current.logo;
+    }
+
+    const res = await ctx.put('/api/web-page-config', {
+      data: { pageName, logo, selfEnrollmentEnabled: enabled },
+    });
+    if (!res.ok()) {
+      throw new Error(`Failed to set self-enrollment config: ${res.status()} ${await res.text()}`);
+    }
+    await ctx.dispose();
+  }
+
   async loginUser(username: string, password: string): Promise<string> {
     const ctx = await request.newContext({ baseURL: API_BASE });
     const res = await ctx.post('/api/auth/login', {

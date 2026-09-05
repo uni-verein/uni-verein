@@ -34,6 +34,10 @@
         "new": "Neues Mitglied anlegen"
       },
       "subtitle": "Geben Sie hier die Stammdaten des Vereinsmitglieds ein.",
+      "publicSuccess": {
+        "title": "Willkommen im Verein!",
+        "subtitle": "Du wurdest erfolgreich als Mitglied angelegt."
+      },
       "fields": {
         "memberNumber": "Mitgliedsnummer",
         "gender": "Geschlecht",
@@ -673,10 +677,17 @@
         "pageNameEmpty": "Vereinsname darf nicht leer sein.",
         "pageNameTooLong": "Vereinsname darf maximal 30 Zeichen lang sein."
       },
+      "selfEnrollment": {
+        "sectionTitle": "Selbstregistrierung",
+        "description": "Wenn aktiviert, können Besucher über den unten stehenden Link ohne Login selbst ein Mitglied anlegen, z. B. an einem Messestand.",
+        "toggleLabel": "Selbstregistrierung aktiviert",
+        "linkLabel": "Öffentlicher Link",
+        "copyButton": "Link kopieren"
+      },
       "buttons": {
         "save": "Konfiguration speichern",
         "saving": "Wird gespeichert...",
-        "delete": "Löschen",
+        "reset": "Zurücksetzen",
         "uploadLogo": "Vereinslogo hochladen",
         "changeLogo": "Neues Vereinslogo hochladen",
         "deleteLogo": "Logo entfernen"
@@ -684,17 +695,24 @@
       "snackbar": {
         "saveSuccess": "Speichern erfolgreich.",
         "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-        "deleteSuccess": "Löschen erfolgreich.",
-        "deleteError": "Einstellungen konnte nicht gelöscht werden. Bitte erneut versuchen."
+        "resetSuccess": "Zurücksetzen erfolgreich.",
+        "resetError": "Zurücksetzen fehlgeschlagen. Bitte erneut versuchen.",
+        "copySuccess": "Link kopiert.",
+        "copyError": "Link konnte nicht kopiert werden."
       },
       "confirm": {
-        "deleteMessage": "Webseiteneinstellungen wirklich löschen?",
-        "deleteButton": "Löschen"
+        "resetMessage": "Alle Webseiteneinstellungen (Vereinsname, Logo und Selbstregistrierung) wirklich zurücksetzen?",
+        "resetButton": "Zurücksetzen"
       },
       "apiError": {
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-        "deleteFailed": "Einstellungen konnte nicht gelöscht werden. Bitte erneut versuchen."
+        "resetFailed": "Zurücksetzen fehlgeschlagen. Bitte erneut versuchen."
       }
+    },
+    "publicEnrollment": {
+      "closedTitle": "Selbstregistrierung nicht verfügbar",
+      "closedMessage": "Die Selbstregistrierung ist derzeit nicht aktiv. Bitte wende dich an einen Vereinsverantwortlichen.",
+      "loadError": "Die Seite konnte nicht geladen werden. Bitte versuche es erneut."
     },
     "login": {
       "login": "Anmelden",

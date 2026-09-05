@@ -3,7 +3,7 @@ import { AlertColor } from '@mui/material/Alert';
 import React from 'react';
 
 export interface ConfigContextType {
-  config: { pageName: string; logo: string };
+  config: { pageName: string; logo: string; selfEnrollmentEnabled: boolean };
   loading: boolean;
   reloadConfig: () => Promise<void>;
   serverReachable: boolean;

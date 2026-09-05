@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using UniVerein.Api.Models;
 
 namespace UniVerein.Api.Controllers;
 
@@ -32,14 +33,16 @@ public class MembersController : ControllerBase
     private readonly AppDbContext _db;
     private readonly CryptoService _crypto;
     private readonly AuditService _auditService;
+    private readonly MemberService _memberService;
     private readonly IHttpContextAccessor _http;
 
     public MembersController(AppDbContext db, CryptoService crypto, AuditService auditService,
-        IHttpContextAccessor http)
+        MemberService memberService, IHttpContextAccessor http)
     {
         _db = db;
         _crypto = crypto;
         _auditService = auditService;
+        _memberService = memberService;
         _http = http;
     }
 
@@ -150,64 +153,19 @@ public class MembersController : ControllerBase
         Log.Information(
             $"MembersController: CreateAsync -> Try to create member: {request.FirstName} {request.LastName}");
 
-        string iban = _crypto.Hash(request.IBAN);
-        string email = _crypto.Hash(request.Email);
-        bool ibanGiven = !string.IsNullOrWhiteSpace(request.IBAN);
-
-        bool memberExists =
-            await _db.Members.AnyAsync(x => (x.EmailHash == email) || (ibanGiven && x.IBAN_Hash == iban));
-        if (memberExists)
+        MemberCreationResult result = await _memberService.CreateMemberAsync(new MemberCreationInput
         {
-            Log.Warning($"MembersController: CreateAsync -> Member already exists");
-            return Conflict(new ApiResults.ErrorResults.ConflictResult(errorCode: ApiErrorCodes.CONFLICT_RESOURCE_ALREADY_EXISTS,
-                errorMessage: "Member already exists.",
-                moreInfo: "A member with the same email address or IBAN already exists."));
-        }
-
-        ContributionPlanEntity? contributionPlan = null;
-        if (request.ContributionPlanId != null)
-        {
-            contributionPlan = await _db.ContributionPlans.FindAsync(request.ContributionPlanId);
-            if (contributionPlan == null)
-            {
-                Log.Warning(
-                    $"MembersController: CreateAsync -> ContributionPlan with ID: {request.ContributionPlanId} not found");
-                return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
-                    errorMessage: "Contribution plan not found.",
-                    moreInfo: $"No contribution plan found with ID {request.ContributionPlanId}."));
-            }
-        }
-
-        MemberCategoryEntity? memberCategory = await _db.MemberCategories.FindAsync(request.MemberCategoryId);
-        if (memberCategory == null)
-        {
-            Log.Warning(
-                $"MembersController: CreateAsync -> ContributionPlan with ID: {request.ContributionPlanId} not found");
-            return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
-                errorMessage: "Member category not found.",
-                moreInfo: $"No member category found with ID {request.MemberCategoryId}."));
-        }
-
-
-        int maxMemberNumber = await _db.Members.Select(m => (int?)m.MemberNumber).MaxAsync() ?? 0;
-        int newMemberNumber = maxMemberNumber + 1;
-
-        MemberEntity member = new()
-        {
-            MandateId = $"{DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss")}_{newMemberNumber}",
-            MemberNumber = newMemberNumber,
             Gender = request.Gender,
             FirstName = request.FirstName,
             MiddleName = request.MiddleName,
             LastName = request.LastName,
-            BirthdayEncrypted = _crypto.Encrypt(request.Birthday),
-            StreetEncrypted = _crypto.Encrypt(request.Street),
+            Birthday = request.Birthday,
+            Street = request.Street,
             PostalCode = request.PostalCode,
             City = request.City,
             CountryCode = request.CountryCode,
-            EmailEncrypted = _crypto.Encrypt(request.Email),
-            EmailHash = _crypto.Hash(request.Email),
-            PhoneEncrypted = _crypto.Encrypt(request.Phone),
+            Email = request.Email,
+            Phone = request.Phone,
             BulkMail = request.BulkMail,
             StartOfStudies = request.StartOfStudies,
             EndOfStudies = request.EndOfStudies,
@@ -215,39 +173,36 @@ public class MembersController : ControllerBase
             CourseOfStudy = request.CourseOfStudy,
             TaskWithinTheClub = request.TaskWithinTheClub,
             MemberCategoryId = request.MemberCategoryId,
-            MemberCategory = memberCategory,
-            IBAN_Encrypted = _crypto.Encrypt(request.IBAN),
-            IBAN_Hash = _crypto.Hash(request.IBAN),
-            Bic_Encrypted = _crypto.Encrypt(request.Bic),
+            IBAN = request.IBAN,
+            Bic = request.Bic,
             SepaConsent = request.SepaConsent,
             EntryDate = request.EntryDate,
             ExitDate = request.ExitDate,
-            ContributionPlanId = request.ContributionPlanId,
-            ContributionPlan = contributionPlan
-        };
-
-        await _db.Members.AddAsync(member);
-        await _db.SaveChangesAsync();
-        await _auditService.LogAsync(AuditLogActions.CREATE, nameof(MemberEntity), new MemberAudit
-        {
-            MemberId = member.Id,
-            MemberNumber = member.MemberNumber,
-            MandateId = member.MandateId,
-            Gender = member.Gender,
-            MemberCategory = member.MemberCategory.Name,
-            TaskWithinTheClub = member.TaskWithinTheClub,
-            AcademicDegree = member.AcademicDegree,
-            CourseOfStudy = member.CourseOfStudy,
-            StartOfStudies = member.StartOfStudies,
-            EndOfStudies = member.EndOfStudies,
-            EntryDate = member.EntryDate,
-            ExitDate = member.ExitDate,
-            BulkMail = member.BulkMail,
-            ContributionPlanId = member.ContributionPlanId,
-            HasIban = !string.IsNullOrWhiteSpace(request.IBAN),
-            HasBic = !string.IsNullOrWhiteSpace(request.Bic),
-            HasSepaConsent = member.SepaConsent.HasValue
+            ContributionPlanId = request.ContributionPlanId
         });
+
+        switch (result.Status)
+        {
+            case MemberCreationStatus.DUPLICATE_CONFLICT:
+                Log.Warning($"MembersController: CreateAsync -> Member already exists");
+                return Conflict(new ApiResults.ErrorResults.ConflictResult(errorCode: ApiErrorCodes.CONFLICT_RESOURCE_ALREADY_EXISTS,
+                    errorMessage: "Member already exists.",
+                    moreInfo: "A member with the same email address or IBAN already exists."));
+            case MemberCreationStatus.CONTRIBUTION_PLAN_NOT_FOUND:
+                Log.Warning(
+                    $"MembersController: CreateAsync -> ContributionPlan with ID: {request.ContributionPlanId} not found");
+                return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
+                    errorMessage: "Contribution plan not found.",
+                    moreInfo: $"No contribution plan found with ID {request.ContributionPlanId}."));
+            case MemberCreationStatus.MEMBER_CATEGORY_NOT_FOUND:
+                Log.Warning(
+                    $"MembersController: CreateAsync -> Member category with ID: {request.MemberCategoryId} not found");
+                return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
+                    errorMessage: "Member category not found.",
+                    moreInfo: $"No member category found with ID {request.MemberCategoryId}."));
+        }
+
+        MemberEntity member = result.Member!;
 
         MemberResult memberResult = new()
         {

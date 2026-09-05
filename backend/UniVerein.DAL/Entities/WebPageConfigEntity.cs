@@ -10,4 +10,7 @@ public class WebPageConfigEntity : BaseEntity
 
     [Column("logo")]
     public string Logo { get; set; } = "";
+
+    [Column("self_enrollment_enabled")]
+    public bool SelfEnrollmentEnabled { get; set; }
 }

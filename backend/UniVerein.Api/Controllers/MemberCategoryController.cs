@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniVerein.DAL.Data;
@@ -24,21 +25,18 @@ namespace UniVerein.Api.Controllers;
 public class MemberCategoriesController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly ReferenceDataService _referenceDataService;
 
-    public MemberCategoriesController(AppDbContext db)
+    public MemberCategoriesController(AppDbContext db, ReferenceDataService referenceDataService)
     {
         _db = db;
+        _referenceDataService = referenceDataService;
     }
 
     [HttpGet]
     public async Task<ActionResult<MemberCategoryResults>> GetAllAsync()
     {
-        List<MemberCategoryResult> results = await _db.MemberCategories.Select(c => new MemberCategoryResult()
-        {
-            Id = c.Id,
-            Category = c.Category,
-            Name = c.Name
-        }).ToListAsync();
+        List<MemberCategoryResult> results = await _referenceDataService.GetMemberCategoriesAsync();
 
         return Ok(new MemberCategoryResults()
         {

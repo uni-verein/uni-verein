@@ -183,6 +183,30 @@ public class WebPageConfigControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task CreateWebPageConfig_PersistsSelfEnrollmentEnabled()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
+        WebPageConfigResult? results =
+            await response.Content.ReadFromJsonAsync<WebPageConfigResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.SelfEnrollmentEnabled.ShouldBeTrue();
+        await WithDbContext(async db =>
+        {
+            WebPageConfigEntity? webPageConfigEntity = await db.WebPageConfigs.FirstOrDefaultAsync();
+            webPageConfigEntity.ShouldNotBeNull();
+            webPageConfigEntity!.SelfEnrollmentEnabled.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
     public async Task UpdateSoftDeletedWebPageConfig_Success()
     {
         // Arrange
@@ -276,6 +300,31 @@ public class WebPageConfigControllerTests : IntegrationTestBase
         });
     }
 
+    [Fact]
+    public async Task DeleteWebPageConfig_AlsoResetsSelfEnrollment()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        WebPageConfigEntity webPageConfig = await CreateWebPageConfigEntity(selfEnrollmentEnabled: true);
+
+        HttpResponseMessage beforeResponse = await client.GetAsync("/self-enrollment/form-data");
+        SelfEnrollmentFormDataResult? beforeResult =
+            await beforeResponse.Content.ReadFromJsonAsync<SelfEnrollmentFormDataResult>(_jsonSerializerOptions);
+        beforeResult.ShouldNotBeNull();
+        beforeResult!.MemberCategories.ShouldNotBeEmpty();
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/web-page-config/{webPageConfig.Id}");
+        HttpResponseMessage afterResponse = await client.GetAsync("/self-enrollment/form-data");
+        SelfEnrollmentFormDataResult? afterResult =
+            await afterResponse.Content.ReadFromJsonAsync<SelfEnrollmentFormDataResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        afterResult.ShouldNotBeNull();
+        afterResult!.MemberCategories.ShouldBeEmpty();
+    }
+
     // ---------------------------------------------------------------
     // GET /api/web-page-config/sidebar
     // ---------------------------------------------------------------
@@ -323,24 +372,27 @@ public class WebPageConfigControllerTests : IntegrationTestBase
     // Helper functions
     // ---------------------------------------------------------------
 
-    private WebPageConfigRequest CreateWebPageConfigRequest(string? name = null)
+    private WebPageConfigRequest CreateWebPageConfigRequest(string? name = null, bool selfEnrollmentEnabled = false)
     {
         return new()
         {
             PageName = name ?? Guid.NewGuid().ToString(),
             Logo =
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            SelfEnrollmentEnabled = selfEnrollmentEnabled
         };
     }
 
-    private async Task<WebPageConfigEntity> CreateWebPageConfigEntity(bool isDeleted = false)
+    private async Task<WebPageConfigEntity> CreateWebPageConfigEntity(bool isDeleted = false,
+        bool selfEnrollmentEnabled = false)
     {
         WebPageConfigEntity pageConfigEntity = new()
         {
             PageName = Guid.NewGuid().ToString(),
             Logo =
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-            DeletedAt = isDeleted ? DateTimeOffset.UtcNow : null
+            DeletedAt = isDeleted ? DateTimeOffset.UtcNow : null,
+            SelfEnrollmentEnabled = selfEnrollmentEnabled
         };
 
         await WithDbContext(async db =>

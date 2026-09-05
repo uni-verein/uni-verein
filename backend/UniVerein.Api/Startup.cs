@@ -56,10 +56,12 @@ namespace UniVerein.Api
             services.AddScoped<MailService>();
             services.AddScoped<ContributionService>();
             services.AddScoped<AuditService>();
+            services.AddScoped<MemberService>();
             services.AddScoped<BackupService>();
             services.AddScoped<ContributionService>();
             services.AddScoped<ReceiptService>();
             services.AddScoped<ReceiptNotificationService>();
+            services.AddScoped<ReferenceDataService>();
 
             services.AddHostedService<ContributionBackgroundService>();
             services.AddHttpClient<FirmwareService>();

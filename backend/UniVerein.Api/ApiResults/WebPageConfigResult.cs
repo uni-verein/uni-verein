@@ -13,4 +13,7 @@ public class WebPageConfigResult
 
     [JsonPropertyName("logo")]
     public string Logo { get; set; } = "";
+
+    [JsonPropertyName("selfEnrollmentEnabled")]
+    public bool SelfEnrollmentEnabled { get; set; }
 }

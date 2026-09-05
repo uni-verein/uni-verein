@@ -75,9 +75,9 @@ Make sure you have the following installed:
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.6.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.6.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.6.0/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.7.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.7.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.7.0/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**
@@ -156,7 +156,7 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of co
 - [x] Mobile web app (iOS & Android)
 - [x] Receipt management
 - [x] Receipt notification
-- [ ] Member self registration (trade fair mode)
+- [x] Member self registration (trade fair mode)
 - [ ] Event planning (calendar)
 - [ ] File management
 - [ ] Multi-factor authentication (MFA)
