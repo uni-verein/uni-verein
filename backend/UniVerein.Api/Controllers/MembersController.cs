@@ -216,7 +216,7 @@ public class MembersController : ControllerBase
             Street = request.Street,
             PostalCode = member.PostalCode,
             City = member.City,
-            CountryCode = member.CountryCode,
+            CountryCode = member.CountryCode ?? string.Empty,
             Email = request.Email,
             Phone = request.Phone,
             BulkMail = member.BulkMail,

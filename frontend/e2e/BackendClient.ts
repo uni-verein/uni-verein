@@ -4,7 +4,10 @@ import {
   Gender,
   Interval,
   Link,
-  Member,
+  MemberApiResult,
+  MemberPayload,
+  ReceiptApiResult,
+  ReceiptCategoryApiResult,
   Role,
   SidebarSettings,
   TaskWithinTheClub,
@@ -83,7 +86,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async createMember(member: any): Promise<any> {
+  async createMember(member: MemberPayload): Promise<MemberApiResult> {
     const ctx = await this.ctx();
 
     const res = await ctx.post('/api/members', {
@@ -97,7 +100,7 @@ export class BackendClient {
     return body;
   }
 
-  async createTestMember(overrides: Partial<Member> = {}): Promise<any> {
+  async createTestMember(overrides: Partial<MemberPayload> = {}): Promise<MemberApiResult> {
     return this.createMember({
       academicDegree: null,
       birthday: '2026-03-14T23:00:00.000Z',
@@ -129,7 +132,7 @@ export class BackendClient {
     });
   }
 
-  async deleteMember(memberId: string): Promise<any> {
+  async deleteMember(memberId: string): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.delete('/api/members/' + memberId);
@@ -139,7 +142,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async createMemberAsUser(member: any, userToken: string): Promise<any> {
+  async createMemberAsUser(member: MemberPayload, userToken: string): Promise<void> {
     const ctx = await this.userCtx(userToken);
 
     const res = await ctx.post('/api/members', {
@@ -163,7 +166,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async deleteAllMember(): Promise<any> {
+  async deleteAllMember(): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.get('/api/members?limit=300');
@@ -176,7 +179,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async deleteAllContributionPlans(): Promise<any> {
+  async deleteAllContributionPlans(): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.get('/api/contribution-plans');
@@ -191,7 +194,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async createContributionPlan(): Promise<any> {
+  async createContributionPlan(): Promise<string> {
     const ctx = await this.ctx();
     const contributionPlan = `playwright_${Date.now()}`;
 
@@ -210,7 +213,7 @@ export class BackendClient {
     return contributionPlan;
   }
 
-  async createTestMemberCategory(): Promise<any> {
+  async createTestMemberCategory(): Promise<string> {
     const ctx = await this.ctx();
     const memberCategory = `test`;
 
@@ -228,7 +231,7 @@ export class BackendClient {
     return memberCategory;
   }
 
-  async deleteTestMemberCategory(): Promise<any> {
+  async deleteTestMemberCategory(): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.get('/api/member-categories');
@@ -243,7 +246,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async updateMailSettings(): Promise<any> {
+  async updateMailSettings(): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.put('/api/mail', {
@@ -264,7 +267,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async deleteMailSettings(): Promise<any> {
+  async deleteMailSettings(): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.get('/api/mail');
@@ -290,7 +293,7 @@ export class BackendClient {
     return pageName;
   }
 
-  async deleteWebPageSettings(): Promise<any> {
+  async deleteWebPageSettings(): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.get('/api/web-page-config');
@@ -301,7 +304,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async updateLinkSettings(): Promise<any> {
+  async updateLinkSettings(): Promise<void> {
     const ctx = await this.ctx();
     const res = await ctx.post(`/api/link`, {
       data: JSON.stringify({
@@ -316,7 +319,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async deleteLinkSettings(): Promise<any> {
+  async deleteLinkSettings(): Promise<void> {
     const ctx = await this.ctx();
 
     let res = await ctx.get('/api/link');
@@ -334,7 +337,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async createLinkSettings(link: Link): Promise<any> {
+  async createLinkSettings(link: Link): Promise<void> {
     const ctx = await this.ctx();
 
     const res = await ctx.post(`/api/link`, {
@@ -352,9 +355,9 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async setSelfEnrollmentEnabled(enabled: boolean): Promise<any> {
+  async setSelfEnrollmentEnabled(enabled: boolean): Promise<void> {
     const ctx = await this.ctx();
-    let pageName = 'Test web page';
+    let pageName = '';
     let logo = '';
     const existing = await ctx.get('/api/web-page-config');
     if (existing.ok()) {
@@ -461,7 +464,9 @@ export class BackendClient {
     return body;
   }
 
-  async createReceiptCategory(name = 'playwright_test_category'): Promise<any> {
+  async createReceiptCategory(
+    name = 'playwright_test_category',
+  ): Promise<ReceiptCategoryApiResult> {
     const ctx = await this.ctx();
     const res = await ctx.post('/api/receipt-categories', { data: { name } });
     if (!res.ok()) {
@@ -472,7 +477,7 @@ export class BackendClient {
     return body;
   }
 
-  async deleteAllReceiptCategories(): Promise<any> {
+  async deleteAllReceiptCategories(): Promise<void> {
     const ctx = await this.ctx();
     const res = await ctx.get('/api/receipt-categories');
     if (res.ok()) {
@@ -484,7 +489,10 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async createTestReceipt(token: string, overrides: Record<string, string> = {}): Promise<any> {
+  async createTestReceipt(
+    token: string,
+    overrides: Record<string, string> = {},
+  ): Promise<ReceiptApiResult> {
     const ctx = await request.newContext({
       baseURL: API_BASE,
       extraHTTPHeaders: { Authorization: `Bearer ${token}` },
@@ -509,7 +517,7 @@ export class BackendClient {
     token: string,
     pdfBytes: Buffer,
     overrides: Record<string, string> = {},
-  ): Promise<any> {
+  ): Promise<ReceiptApiResult> {
     const ctx = await request.newContext({
       baseURL: API_BASE,
       extraHTTPHeaders: { Authorization: `Bearer ${token}` },
@@ -549,7 +557,7 @@ export class BackendClient {
     return { status, contentType, body };
   }
 
-  async deleteAllReceipts(): Promise<any> {
+  async deleteAllReceipts(): Promise<void> {
     const ctx = await this.ctx();
     const res = await ctx.get('/api/receipts?limit=300');
     if (res.ok()) {
@@ -561,7 +569,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async setUserSetting(token: string, type: string, enabled: boolean): Promise<any> {
+  async setUserSetting(token: string, type: string, enabled: boolean): Promise<void> {
     const ctx = await this.userCtx(token);
     const res = await ctx.put(`/api/users/account/settings/${type}`, { data: { enabled } });
     if (!res.ok()) {
@@ -570,7 +578,7 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async payReceipt(token: string, receiptId: string, paymentMethod?: string): Promise<any> {
+  async payReceipt(token: string, receiptId: string, paymentMethod?: string): Promise<void> {
     const ctx = await this.userCtx(token);
     const res = await ctx.post(`/api/receipts/${receiptId}/pay`, {
       data: { paymentMethod: paymentMethod ?? null },

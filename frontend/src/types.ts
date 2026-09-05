@@ -2,6 +2,69 @@ import { UUIDTypes } from 'uuid';
 import { AlertColor } from '@mui/material/Alert';
 import React from 'react';
 
+export interface MemberPayload {
+  id?: string;
+  memberNumber?: number;
+  gender?: Gender | string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  birthday?: string | null;
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string | null;
+  email?: string;
+  phone?: string;
+  bulkMail?: BulkMail | string | null;
+  startOfStudies?: string | null;
+  endOfStudies?: string | null;
+  academicDegree?: AcademicDegree | null;
+  courseOfStudy?: string;
+  taskWithinTheClub?: TaskWithinTheClub | string;
+  memberCategoryId?: string | null;
+  iban?: string;
+  bic?: string;
+  sepaConsent?: string | null;
+  entryDate?: string | null;
+  exitDate?: string | null;
+  contributionPlanId?: string | null;
+}
+
+export interface MemberApiResult extends MemberPayload {
+  id: string;
+  memberNumber: number;
+  email: string;
+}
+
+export interface ReceiptCategoryApiResult {
+  id: string;
+  name: string;
+}
+
+interface ReceiptFileApiResult {
+  id: string;
+  contentType: string;
+  position: number;
+}
+
+export interface ReceiptApiResult {
+  id: string;
+  userId: string;
+  userName: string | null;
+  amount: number;
+  receiptDate: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  vendor: string | null;
+  description: string | null;
+  paymentMethod: string | null;
+  paid: boolean;
+  files: ReceiptFileApiResult[];
+  createdAt: string;
+  deletedAt: string | null;
+}
+
 export interface ConfigContextType {
   config: { pageName: string; logo: string; selfEnrollmentEnabled: boolean };
   loading: boolean;
