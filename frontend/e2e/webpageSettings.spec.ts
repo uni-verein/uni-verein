@@ -89,11 +89,11 @@ test.describe('Web page – Configure', () => {
       page.getByRole('alert').filter({ hasText: 'Speichern erfolgreich.' }),
     ).toBeVisible();
     await expect(page.getByText('Test page 2')).toBeVisible({ timeout: 1000 });
-    await expect(page.getByRole('button', { name: 'Löschen' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Zurücksetzen' })).toBeVisible();
     await backend.deleteWebPageSettings();
   });
 
-  test('Delete webpage settings', async ({ page }) => {
+  test('Reset webpage settings', async ({ page }) => {
     const pageName = await backend.updateWebPageSettings();
     await openDashboard(page, tc.get().token, pageName);
 
@@ -105,13 +105,38 @@ test.describe('Web page – Configure', () => {
     await expect(
       page.getByRole('heading', { name: 'Webseiteneinstellungen', exact: true }),
     ).toBeVisible();
-    await page.getByRole('button', { name: 'Löschen' }).click();
+    await page.getByRole('button', { name: 'Zurücksetzen' }).click();
     await expect(page.getByRole('heading', { name: 'Bestätigung' })).toBeVisible();
-    await expect(page.getByText('Webseiteneinstellungen wirklich löschen?')).toBeVisible();
+    await expect(
+      page.getByText(
+        'Alle Webseiteneinstellungen (Vereinsname, Logo und Selbstregistrierung) wirklich zurücksetzen?',
+      ),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Löschen' })).toBeVisible();
-    await page.getByRole('button', { name: 'Löschen' }).click();
-    await expect(page.getByRole('alert').filter({ hasText: 'Löschen erfolgreich.' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Zurücksetzen' })).toBeVisible();
+    await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Zurücksetzen erfolgreich.' }),
+    ).toBeVisible();
+  });
+
+  test('Reset webpage settings also disables self-enrollment', async ({ page }) => {
+    const pageName = await backend.updateWebPageSettings();
+    await backend.setSelfEnrollmentEnabled(true);
+    await openDashboard(page, tc.get().token, pageName);
+
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await expect(page.getByRole('switch', { name: 'Selbstregistrierung aktiviert' })).toBeChecked();
+
+    await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+    await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Zurücksetzen erfolgreich.' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('switch', { name: 'Selbstregistrierung aktiviert' }),
+    ).not.toBeChecked();
   });
 
   test('Show changed webpage name', async ({ page }) => {

@@ -215,7 +215,7 @@ jobs:
             -v ${{ github.workspace }}/frontend:/work \
             -w /work \
             -e CI=true \
-            mcr.microsoft.com/playwright:v1.58.2-noble \
+            mcr.microsoft.com/playwright:v1.63.0-noble \
             npx playwright test
 
       - name: Upload Playwright report

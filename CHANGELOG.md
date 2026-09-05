@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.7.0] UV-13
+
+### Added
+- Self-enrollment: prospective members can now sign themselves up through a public form, without needing an account. Fields that are admin-only or set automatically (task within the club, entry/exit date, SEPA consent) are hidden from the form and forced server-side regardless of what the request body contains (task is always "Member", entry date and SEPA consent are set to "now"). Duplicate email addresses/IBANs are rejected the same way as when an admin creates a member.
+- A "Self-enrollment" toggle in the general club settings enables/disables the public form, together with a button to copy its shareable link while disabled, both the public page and its `/self-enrollment/form-data` endpoint serve nothing.
+
+### Changed
+- Member-creation logic (duplicate detection, member-number assignment, contribution-plan/member-category validation) was consolidated into a shared `MemberService.CreateMemberAsync`, now used by both the admin "create member" endpoint and self-enrollment instead of being duplicated across the two.
+- The `/member-categories`, `/contribution-plans`, and `/self-enrollment/form-data` endpoints now share their EF Core query logic through a new `ReferenceDataService` instead of each maintaining its own copy of the same projection.
+- `frontend/nginx.conf` now serves the SPA with a `try_files` fallback to `index.html`, so a directly opened or shared self-enrollment link resolves correctly instead of 404 status code.
+
+### Fixed
+- Bumped `fast-uri` (via a `package.json` override on its transitive dependency) and `@tiptap/*` to close four High-severity SSRF/host-confusion advisories and one Moderate-severity prototype-pollution-to-XSS advisory reported by Dependabot.
+
 ## [v1.6.0] UV-16
 
 ### Added

@@ -3,8 +3,8 @@ import { ConfigContextType } from '../types';
 import { api } from '../api';
 
 const PageConfigContext = createContext<ConfigContextType>({
-  config: { pageName: '', logo: '' },
-  loading: false,
+  config: { pageName: '', logo: '', selfEnrollmentEnabled: false },
+  loading: true,
   reloadConfig: async () => {},
   serverReachable: true,
 });
@@ -12,11 +12,16 @@ const PageConfigContext = createContext<ConfigContextType>({
 const RETRY_INTERVAL_MS = 15_000;
 
 export const PageConfigProvider = ({ children }: any) => {
-  const [config, setConfig] = useState<{ pageName: string; logo: string }>({
+  const [config, setConfig] = useState<{
+    pageName: string;
+    logo: string;
+    selfEnrollmentEnabled: boolean;
+  }>({
     pageName: '',
     logo: '',
+    selfEnrollmentEnabled: false,
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [serverReachable, setServerReachable] = useState(true);
 
   const reloadConfig = useCallback(async () => {

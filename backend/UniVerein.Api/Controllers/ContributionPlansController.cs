@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniVerein.DAL.Data;
@@ -24,22 +25,18 @@ namespace UniVerein.Api.Controllers;
 public class ContributionPlansController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly ReferenceDataService _referenceDataService;
 
-    public ContributionPlansController(AppDbContext db)
+    public ContributionPlansController(AppDbContext db, ReferenceDataService referenceDataService)
     {
         _db = db;
+        _referenceDataService = referenceDataService;
     }
 
     [HttpGet]
     public async Task<ActionResult<ContributionPlanResults>> GetAllAsync()
     {
-        List<ContributionPlanResult> results = await _db.ContributionPlans.Select(c => new ContributionPlanResult()
-        {
-            Id = c.Id,
-            Name = c.Name,
-            Amount = c.Amount,
-            Interval = c.Interval
-        }).ToListAsync();
+        List<ContributionPlanResult> results = await _referenceDataService.GetContributionPlansAsync();
 
         return Ok(new ContributionPlanResults()
         {

@@ -12,4 +12,7 @@ public class WebPageConfigRequest
     [Required(AllowEmptyStrings = true)]
     [JsonPropertyName("logo")]
     public string Logo { get; set; } = string.Empty;
+
+    [JsonPropertyName("selfEnrollmentEnabled")]
+    public bool SelfEnrollmentEnabled { get; set; }
 }

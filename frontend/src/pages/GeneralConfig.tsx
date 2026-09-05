@@ -10,10 +10,15 @@ import {
   Alert,
   ButtonProps,
   Avatar,
+  Switch,
+  FormControlLabel,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { api } from '../api';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
@@ -40,9 +45,11 @@ export default function GeneralConfig() {
     id: undefined,
     pageName: '',
     logo: '',
+    selfEnrollmentEnabled: false,
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSmall = useMediaQuery('(max-width:1000px)');
+  const enrollmentUrl = `${window.location.origin}/enroll`;
 
   const loadConfig = async () => {
     try {
@@ -55,6 +62,7 @@ export default function GeneralConfig() {
         id: undefined,
         pageName: '',
         logo: '',
+        selfEnrollmentEnabled: false,
       });
     } finally {
       setFetching(false);
@@ -144,10 +152,10 @@ export default function GeneralConfig() {
     }
   };
 
-  const handleDelete = async (id: UUIDTypes) => {
+  const handleReset = async (id: UUIDTypes) => {
     setConfirmDialog({
-      message: t('pages.generalConfig.confirm.deleteMessage'),
-      buttonText: t('pages.generalConfig.confirm.deleteButton'),
+      message: t('pages.generalConfig.confirm.resetMessage'),
+      buttonText: t('pages.generalConfig.confirm.resetButton'),
       confirmColor: 'error',
     });
     const confirmed = await confirm();
@@ -157,15 +165,30 @@ export default function GeneralConfig() {
         await loadConfig();
         setConfigDeleteOrUpdate({
           status: 'success',
-          message: t('pages.generalConfig.snackbar.deleteSuccess'),
+          message: t('pages.generalConfig.snackbar.resetSuccess'),
         });
       } catch {
-        setApiError(t('pages.generalConfig.apiError.deleteFailed'));
+        setApiError(t('pages.generalConfig.apiError.resetFailed'));
         setConfigDeleteOrUpdate({
           status: 'error',
-          message: t('pages.generalConfig.snackbar.deleteError'),
+          message: t('pages.generalConfig.snackbar.resetError'),
         });
       }
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(enrollmentUrl);
+      setConfigDeleteOrUpdate({
+        status: 'success',
+        message: t('pages.generalConfig.snackbar.copySuccess'),
+      });
+    } catch {
+      setConfigDeleteOrUpdate({
+        status: 'error',
+        message: t('pages.generalConfig.snackbar.copyError'),
+      });
     }
   };
 
@@ -281,6 +304,61 @@ export default function GeneralConfig() {
             </Grid>
 
             <Grid size={12} sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                {t('pages.generalConfig.selfEnrollment.sectionTitle')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {t('pages.generalConfig.selfEnrollment.description')}
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.selfEnrollmentEnabled}
+                    onChange={(e) =>
+                      setConfig({ ...config, selfEnrollmentEnabled: e.target.checked })
+                    }
+                    slotProps={{
+                      input: {
+                        role: 'switch',
+                        'aria-label': t('pages.generalConfig.selfEnrollment.toggleLabel'),
+                      },
+                    }}
+                  />
+                }
+                label={t('pages.generalConfig.selfEnrollment.toggleLabel')}
+              />
+
+              {config.selfEnrollmentEnabled && (
+                <Box sx={{ mt: 1, maxWidth: 480 }}>
+                  <TextField
+                    label={t('pages.generalConfig.selfEnrollment.linkLabel')}
+                    fullWidth
+                    value={enrollmentUrl}
+                    slotProps={{
+                      htmlInput: {
+                        readOnly: true,
+                        onFocus: (e: React.FocusEvent<HTMLInputElement>) => e.target.select(),
+                      },
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={handleCopyLink}
+                              aria-label={t('pages.generalConfig.selfEnrollment.copyButton')}
+                              edge="end"
+                            >
+                              <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Box>
+              )}
+            </Grid>
+
+            <Grid size={12} sx={{ mt: 2 }}>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                 <Button
                   type="submit"
@@ -299,14 +377,14 @@ export default function GeneralConfig() {
 
                 {config.id !== undefined && (
                   <Button
-                    onClick={() => handleDelete(config.id!)}
+                    onClick={() => handleReset(config.id!)}
                     variant="outlined"
                     color="error"
                     size="large"
-                    startIcon={<DeleteIcon />}
+                    startIcon={<RestartAltIcon />}
                     sx={{ borderRadius: 2, px: 3, textTransform: 'none' }}
                   >
-                    {t('pages.generalConfig.buttons.delete')}
+                    {t('pages.generalConfig.buttons.reset')}
                   </Button>
                 )}
               </Box>

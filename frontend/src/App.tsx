@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { createTheme, ThemeProvider, CssBaseline, Typography, useMediaQuery } from '@mui/material';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import PublicEnrollmentPage from './pages/PublicEnrollmentPage';
 import { isTokenValid } from './utils';
 import { usePageConfig } from './components/PageConfigContext';
 import { useThemeMode } from './components/ThemeModeContext';
@@ -83,7 +84,9 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      {!logged ? (
+      {window.location.pathname === '/enroll' ? (
+        <PublicEnrollmentPage />
+      ) : !logged ? (
         <Login onLogin={handleLoginSuccess} demo={demo} />
       ) : (
         <Dashboard onLogout={handleLogout} pageName={config.pageName} />

@@ -34,6 +34,10 @@
         "new": "Create new member"
       },
       "subtitle": "Please enter the master data of the club member here.",
+      "publicSuccess": {
+        "title": "Welcome to the club!",
+        "subtitle": "You've been successfully added as a member."
+      },
       "fields": {
         "memberNumber": "Member Number",
         "gender": "Gender",
@@ -673,10 +677,17 @@
         "pageNameEmpty": "Club name must not be empty.",
         "pageNameTooLong": "Club name must not exceed 30 characters."
       },
+      "selfEnrollment": {
+        "sectionTitle": "Self-enrollment",
+        "description": "When enabled, visitors can create their own member record without logging in via the link below, e.g. at a trade fair booth.",
+        "toggleLabel": "Self-enrollment enabled",
+        "linkLabel": "Public link",
+        "copyButton": "Copy link"
+      },
       "buttons": {
         "save": "Save Configuration",
         "saving": "Saving...",
-        "delete": "Delete",
+        "reset": "Reset",
         "uploadLogo": "Upload club logo",
         "changeLogo": "Upload new club logo",
         "deleteLogo": "Remove logo"
@@ -684,17 +695,24 @@
       "snackbar": {
         "saveSuccess": "Saved successfully.",
         "saveError": "Saving failed. Please try again.",
-        "deleteSuccess": "Deleted successfully.",
-        "deleteError": "Settings could not be deleted. Please try again."
+        "resetSuccess": "Reset successfully.",
+        "resetError": "Reset failed. Please try again.",
+        "copySuccess": "Link copied.",
+        "copyError": "Failed to copy link."
       },
       "confirm": {
-        "deleteMessage": "Really delete website-settings?",
-        "deleteButton": "Delete"
+        "resetMessage": "Really reset all website settings (club name, logo, and self-enrollment)?",
+        "resetButton": "Reset"
       },
       "apiError": {
         "saveFailed": "Saving failed. Please try again.",
-        "deleteFailed": "Settings could not be deleted. Please try again."
+        "resetFailed": "Reset failed. Please try again."
       }
+    },
+    "publicEnrollment": {
+      "closedTitle": "Self-enrollment unavailable",
+      "closedMessage": "Self-enrollment is currently not active. Please contact a club administrator.",
+      "loadError": "The page could not be loaded. Please try again."
     },
     "login": {
       "login": "Login",

@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { api } from '../../api';
 import {
   BulkMail,
@@ -70,12 +71,14 @@ export default function MemberForm({
   contributionPlans,
   memberCategories,
   onClose,
+  mode = 'admin',
 }: {
   view: boolean;
   member: Member;
   contributionPlans: ContributionPlans[];
   memberCategories: MemberCategory[];
   onClose: () => void;
+  mode?: 'admin' | 'public';
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
@@ -84,6 +87,7 @@ export default function MemberForm({
   const [errors, setErrors] = useState<MemberErrors>({});
   const [editOrUpdateMember, setEditOrUpdateMember] =
     useState<SnackbarState>(SNACKBAR_INITIAL_STATE);
+  const [publicSuccess, setPublicSuccess] = useState(false);
   const setSuccessMember = useSnackbar();
   const { t } = useTranslation();
 
@@ -195,7 +199,12 @@ export default function MemberForm({
 
     try {
       if (m.id === NIL_UUID) {
-        const response = await api('/members', { method: 'POST', body: JSON.stringify(m) });
+        const createEndpoint = mode === 'public' ? '/self-enrollment' : '/members';
+        const payload = mode === 'public' ? { ...m, entryDate: new Date() } : m;
+        const response = await api(createEndpoint, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
         console.log(response);
         if (response === 409) {
           setApiError(t('components.memberForm.alerts.duplicateIbanOrEmail'));
@@ -203,6 +212,9 @@ export default function MemberForm({
             status: 'error',
             message: t('components.memberForm.alerts.duplicateIbanOrEmailShort'),
           });
+        } else if (mode === 'public') {
+          setPublicSuccess(true);
+          setTimeout(onClose, 3000);
         } else {
           setSuccessMember({
             status: 'success',
@@ -254,10 +266,11 @@ export default function MemberForm({
   const handleIbanChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value.replace(/\s+/g, '').toUpperCase();
 
-    setM({
-      ...m,
+    setM((prev) => ({
+      ...prev,
       iban: raw,
-    });
+      ...(mode === 'public' ? { sepaConsent: raw && prev.bic ? new Date() : null } : {}),
+    }));
 
     if (validateIBAN(raw)) {
       setErrors({ ...errors, iban: undefined });
@@ -269,10 +282,11 @@ export default function MemberForm({
   const handleBicChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value.replace(/\s+/g, '').toUpperCase();
 
-    setM({
-      ...m,
+    setM((prev) => ({
+      ...prev,
       bic: raw,
-    });
+      ...(mode === 'public' ? { sepaConsent: prev.iban && raw ? new Date() : null } : {}),
+    }));
 
     if (validateBIC(raw)) {
       setErrors({ ...errors, bic: undefined });
@@ -284,10 +298,17 @@ export default function MemberForm({
   const formattedIBAN = formatIBAN(m.iban ?? '');
   const allId = memberCategories.find((x) => x.category === 'ALL')?.id.toString() ?? '';
 
+  const handleDialogClose = (_event: object, reason: 'backdropClick' | 'escapeKeyDown') => {
+    if (mode === 'public' && (reason === 'backdropClick' || reason === 'escapeKeyDown')) {
+      return;
+    }
+    onClose();
+  };
+
   return (
     <Dialog
       open={true}
-      onClose={onClose}
+      onClose={handleDialogClose}
       fullWidth={!isMobile}
       fullScreen={isMobile}
       maxWidth="sm"
@@ -295,510 +316,530 @@ export default function MemberForm({
         paper: { sx: { borderRadius: isMobile ? 0 : 3, p: 1 } },
       }}
     >
-      <form onSubmit={save}>
-        <DialogTitle>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {m.id !== NIL_UUID
-              ? t(`components.memberForm.title.${view ? 'view' : 'edit'}`)
-              : t('components.memberForm.title.new')}
+      {publicSuccess ? (
+        <DialogContent sx={{ textAlign: 'center', py: 8 }}>
+          <CheckCircleIcon color="success" sx={{ fontSize: 64, mb: 2 }} />
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+            {t('components.memberForm.publicSuccess.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {!view && t('components.memberForm.subtitle')}
+            {t('components.memberForm.publicSuccess.subtitle')}
           </Typography>
-        </DialogTitle>
+        </DialogContent>
+      ) : (
+        <form onSubmit={save}>
+          <DialogTitle>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              {m.id !== NIL_UUID
+                ? t(`components.memberForm.title.${view ? 'view' : 'edit'}`)
+                : t('components.memberForm.title.new')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {!view && t('components.memberForm.subtitle')}
+            </Typography>
+          </DialogTitle>
 
-        <Divider sx={{ my: 1 }} />
+          <Divider sx={{ my: 1 }} />
 
-        <DialogContent>
-          <Grid container spacing={2}>
-            {m.id !== NIL_UUID && (
+          <DialogContent>
+            <Grid container spacing={2}>
+              {m.id !== NIL_UUID && (
+                <Grid size={6}>
+                  <TextField
+                    fullWidth
+                    disabled
+                    label={t('components.memberForm.fields.memberNumber')}
+                    variant="outlined"
+                    value={m.memberNumber}
+                  />
+                </Grid>
+              )}
               <Grid size={6}>
                 <TextField
                   fullWidth
-                  disabled
-                  label={t('components.memberForm.fields.memberNumber')}
+                  disabled={view}
+                  label={t('components.memberForm.fields.gender')}
                   variant="outlined"
-                  value={m.memberNumber}
+                  value={m.gender}
+                  onChange={handleChange('gender')}
+                  select
+                  required
+                  error={!!errors.gender}
+                  helperText={errors.gender}
+                >
+                  <MenuItem value={Gender.MALE}>
+                    {t('components.memberForm.fields.genderOptions.male')}
+                  </MenuItem>
+                  <MenuItem value={Gender.FEMALE}>
+                    {t('components.memberForm.fields.genderOptions.female')}
+                  </MenuItem>
+                  <MenuItem value={Gender.DIVERSE}>
+                    {t('components.memberForm.fields.genderOptions.diverse')}
+                  </MenuItem>
+                </TextField>
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.firstName')}
+                  variant="outlined"
+                  value={m.firstName}
+                  onChange={handleChange('firstName')}
+                  required
+                  error={!!errors.firstName}
+                  helperText={errors.firstName ?? `${m.firstName.length}/100`}
                 />
               </Grid>
-            )}
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.gender')}
-                variant="outlined"
-                value={m.gender}
-                onChange={handleChange('gender')}
-                select
-                required
-                error={!!errors.gender}
-                helperText={errors.gender}
-              >
-                <MenuItem value={Gender.MALE}>
-                  {t('components.memberForm.fields.genderOptions.male')}
-                </MenuItem>
-                <MenuItem value={Gender.FEMALE}>
-                  {t('components.memberForm.fields.genderOptions.female')}
-                </MenuItem>
-                <MenuItem value={Gender.DIVERSE}>
-                  {t('components.memberForm.fields.genderOptions.diverse')}
-                </MenuItem>
-              </TextField>
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.firstName')}
-                variant="outlined"
-                value={m.firstName}
-                onChange={handleChange('firstName')}
-                required
-                error={!!errors.firstName}
-                helperText={errors.firstName ?? `${m.firstName.length}/100`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.middleName')}
-                variant="outlined"
-                value={m.middleName}
-                onChange={handleChange('middleName')}
-                error={!!errors.middleName}
-                helperText={errors.middleName ?? `${m.middleName.length}/100`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.lastName')}
-                variant="outlined"
-                value={m.lastName}
-                onChange={handleChange('lastName')}
-                required
-                error={!!errors.lastName}
-                helperText={errors.lastName ?? `${m.lastName.length}/100`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                <DatePicker
-                  label={t('components.memberForm.fields.birthday')}
-                  views={['day', 'month', 'year']}
-                  format="DD.MM.YYYY"
-                  value={m.birthday ? dayjs(m.birthday) : null}
-                  onChange={(newValue) => {
-                    const dateValue = newValue ? newValue.toDate() : null;
-                    handleManualChange('birthday', dateValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      variant: 'outlined',
-                      required: true,
-                      disabled: view,
-                      error: !!errors.birthday,
-                      helperText: errors.birthday,
-                    },
-                  }}
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.middleName')}
+                  variant="outlined"
+                  value={m.middleName}
+                  onChange={handleChange('middleName')}
+                  error={!!errors.middleName}
+                  helperText={errors.middleName ?? `${m.middleName.length}/100`}
                 />
-              </LocalizationProvider>
-            </Grid>
-          </Grid>
-          <Divider sx={{ my: 1 }} />
-          <Grid container spacing={2}>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.street')}
-                variant="outlined"
-                value={m.street}
-                onChange={handleChange('street')}
-                required
-                error={!!errors.street}
-                helperText={errors.street ?? `${m.street.length}/100`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.postalCode')}
-                variant="outlined"
-                value={m.postalCode}
-                onChange={handleChange('postalCode')}
-                required
-                error={!!errors.postalCode}
-                helperText={errors.postalCode ?? `${m.postalCode.length}/10`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.city')}
-                variant="outlined"
-                value={m.city}
-                onChange={handleChange('city')}
-                required
-                error={!!errors.city}
-                helperText={errors.city ?? `${m.city.length}/100`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                label={t('components.memberForm.fields.countryCode')}
-                fullWidth
-                required
-                value={m.countryCode}
-                onChange={handleChange('countryCode')}
-                select
-              >
-                {countryOptions.map(({ value, label }) => (
-                  <MenuItem key={value} value={value}>
-                    {label} ({value})
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.email')}
-                type="email"
-                variant="outlined"
-                value={m.email}
-                onChange={handleChange('email')}
-                required
-                error={!!errors.email}
-                helperText={errors.email ?? `${m.email.length}/50`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.phone')}
-                variant="outlined"
-                value={m.phone}
-                onChange={handleChange('phone')}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.bulkMail')}
-                variant="outlined"
-                value={m.bulkMail ?? BulkMail.ALLOWED}
-                onChange={handleChange('bulkMail')}
-                select
-              >
-                <MenuItem value={BulkMail.ALLOWED}>
-                  {t('components.memberForm.fields.bulkMailOptions.allowed')}
-                </MenuItem>
-                <MenuItem value={BulkMail.NOT_ALLOWED}>
-                  {t('components.memberForm.fields.bulkMailOptions.notAllowed')}
-                </MenuItem>
-              </TextField>
-            </Grid>
-          </Grid>
-          <Divider sx={{ my: 1 }} />
-          <Grid container spacing={2}>
-            <Grid size={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                <DatePicker
-                  label={t('components.memberForm.fields.startOfStudies')}
-                  views={['month', 'year']}
-                  value={m.startOfStudies ? dayjs(m.startOfStudies) : null}
-                  onChange={(newValue) => {
-                    const dateValue = newValue ? newValue.startOf('month').toDate() : null;
-                    handleManualChange('startOfStudies', dateValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      variant: 'outlined',
-                      required: true,
-                      disabled: view,
-                      error: !!errors.startOfStudies,
-                      helperText: errors.startOfStudies,
-                    },
-                  }}
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.lastName')}
+                  variant="outlined"
+                  value={m.lastName}
+                  onChange={handleChange('lastName')}
+                  required
+                  error={!!errors.lastName}
+                  helperText={errors.lastName ?? `${m.lastName.length}/100`}
                 />
-              </LocalizationProvider>
+              </Grid>
+              <Grid size={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                  <DatePicker
+                    label={t('components.memberForm.fields.birthday')}
+                    views={['day', 'month', 'year']}
+                    format="DD.MM.YYYY"
+                    value={m.birthday ? dayjs(m.birthday) : null}
+                    onChange={(newValue) => {
+                      const dateValue = newValue ? newValue.toDate() : null;
+                      handleManualChange('birthday', dateValue);
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        required: true,
+                        disabled: view,
+                        error: !!errors.birthday,
+                        helperText: errors.birthday,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
             </Grid>
-            <Grid size={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                <DatePicker
-                  label={t('components.memberForm.fields.endOfStudies')}
-                  views={['month', 'year']}
-                  value={m.endOfStudies ? dayjs(m.endOfStudies) : null}
-                  onChange={(newValue) => {
-                    const dateValue = newValue ? newValue.startOf('month').toDate() : null;
-                    handleManualChange('endOfStudies', dateValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      variant: 'outlined',
-                      disabled: view,
-                      error: !!errors.endOfStudies,
-                      helperText: errors.endOfStudies,
-                    },
-                  }}
+            <Divider sx={{ my: 1 }} />
+            <Grid container spacing={2}>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.street')}
+                  variant="outlined"
+                  value={m.street}
+                  onChange={handleChange('street')}
+                  required
+                  error={!!errors.street}
+                  helperText={errors.street ?? `${m.street.length}/100`}
                 />
-              </LocalizationProvider>
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.academicDegree')}
-                variant="outlined"
-                value={m.academicDegree}
-                onChange={handleChange('academicDegree')}
-                select
-              >
-                {Object.entries(ACADEMIC_DEGREE_LABELS).map(([value, label]) => (
-                  <MenuItem key={value} value={value}>
-                    {label}
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.postalCode')}
+                  variant="outlined"
+                  value={m.postalCode}
+                  onChange={handleChange('postalCode')}
+                  required
+                  error={!!errors.postalCode}
+                  helperText={errors.postalCode ?? `${m.postalCode.length}/10`}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.city')}
+                  variant="outlined"
+                  value={m.city}
+                  onChange={handleChange('city')}
+                  required
+                  error={!!errors.city}
+                  helperText={errors.city ?? `${m.city.length}/100`}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  label={t('components.memberForm.fields.countryCode')}
+                  fullWidth
+                  required
+                  value={m.countryCode}
+                  onChange={handleChange('countryCode')}
+                  select
+                >
+                  {countryOptions.map(({ value, label }) => (
+                    <MenuItem key={value} value={value}>
+                      {label} ({value})
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.email')}
+                  type="email"
+                  variant="outlined"
+                  value={m.email}
+                  onChange={handleChange('email')}
+                  required
+                  error={!!errors.email}
+                  helperText={errors.email ?? `${m.email.length}/50`}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.phone')}
+                  variant="outlined"
+                  value={m.phone}
+                  onChange={handleChange('phone')}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.bulkMail')}
+                  variant="outlined"
+                  value={m.bulkMail ?? BulkMail.ALLOWED}
+                  onChange={handleChange('bulkMail')}
+                  select
+                >
+                  <MenuItem value={BulkMail.ALLOWED}>
+                    {t('components.memberForm.fields.bulkMailOptions.allowed')}
                   </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.courseOfStudy')}
-                variant="outlined"
-                value={m.courseOfStudy}
-                onChange={handleChange('courseOfStudy')}
-                error={!!errors.courseOfStudy}
-                helperText={errors.courseOfStudy ?? `${m.courseOfStudy.length}/100`}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.taskWithinTheClub')}
-                variant="outlined"
-                value={m.taskWithinTheClub || ''}
-                onChange={handleChange('taskWithinTheClub')}
-                select
-                required
-              >
-                {Object.entries(TASK_WITHIN_THE_CLUB_LABELS).map(([value, label]) => (
-                  <MenuItem key={value} value={value}>
-                    {t(`components.taskWithinTheClubOptions.${label}`)}
+                  <MenuItem value={BulkMail.NOT_ALLOWED}>
+                    {t('components.memberForm.fields.bulkMailOptions.notAllowed')}
                   </MenuItem>
-                ))}
-              </TextField>
+                </TextField>
+              </Grid>
             </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.memberCategory')}
-                variant="outlined"
-                value={
-                  !m.memberCategoryId || m.memberCategoryId === '' ? allId : m.memberCategoryId
-                }
-                onChange={handleChange('memberCategoryId')}
-                select
-                required
-                error={!!errors.memberCategoryId}
-                helperText={errors.memberCategoryId}
-              >
-                {memberCategories.map((e) => {
-                  if (e.category === 'ALL') return null;
-
-                  const translationKey = `components.memberForm.fields.memberCategoryOptions.${e.category}`;
-                  const label = t(translationKey).startsWith(translationKey)
-                    ? e.name
-                    : t(translationKey);
-
-                  return (
-                    <MenuItem key={e.id.toString()} value={e.id.toString()}>
+            <Divider sx={{ my: 1 }} />
+            <Grid container spacing={2}>
+              <Grid size={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                  <DatePicker
+                    label={t('components.memberForm.fields.startOfStudies')}
+                    views={['month', 'year']}
+                    value={m.startOfStudies ? dayjs(m.startOfStudies) : null}
+                    onChange={(newValue) => {
+                      const dateValue = newValue ? newValue.startOf('month').toDate() : null;
+                      handleManualChange('startOfStudies', dateValue);
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        required: true,
+                        disabled: view,
+                        error: !!errors.startOfStudies,
+                        helperText: errors.startOfStudies,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid size={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                  <DatePicker
+                    label={t('components.memberForm.fields.endOfStudies')}
+                    views={['month', 'year']}
+                    value={m.endOfStudies ? dayjs(m.endOfStudies) : null}
+                    onChange={(newValue) => {
+                      const dateValue = newValue ? newValue.startOf('month').toDate() : null;
+                      handleManualChange('endOfStudies', dateValue);
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        disabled: view,
+                        error: !!errors.endOfStudies,
+                        helperText: errors.endOfStudies,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.academicDegree')}
+                  variant="outlined"
+                  value={m.academicDegree}
+                  onChange={handleChange('academicDegree')}
+                  select
+                >
+                  {Object.entries(ACADEMIC_DEGREE_LABELS).map(([value, label]) => (
+                    <MenuItem key={value} value={value}>
                       {label}
                     </MenuItem>
-                  );
-                })}
-              </TextField>
-            </Grid>
-            <Grid size={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                <DatePicker
-                  label={t('components.memberForm.fields.entryDate')}
-                  views={['day', 'month', 'year']}
-                  format="DD.MM.YYYY"
-                  value={m.entryDate ? dayjs(m.entryDate) : null}
-                  onChange={(newValue) => {
-                    const dateValue = newValue ? newValue.toDate() : null;
-                    handleManualChange('entryDate', dateValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      variant: 'outlined',
-                      required: true,
-                      disabled: view,
-                    },
-                  }}
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.courseOfStudy')}
+                  variant="outlined"
+                  value={m.courseOfStudy}
+                  onChange={handleChange('courseOfStudy')}
+                  error={!!errors.courseOfStudy}
+                  helperText={errors.courseOfStudy ?? `${m.courseOfStudy.length}/100`}
                 />
-              </LocalizationProvider>
-            </Grid>
-            <Grid size={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                <DatePicker
-                  label={t('components.memberForm.fields.exitDate')}
-                  views={['day', 'month', 'year']}
-                  format="DD.MM.YYYY"
-                  value={m.exitDate ? dayjs(m.exitDate) : null}
-                  onChange={(newValue) => {
-                    const dateValue = newValue ? newValue.toDate() : null;
-                    handleManualChange('exitDate', dateValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      variant: 'outlined',
-                      disabled: view,
-                      error: !!errors.exitDate,
-                      helperText: errors.exitDate,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.iban')}
-                variant="outlined"
-                placeholder="DE00 0000 0000 0000 0000 00"
-                value={formattedIBAN}
-                onChange={handleIbanChange}
-                error={errors.iban !== undefined}
-                helperText={errors.iban}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.bic')}
-                variant="outlined"
-                placeholder="DEUTDEXXX"
-                value={m.bic}
-                onChange={handleBicChange}
-                error={errors.bic !== undefined}
-                helperText={errors.bic}
-              />
-            </Grid>
-            <Grid size={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                <DatePicker
-                  label={t('components.memberForm.fields.sepaConsent')}
-                  views={['day', 'month', 'year']}
-                  format="DD.MM.YYYY"
-                  value={m.sepaConsent ? dayjs(m.sepaConsent) : null}
-                  onChange={(newValue) => {
-                    const dateValue = newValue ? newValue.toDate() : null;
-                    handleManualChange('sepaConsent', dateValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      variant: 'outlined',
-                      disabled: view,
-                      error: !!errors.sepaConsent,
-                      helperText: errors.sepaConsent,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                disabled={view}
-                label={t('components.memberForm.fields.contributionPlan')}
-                variant="outlined"
-                value={m.contributionPlanId === null ? NIL_UUID : m.contributionPlanId}
-                onChange={(event) =>
-                  event.target.value !== NIL_UUID
-                    ? setM({
-                        ...m,
-                        ['contributionPlanId']: event.target.value,
-                      })
-                    : null
-                }
-                select
-                error={!!errors.contributionPlanId}
-                helperText={errors.contributionPlanId}
-              >
-                <MenuItem value={NIL_UUID}>
-                  {t('components.memberForm.fields.noContribution')}
-                </MenuItem>
-                {contributionPlans.map((x) => {
-                  return <MenuItem value={x.id.toString()}>{x.name}</MenuItem>;
-                })}
-              </TextField>
-            </Grid>
-          </Grid>
+              </Grid>
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <TextField
+                    fullWidth
+                    disabled={view}
+                    label={t('components.memberForm.fields.taskWithinTheClub')}
+                    variant="outlined"
+                    value={m.taskWithinTheClub || ''}
+                    onChange={handleChange('taskWithinTheClub')}
+                    select
+                    required
+                  >
+                    {Object.entries(TASK_WITHIN_THE_CLUB_LABELS).map(([value, label]) => (
+                      <MenuItem key={value} value={value}>
+                        {t(`components.taskWithinTheClubOptions.${label}`)}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              )}
+              <Grid size={mode === 'public' ? 12 : 6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.memberCategory')}
+                  variant="outlined"
+                  value={
+                    !m.memberCategoryId || m.memberCategoryId === '' ? allId : m.memberCategoryId
+                  }
+                  onChange={handleChange('memberCategoryId')}
+                  select
+                  required
+                  error={!!errors.memberCategoryId}
+                  helperText={errors.memberCategoryId}
+                >
+                  {memberCategories.map((e) => {
+                    if (e.category === 'ALL') return null;
 
-          {Object.keys(errors).length !== 0 &&
-            Object.values(errors).some((v) => v !== undefined) && (
-              <Alert severity="error" onClose={() => setErrors({})} sx={{ mb: 2, mt: 2 }}>
-                {t('components.memberForm.alerts.invalidInputs')}
+                    const translationKey = `components.memberForm.fields.memberCategoryOptions.${e.category}`;
+                    const label = t(translationKey).startsWith(translationKey)
+                      ? e.name
+                      : t(translationKey);
+
+                    return (
+                      <MenuItem key={e.id.toString()} value={e.id.toString()}>
+                        {label}
+                      </MenuItem>
+                    );
+                  })}
+                </TextField>
+              </Grid>
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                    <DatePicker
+                      label={t('components.memberForm.fields.entryDate')}
+                      views={['day', 'month', 'year']}
+                      format="DD.MM.YYYY"
+                      value={m.entryDate ? dayjs(m.entryDate) : null}
+                      onChange={(newValue) => {
+                        const dateValue = newValue ? newValue.toDate() : null;
+                        handleManualChange('entryDate', dateValue);
+                      }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          variant: 'outlined',
+                          required: true,
+                          disabled: view,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+              )}
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                    <DatePicker
+                      label={t('components.memberForm.fields.exitDate')}
+                      views={['day', 'month', 'year']}
+                      format="DD.MM.YYYY"
+                      value={m.exitDate ? dayjs(m.exitDate) : null}
+                      onChange={(newValue) => {
+                        const dateValue = newValue ? newValue.toDate() : null;
+                        handleManualChange('exitDate', dateValue);
+                      }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          variant: 'outlined',
+                          disabled: view,
+                          error: !!errors.exitDate,
+                          helperText: errors.exitDate,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+              )}
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.iban')}
+                  variant="outlined"
+                  placeholder="DE00 0000 0000 0000 0000 00"
+                  value={formattedIBAN}
+                  onChange={handleIbanChange}
+                  error={errors.iban !== undefined}
+                  helperText={errors.iban}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.bic')}
+                  variant="outlined"
+                  placeholder="DEUTDEXXX"
+                  value={m.bic}
+                  onChange={handleBicChange}
+                  error={errors.bic !== undefined}
+                  helperText={errors.bic}
+                />
+              </Grid>
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                    <DatePicker
+                      label={t('components.memberForm.fields.sepaConsent')}
+                      views={['day', 'month', 'year']}
+                      format="DD.MM.YYYY"
+                      value={m.sepaConsent ? dayjs(m.sepaConsent) : null}
+                      onChange={(newValue) => {
+                        const dateValue = newValue ? newValue.toDate() : null;
+                        handleManualChange('sepaConsent', dateValue);
+                      }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          variant: 'outlined',
+                          disabled: view,
+                          error: !!errors.sepaConsent,
+                          helperText: errors.sepaConsent,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+              )}
+              <Grid size={mode === 'public' ? 12 : 6}>
+                <TextField
+                  fullWidth
+                  disabled={view}
+                  label={t('components.memberForm.fields.contributionPlan')}
+                  variant="outlined"
+                  value={m.contributionPlanId === null ? NIL_UUID : m.contributionPlanId}
+                  onChange={(event) =>
+                    event.target.value !== NIL_UUID
+                      ? setM({
+                          ...m,
+                          ['contributionPlanId']: event.target.value,
+                        })
+                      : null
+                  }
+                  select
+                  error={!!errors.contributionPlanId}
+                  helperText={errors.contributionPlanId}
+                >
+                  <MenuItem value={NIL_UUID}>
+                    {t('components.memberForm.fields.noContribution')}
+                  </MenuItem>
+                  {contributionPlans.map((x) => {
+                    return <MenuItem value={x.id.toString()}>{x.name}</MenuItem>;
+                  })}
+                </TextField>
+              </Grid>
+            </Grid>
+
+            {Object.keys(errors).length !== 0 &&
+              Object.values(errors).some((v) => v !== undefined) && (
+                <Alert severity="error" onClose={() => setErrors({})} sx={{ mb: 2, mt: 2 }}>
+                  {t('components.memberForm.alerts.invalidInputs')}
+                </Alert>
+              )}
+
+            {apiError && (
+              <Alert severity="error" onClose={() => setApiError(null)} sx={{ mb: 2 }}>
+                {apiError}
               </Alert>
             )}
+          </DialogContent>
 
-          {apiError && (
-            <Alert severity="error" onClose={() => setApiError(null)} sx={{ mb: 2 }}>
-              {apiError}
-            </Alert>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3, gap: 1 }}>
-          <Button
-            onClick={onClose}
-            color="inherit"
-            startIcon={<CloseIcon />}
-            sx={{ textTransform: 'none' }}
-          >
-            {view
-              ? t('components.memberForm.buttons.close')
-              : t('components.memberForm.buttons.cancel')}
-          </Button>
-          {!view ? (
+          <DialogActions sx={{ p: 3, gap: 1 }}>
             <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              startIcon={<SaveIcon />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3,
-              }}
+              onClick={onClose}
+              color="inherit"
+              startIcon={<CloseIcon />}
+              sx={{ textTransform: 'none' }}
             >
-              {t('components.memberForm.buttons.save')}
+              {view
+                ? t('components.memberForm.buttons.close')
+                : t('components.memberForm.buttons.cancel')}
             </Button>
-          ) : null}
-        </DialogActions>
-      </form>
+            {!view ? (
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                startIcon={<SaveIcon />}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  px: 3,
+                }}
+              >
+                {t('components.memberForm.buttons.save')}
+              </Button>
+            ) : null}
+          </DialogActions>
+        </form>
+      )}
 
       <CustomSnackbar
         status={editOrUpdateMember.status}

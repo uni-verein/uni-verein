@@ -38,7 +38,8 @@ public class WebPageConfigController : ControllerBase
         {
             Id = webPageConfig.Id,
             PageName = webPageConfig.PageName,
-            Logo = webPageConfig.Logo
+            Logo = webPageConfig.Logo,
+            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled
         };
 
         return Ok(result);
@@ -54,7 +55,8 @@ public class WebPageConfigController : ControllerBase
             webPageConfig = new()
             {
                 PageName = request.PageName,
-                Logo = request.Logo
+                Logo = request.Logo,
+                SelfEnrollmentEnabled = request.SelfEnrollmentEnabled
             };
             await _db.WebPageConfigs.AddAsync(webPageConfig);
         }
@@ -62,6 +64,7 @@ public class WebPageConfigController : ControllerBase
         {
             webPageConfig.PageName = request.PageName;
             webPageConfig.Logo = request.Logo;
+            webPageConfig.SelfEnrollmentEnabled = request.SelfEnrollmentEnabled;
             webPageConfig.DeletedAt = null;
             _db.WebPageConfigs.Update(webPageConfig);
         }
@@ -71,7 +74,8 @@ public class WebPageConfigController : ControllerBase
         {
             Id = webPageConfig.Id,
             PageName = webPageConfig.PageName,
-            Logo = webPageConfig.Logo
+            Logo = webPageConfig.Logo,
+            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled
         });
     }
 
