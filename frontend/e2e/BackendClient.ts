@@ -357,7 +357,7 @@ export class BackendClient {
 
   async setSelfEnrollmentEnabled(enabled: boolean): Promise<void> {
     const ctx = await this.ctx();
-    let pageName = '';
+    let pageName = 'Test web page';
     let logo = '';
     const existing = await ctx.get('/api/web-page-config');
     if (existing.ok()) {

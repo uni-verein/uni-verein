@@ -6,13 +6,13 @@ import { Role } from '../src/types';
 const backend = new BackendClient();
 const createdUserIds = new Set<string>();
 
-async function openDashboard(page: Page, token: string) {
+async function openDashboard(page: Page, token: string, pageName = 'Test web page') {
   await page.addInitScript((t) => {
     localStorage.setItem('token', t);
   }, token);
 
   await page.goto(APP_BASE);
-  await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
+  await expect(page.getByText(pageName)).toBeVisible({ timeout: 8000 });
 }
 
 test.beforeAll(async () => {
