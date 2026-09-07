@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -22,9 +22,9 @@ import { api } from '../api';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
-import { usePageConfig } from '../components/PageConfigContext';
+import { usePageConfig } from '../hooks/usePageConfig';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 export default function GeneralConfig() {
@@ -51,7 +51,7 @@ export default function GeneralConfig() {
   const isSmall = useMediaQuery('(max-width:1000px)');
   const enrollmentUrl = `${window.location.origin}/enroll`;
 
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       const data = await api('/web-page-config');
       if (data) {
@@ -67,11 +67,12 @@ export default function GeneralConfig() {
     } finally {
       setFetching(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadConfig();
-  }, []);
+  }, [loadConfig]);
 
   const validate = () => {
     const newErrors: { pageName?: string } = {};

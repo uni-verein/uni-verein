@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -18,7 +18,7 @@ import { UUIDTypes } from 'uuid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useConfirm } from '../hooks/useConfirm';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 
 export default function EmailConfig() {
@@ -57,7 +57,7 @@ export default function EmailConfig() {
   const [testEmailError, setTestEmailError] = useState('');
   const [testLoading, setTestLoading] = useState(false);
 
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       const data = await api('/mail');
       if (data) {
@@ -78,11 +78,12 @@ export default function EmailConfig() {
     } finally {
       setFetching(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadConfig();
-  }, []);
+  }, [loadConfig]);
 
   const validate = () => {
     const newErrors: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -18,7 +18,7 @@ import DownloadFileIcon from '@mui/icons-material/Download';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { api, apiFile } from '../api';
 import { MemberCategory } from '../types';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useIndexedTranslation } from '../hooks/useIndexedTranslation';
@@ -40,16 +40,17 @@ export default function Backup() {
   const setSnackbar = useSnackbar();
   const { ti } = useIndexedTranslation();
 
-  const load = async (query: MemberCategory | null) => {
+  const load = useCallback(async (query: MemberCategory | null) => {
     const data = await api('/members/count' + (query === null ? '' : `?memberCategory=${query}`));
     if (data) {
       setMemberCount(data?.count ?? 0);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load(null);
-  }, []);
+  }, [load]);
 
   const triggerDownload = (query: string, filename: string) => {
     const token = localStorage.getItem('token');

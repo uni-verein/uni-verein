@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 
+// iOS Safari exposes this non-standard property to detect "Add to Home Screen" installs.
+interface NavigatorWithIosStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 function detectPwaInstalled(): boolean {
   const isStandaloneDisplay =
     typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches;
-  const isIosStandalone = (navigator as any).standalone === true;
+  const isIosStandalone = (navigator as NavigatorWithIosStandalone).standalone === true;
   return Boolean(isStandaloneDisplay || isIosStandalone);
 }
 

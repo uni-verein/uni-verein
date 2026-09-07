@@ -100,7 +100,7 @@ export class BackendClient {
     return body;
   }
 
-  async createTestMember(overrides: Partial<MemberPayload> = {}): Promise<MemberApiResult> {
+  async createTestMember(overrides: MemberPayload = {}): Promise<MemberApiResult> {
     return this.createMember({
       academicDegree: null,
       birthday: '2026-03-14T23:00:00.000Z',

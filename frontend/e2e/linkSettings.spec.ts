@@ -9,7 +9,7 @@ async function openDashboard(
   page: Page,
   token: string,
   pageName: string | undefined = undefined,
-): Promise<any> {
+): Promise<void> {
   await page.addInitScript((t) => {
     localStorage.setItem('token', t);
   }, token);

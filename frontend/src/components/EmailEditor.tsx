@@ -35,7 +35,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import { EmailEditorProps } from '../types';
 import { useTranslation } from 'react-i18next';
-import { useSnackbar } from './SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 
 export default function EmailEditor({
   onSend,
@@ -82,13 +82,14 @@ export default function EmailEditor({
       (editor?.getHTML().includes('{fullname}') || editor?.getHTML().includes('{firstname}')) &&
       recipientCount > 150
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInformation(t('pages.mail.editorPage.info'));
       setDisableSendButton(true);
     } else {
       setInformation(null);
       setDisableSendButton(false);
     }
-  }, [initialContent, editor]);
+  }, [initialContent, editor, recipientCount, t]);
 
   const readFileAsBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -234,7 +235,7 @@ export default function EmailEditor({
           <Tooltip title={t('pages.mail.editorPage.toolbar.underline')}>
             <IconButton
               size="small"
-              onClick={() => (editor.chain().focus() as any).toggleUnderline?.().run()}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
               sx={toolbarBtnSx(false)}
             >
               <FormatUnderlinedIcon fontSize="small" />

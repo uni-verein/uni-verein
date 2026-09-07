@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import {
   Box,
   Drawer,
@@ -38,7 +38,7 @@ import { Role } from '../types';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
 import { SidebarContent } from '../components/SidebarContent';
-import { useThemeMode, ThemeMode } from '../components/ThemeModeContext';
+import { useThemeMode, ThemeMode } from '../hooks/useThemeMode';
 
 const Members = lazy(() => import('./Members'));
 const Mail = lazy(() => import('./Mail'));
@@ -61,6 +61,24 @@ const drawerWidthExpanded = 280;
 const drawerWidthCollapsed = 64;
 const bottomNavHeight = 56;
 
+function readUserFromToken(): { id: UUIDTypes | undefined; name: string; role: string | Role } {
+  const empty = { id: undefined, name: '', role: '' };
+  const tokenString = localStorage.getItem('token');
+  if (!tokenString) return empty;
+
+  try {
+    const payload = JSON.parse(atob(tokenString.split('.')[1]));
+    return {
+      name: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
+      role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
+      id: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
+    };
+  } catch (e) {
+    console.error('Token parse error', e);
+    return empty;
+  }
+}
+
 export default function Dashboard({
   onLogout,
   pageName,
@@ -72,11 +90,11 @@ export default function Dashboard({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
   const [page, setPage] = useState('members');
-  const [user, setUser] = useState<{
+  const [user] = useState<{
     id: UUIDTypes | undefined;
     name: string;
     role: string | Role;
-  }>({ id: undefined, name: '', role: '' });
+  }>(readUserFromToken);
   const [openSettings, setOpenSettings] = useState(false);
   const [sideBarSettings, setSideBarSettings] = useState({
     showMail: false,
@@ -114,22 +132,25 @@ export default function Dashboard({
   const themeModeLabel = t(`pages.dashboard.themeMode.${mode}`);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCollapsed(isMobile);
   }, [isMobile]);
 
   useEffect(() => {
     if (collapsed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpenSettings(false);
     }
   }, [collapsed]);
 
   useEffect(() => {
     if (isMobile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMobileNavOpen(false);
     }
   }, [page, isMobile]);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const settings = await api('/web-page-config/sidebar');
       if (settings) {
@@ -138,9 +159,9 @@ export default function Dashboard({
     } catch {
       // best-effort: sidebar keeps its default settings if this fails
     }
-  };
+  }, []);
 
-  const loadFirmwareUpdate = async () => {
+  const loadFirmwareUpdate = useCallback(async () => {
     try {
       const result = await api('/notifications/firmware-update');
       if (result) {
@@ -149,31 +170,19 @@ export default function Dashboard({
     } catch {
       // best-effort: no firmware-update notification shown if this fails
     }
-  };
-
-  useEffect(() => {
-    const tokenString = localStorage.getItem('token');
-    if (!tokenString) return;
-
-    try {
-      const payload = JSON.parse(atob(tokenString.split('.')[1]));
-      setUser({
-        name: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
-        role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
-        id: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
-      });
-    } catch (e) {
-      console.error('Token parse error', e);
-    }
-
-    loadSettings();
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSettings();
+  }, [loadSettings]);
+
+  useEffect(() => {
     if (user.role === Role.ADMIN) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadFirmwareUpdate();
     }
-  }, [user.role]);
+  }, [user.role, loadFirmwareUpdate]);
 
   const navItems = [
     {

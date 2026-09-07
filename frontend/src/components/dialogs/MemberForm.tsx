@@ -45,7 +45,7 @@ import {
 import { NIL as NIL_UUID } from 'uuid';
 import * as countries from 'i18n-iso-countries';
 import deLocale from 'i18n-iso-countries/langs/de.json';
-import { useSnackbar } from '../SnackbarContext';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { CustomSnackbar } from '../CustomSnackbar';
 import { useTranslation } from 'react-i18next';
 countries.registerLocale(deLocale);

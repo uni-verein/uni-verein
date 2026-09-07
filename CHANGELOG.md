@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed UV-20
+- Cleared out every remaining frontend ESLint/TypeScript warning: `any`-typed props, state, and API helpers (`api`/`apiFile`, `AuditLog`, `Contribution`/`ContributionInfo`, SignalR payloads, TipTap's `toggleUnderline`, the iOS `navigator.standalone` check, …) were replaced with concrete types; data-loading functions used inside `useEffect` are now wrapped in `useCallback` and listed in their effect's dependency array instead of being omitted, and the `useCallback`-plus-`@ts-expect-error`-wrapped `lodash.debounce` calls (Members, Receipts, Sepa, Contributions, RecipientList) were replaced with properly typed `useMemo`-based debouncing so no dependency is silently dropped.
+- Every remaining unavoidable `setState` call inside an effect body (token/session checks, responsive layout resets, debounced search effects, etc.) is now explicitly annotated with `// eslint-disable-next-line react-hooks/set-state-in-effect` instead of triggering a warning.
+- `PageConfigContext`, `SnackbarContext`, and `ThemeModeContext` each had their hook (`usePageConfig`/`useSnackbar`/`useThemeMode`) and context object moved out into a dedicated `hooks/use*.ts` file, so the `*Context.tsx` files only export the provider component — this satisfies `react-refresh/only-export-components`, which flagged them for exporting non-component values alongside a component. `MuiIcons.tsx`'s `loadAllIcons` helper was split out into `utils/iconLoader.ts` for the same reason.
+- The dashboard now reads the logged-in user's name/role/id from the JWT synchronously via a lazy `useState` initializer instead of after mount via an effect, avoiding an initial render with an empty user before the token is parsed.
+
+### Fixed
+- Audit log table and card rows were all keyed on `l.id`, a field `AuditLog` entries don't have (it only surfaced once the `any` typing was removed); they're now keyed on `` `${l.timestamp}-${index}` ``, giving React stable, non-colliding keys instead of every row sharing the same `undefined` key.
+
 ## [v1.7.0] UV-13
 
 ### Added

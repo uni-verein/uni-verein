@@ -17,7 +17,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import type { SvgIconComponent } from '@mui/icons-material';
-import { DynamicIcon, loadAllIcons } from '../MuiIcons';
+import { DynamicIcon } from '../MuiIcons';
+import { loadAllIcons } from '../../utils/iconLoader';
 import { useTranslation } from 'react-i18next';
 
 // Rendering all ~8600 icons at once means mounting that many MUI IconButton/Tooltip
@@ -48,6 +49,7 @@ export function IconPickerDialog({ open, selectedIcon, onSelect, onClose }: Icon
     if (!open) return;
 
     abortRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
 
     const load = async () => {

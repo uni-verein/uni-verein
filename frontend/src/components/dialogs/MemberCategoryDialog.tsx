@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { api } from '../../api';
 import { MemberCategory } from '../../types';
-import { useSnackbar } from '../SnackbarContext';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 
 export function MemberCategoryDialog({

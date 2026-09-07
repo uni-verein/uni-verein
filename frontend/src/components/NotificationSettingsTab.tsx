@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import { Role, UserSetting, UserSettingType } from '../types';
-import { useSnackbar } from './SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 
 export function NotificationSettingsTab({ role }: { role?: Role | string }) {
   const { t } = useTranslation();
@@ -36,7 +36,7 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
       }
     };
     loadSettings().catch();
-  }, [role]);
+  }, [role, setSnackbar, t]);
 
   const handleToggle = async (checked: boolean) => {
     setSaving(true);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -25,7 +25,7 @@ import { MemberCategory } from '../types';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { MobileListCard } from '../components/MobileListCard';
 import { MemberCategoryDialog } from '../components/dialogs/MemberCategoryDialog';
@@ -46,7 +46,7 @@ export default function MemberCategoryConfig() {
   const setMemberCategoryChange = useSnackbar();
   const { t } = useTranslation();
 
-  const loadMemberCategories = async () => {
+  const loadMemberCategories = useCallback(async () => {
     try {
       const data = await api('/member-categories');
       if (data) {
@@ -55,11 +55,12 @@ export default function MemberCategoryConfig() {
     } catch {
       // best-effort: table just stays empty if this fails
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMemberCategories();
-  }, []);
+  }, [loadMemberCategories]);
 
   const handleOpen = (memberCategory: MemberCategory | null = null) => {
     setEditMemberCategory(memberCategory);

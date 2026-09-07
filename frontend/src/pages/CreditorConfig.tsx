@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -20,7 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { UUIDTypes } from 'uuid';
 import { useConfirm } from '../hooks/useConfirm';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 countries.registerLocale(deLocale);
 
@@ -66,7 +66,7 @@ export default function CreditorConfig() {
     countryCode: '',
   });
 
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     setFetching(true);
     try {
       const data = await api('/creditor-config');
@@ -88,11 +88,12 @@ export default function CreditorConfig() {
     } finally {
       setFetching(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadConfig();
-  }, []);
+  }, [loadConfig]);
 
   const validate = () => {
     const newErrors: {

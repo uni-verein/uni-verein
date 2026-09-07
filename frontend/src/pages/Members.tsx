@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -52,7 +52,7 @@ import { TASK_WITHIN_THE_CLUB_LABELS } from '../utils';
 import { NIL as NIL_UUID, UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 
 export default function Members({ role }: UserRoleProps) {
@@ -82,51 +82,65 @@ export default function Members({ role }: UserRoleProps) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const contributionPlan = await api('/contribution-plans');
     setContributionPlans(contributionPlan.items);
     const memberCategories = await api('/member-categories');
     setMemberCategories(memberCategories.items);
-  };
-
-  useEffect(() => {
-    load();
   }, []);
 
-  const fetchData = async (
-    s: string | undefined,
-    a: TaskWithinTheClub | null,
-    st: UUIDTypes | null,
-    d: boolean,
-    p: number,
-    l: number,
-  ) => {
-    setLoading(true);
-    try {
-      const offset = p * l;
-      const params = new URLSearchParams({
-        name: s !== undefined ? s : '',
-        taskWithinTheClub: a !== null ? a : '',
-        memberCategoryId: st !== null ? st.toString() : '',
-        deleted: d.toString(),
-        limit: l.toString(),
-        offset: offset.toString(),
-      });
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
 
-      const response = await api(`/members?${params.toString()}`);
-      setMembers(response.items);
-      setTotalCount(response.total);
-    } catch (error) {
-      console.error('Loading error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchData = useCallback(
+    async (
+      s: string | undefined,
+      a: TaskWithinTheClub | null,
+      st: UUIDTypes | null,
+      d: boolean,
+      p: number,
+      l: number,
+    ) => {
+      setLoading(true);
+      try {
+        const offset = p * l;
+        const params = new URLSearchParams({
+          name: s !== undefined ? s : '',
+          taskWithinTheClub: a !== null ? a : '',
+          memberCategoryId: st !== null ? st.toString() : '',
+          deleted: d.toString(),
+          limit: l.toString(),
+          offset: offset.toString(),
+        });
 
-  const debouncedFetch = useCallback(
-    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
-    debounce((...args: any) => fetchData(...args), 500),
+        const response = await api(`/members?${params.toString()}`);
+        setMembers(response.items);
+        setTotalCount(response.total);
+      } catch (error) {
+        console.error('Loading error:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
     [],
+  );
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(
+        (
+          s: string | undefined,
+          a: TaskWithinTheClub | null,
+          st: UUIDTypes | null,
+          d: boolean,
+          p: number,
+          l: number,
+        ) => fetchData(s, a, st, d, p, l),
+        500,
+      ),
+    [fetchData],
   );
 
   useEffect(() => {

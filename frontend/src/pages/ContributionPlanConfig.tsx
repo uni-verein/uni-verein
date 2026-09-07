@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -25,7 +25,7 @@ import { ContributionPlans, Interval } from '../types';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { MobileListCard } from '../components/MobileListCard';
 import { ContributionPlanDialog } from '../components/dialogs/ContributionPlanDialog';
@@ -46,7 +46,7 @@ export default function ContributionPlanConfig() {
   const setContributionChange = useSnackbar();
   const { t } = useTranslation();
 
-  const loadContributionPlans = async () => {
+  const loadContributionPlans = useCallback(async () => {
     try {
       const data = await api('/contribution-plans');
       if (data) {
@@ -55,11 +55,12 @@ export default function ContributionPlanConfig() {
     } catch {
       // best-effort: table just stays empty if this fails
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadContributionPlans();
-  }, []);
+  }, [loadContributionPlans]);
   const handleOpen = (contributionPlan: ContributionPlans | null = null) => {
     setEditContributionPlan(contributionPlan);
     setOpenDialog(true);

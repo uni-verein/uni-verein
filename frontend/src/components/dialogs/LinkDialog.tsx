@@ -14,7 +14,7 @@ import {
 import ImageSearchIcon from '@mui/icons-material/ImageSearch';
 import { api } from '../../api';
 import { Link } from '../../types';
-import { useSnackbar } from '../SnackbarContext';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { IconPickerDialog } from './IconPickerDialog';
 import { DynamicIcon } from '../MuiIcons';
 import { useTranslation } from 'react-i18next';

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -26,7 +26,7 @@ import { Role, User, UserManagementProps } from '../types';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from './dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from './SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { MobileListCard } from './MobileListCard';
 import { UserDialog } from './dialogs/UserDialog';
@@ -50,7 +50,7 @@ export function ProfileSettingsTab({
   const setUserCreateOrUpdate = useSnackbar();
   const { t } = useTranslation();
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const data = await api(`${accountView ? `/users/account` : '/users'}`);
       if (!accountView) {
@@ -61,11 +61,12 @@ export function ProfileSettingsTab({
     } catch {
       setApiError(t('pages.userManagement.apiError.loadFailed'));
     }
-  };
+  }, [accountView, t]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUsers().catch();
-  }, []);
+  }, [loadUsers]);
 
   const handleOpen = (user: User | null = null) => {
     setApiError(null);

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -29,7 +29,8 @@ import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import EuroIcon from '@mui/icons-material/Euro';
 import { api } from '../api';
 import { useTranslation } from 'react-i18next';
-import { Role, UserRoleProps } from '../types';
+import { Contribution, ContributionInfo, Role, UserRoleProps } from '../types';
+import { UUIDTypes } from 'uuid';
 import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 import debounce from 'lodash.debounce';
 import { MobileListCard } from '../components/MobileListCard';
@@ -37,8 +38,8 @@ import { MobileListCard } from '../components/MobileListCard';
 export default function Contributions({ role }: UserRoleProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
-  const [data, setData] = useState<any[]>([]);
-  const [paymentData, setPaymentData] = useState<{ openPayments: number; openAmount: number }>({
+  const [data, setData] = useState<Contribution[]>([]);
+  const [paymentData, setPaymentData] = useState<ContributionInfo>({
     openPayments: 0,
     openAmount: 0,
   });
@@ -51,7 +52,7 @@ export default function Contributions({ role }: UserRoleProps) {
   const { t } = useTranslation();
   const isFiltered = search !== '' || showUnpaid !== undefined;
 
-  const fetchData = async (p: number, l: number, n: string, u: boolean | undefined) => {
+  const fetchData = useCallback(async (p: number, l: number, n: string, u: boolean | undefined) => {
     setLoading(true);
     try {
       const offset = p * l;
@@ -73,32 +74,36 @@ export default function Contributions({ role }: UserRoleProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchInfo = async () => {
+  const fetchInfo = useCallback(async () => {
     try {
       const response = await api(`/contributions/info`);
       setPaymentData(response);
     } catch (error) {
       console.error('Loading error:', error);
     }
-  };
+  }, []);
 
-  const debouncedFetch = useCallback(
-    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
-    debounce((...args: any) => fetchData(...args), 500),
-    [],
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(
+        (p: number, l: number, n: string, u: boolean | undefined) => fetchData(p, l, n, u),
+        500,
+      ),
+    [fetchData],
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchInfo().catch();
-  }, []);
+  }, [fetchInfo]);
 
   useEffect(() => {
     debouncedFetch(page, rowsPerPage, search, showUnpaid);
   }, [page, rowsPerPage, search, showUnpaid, debouncedFetch]);
 
-  const markAsPaid = async (id: number, paid: boolean) => {
+  const markAsPaid = async (id: UUIDTypes, paid: boolean) => {
     await api(`/contributions/${id}?paid=${paid ? 'true' : 'false'}`, { method: 'POST' });
     debouncedFetch(page, rowsPerPage, search, showUnpaid);
     fetchInfo().catch();
@@ -258,7 +263,7 @@ export default function Contributions({ role }: UserRoleProps) {
           )}
           {data.map((c) => (
             <MobileListCard
-              key={c.id}
+              key={c.id.toString()}
               primary={
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                   <Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>
@@ -362,7 +367,7 @@ export default function Contributions({ role }: UserRoleProps) {
             </TableHead>
             <TableBody>
               {data.map((c) => (
-                <TableRow key={c.id} hover>
+                <TableRow key={c.id.toString()} hover>
                   <TableCell sx={{ fontWeight: 500 }}>{c.name}</TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>

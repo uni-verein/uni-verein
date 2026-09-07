@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -25,7 +25,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { DynamicIcon } from '../components/MuiIcons';
 import { MobileListCard } from '../components/MobileListCard';
@@ -54,7 +54,7 @@ export default function LinkConfig() {
   const [fetching, setFetching] = useState(true);
   const setConfigDeleteOrUpdate = useSnackbar();
 
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       const data = await api('/link');
       if (data) {
@@ -65,11 +65,12 @@ export default function LinkConfig() {
     } finally {
       setFetching(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadConfig();
-  }, []);
+  }, [loadConfig]);
 
   const handleOpen = (link: Link | null = null) => {
     setEditLink(link);
