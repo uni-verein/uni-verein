@@ -99,6 +99,7 @@ export default function ReceiptForm({
       isPdf: f.isPdf,
       originalUrl: f.isPdf ? URL.createObjectURL(f.blob) : undefined,
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNewPreviews(urls);
 
     return () =>

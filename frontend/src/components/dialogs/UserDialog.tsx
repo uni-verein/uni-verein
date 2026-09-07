@@ -16,7 +16,7 @@ import {
 import { api } from '../../api';
 import { Role, User } from '../../types';
 import { UUIDTypes } from 'uuid';
-import { useSnackbar } from '../SnackbarContext';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 
 export function UserDialog({

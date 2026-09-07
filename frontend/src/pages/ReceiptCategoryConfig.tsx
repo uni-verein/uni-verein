@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -24,7 +24,7 @@ import { ReceiptCategory } from '../types';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { MobileListCard } from '../components/MobileListCard';
 import { ReceiptCategoryDialog } from '../components/dialogs/ReceiptCategoryDialog';
@@ -44,7 +44,7 @@ export default function ReceiptCategoryConfig() {
   const setReceiptCategoryChange = useSnackbar();
   const { t } = useTranslation();
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const data = await api('/receipt-categories');
       if (data) {
@@ -53,11 +53,12 @@ export default function ReceiptCategoryConfig() {
     } catch {
       // best-effort: table just stays empty if this fails
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCategories();
-  }, []);
+  }, [loadCategories]);
 
   const handleDelete = async (id: UUIDTypes) => {
     setConfirmDialog({

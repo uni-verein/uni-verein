@@ -4,8 +4,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PublicEnrollmentPage from './pages/PublicEnrollmentPage';
 import { isTokenValid } from './utils';
-import { usePageConfig } from './components/PageConfigContext';
-import { useThemeMode } from './components/ThemeModeContext';
+import { usePageConfig } from './hooks/usePageConfig';
+import { useThemeMode } from './hooks/useThemeMode';
 
 export default function App() {
   const [logged, setLogged] = useState(!!localStorage.getItem('token'));
@@ -52,6 +52,7 @@ export default function App() {
     console.log(token);
     if (token && isTokenValid(token)) {
       console.log('token is valid');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLogged(true);
     } else {
       localStorage.removeItem('token');

@@ -428,3 +428,24 @@ export interface TestContext {
 }
 
 export const SNACKBAR_INITIAL_STATE: SnackbarState = { status: null, message: '' };
+
+export interface Contribution {
+  id: UUIDTypes;
+  name: string;
+  amount: number;
+  dueDate: Date;
+  paid: boolean;
+}
+
+export interface ContributionInfo {
+  openPayments: number;
+  openAmount: number;
+}
+
+export interface AuditLog {
+  timestamp: string;
+  userName: string;
+  action: string;
+  entity: string;
+  data: string;
+}

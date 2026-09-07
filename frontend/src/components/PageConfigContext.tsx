@@ -1,17 +1,10 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { ConfigContextType } from '../types';
+import { useState, useCallback, useEffect, ReactNode } from 'react';
 import { api } from '../api';
-
-const PageConfigContext = createContext<ConfigContextType>({
-  config: { pageName: '', logo: '', selfEnrollmentEnabled: false },
-  loading: true,
-  reloadConfig: async () => {},
-  serverReachable: true,
-});
+import { PageConfigContext } from '../hooks/usePageConfig';
 
 const RETRY_INTERVAL_MS = 15_000;
 
-export const PageConfigProvider = ({ children }: any) => {
+export const PageConfigProvider = ({ children }: { children: ReactNode }) => {
   const [config, setConfig] = useState<{
     pageName: string;
     logo: string;
@@ -56,5 +49,3 @@ export const PageConfigProvider = ({ children }: any) => {
     </PageConfigContext.Provider>
   );
 };
-
-export const usePageConfig = () => useContext(PageConfigContext);

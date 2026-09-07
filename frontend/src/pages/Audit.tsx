@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import {
   Box,
@@ -18,18 +18,19 @@ import { AuditLogCard } from '../components/AuditLogCard';
 import { AuditLogTableRow } from '../components/AuditLogTableRow';
 import { useTranslation } from 'react-i18next';
 import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
+import { AuditLog } from '../types';
 
 export default function Audit() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const { t } = useTranslation();
 
-  const fetchData = async (p: number, l: number) => {
+  const fetchData = useCallback(async (p: number, l: number) => {
     setLoading(true);
     try {
       const offset = p * l;
@@ -46,11 +47,12 @@ export default function Audit() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData(page, rowsPerPage);
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, fetchData]);
 
   return (
     <Box sx={{ p: { xs: 0, sm: 3 } }}>
@@ -69,7 +71,7 @@ export default function Audit() {
               {t('pages.audit.noEntries')}
             </Typography>
           ) : (
-            logs.map((l) => <AuditLogCard key={l.id} l={l} />)
+            logs.map((l, index) => <AuditLogCard key={`${l.timestamp}-${index}`} l={l} />)
           )}
           <ResponsiveTablePagination
             component="div"
@@ -109,7 +111,7 @@ export default function Audit() {
 
             <TableBody>
               {logs.map((l, index) => (
-                <AuditLogTableRow key={l.id} l={l} index={index} />
+                <AuditLogTableRow key={`${l.timestamp}-${index}`} l={l} index={index} />
               ))}
 
               {logs.length === 0 && (

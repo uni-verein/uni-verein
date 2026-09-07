@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -21,11 +21,12 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { api, apiFile } from '../api';
 import { UUIDTypes } from 'uuid';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 import debounce from 'lodash.debounce';
 import { MobileListCard } from '../components/MobileListCard';
 import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 
-function formatDate(date: Date, t: any): string {
+function formatDate(date: Date, t: TFunction): string {
   const now = new Date();
 
   const isToday =
@@ -70,7 +71,7 @@ export default function Sepa() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const fetchData = async (p: number, l: number) => {
+  const fetchData = useCallback(async (p: number, l: number) => {
     setLoading(true);
     try {
       const offset = p * l;
@@ -87,12 +88,11 @@ export default function Sepa() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const debouncedFetch = useCallback(
-    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
-    debounce((...args: any) => fetchData(...args), 500),
-    [],
+  const debouncedFetch = useMemo(
+    () => debounce((p: number, l: number) => fetchData(p, l), 500),
+    [fetchData],
   );
 
   useEffect(() => {

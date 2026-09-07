@@ -4,6 +4,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useTranslation } from 'react-i18next';
 import { RedactedText } from './RedactedText';
+import { AuditLog } from '../types';
 
 const actionColors: Record<string, 'success' | 'error' | 'warning' | 'info'> = {
   CREATE: 'success',
@@ -12,7 +13,7 @@ const actionColors: Record<string, 'success' | 'error' | 'warning' | 'info'> = {
   READ: 'info',
 };
 
-export function AuditLogTableRow({ l, index }: { l: any; index: number }) {
+export function AuditLogTableRow({ l, index }: { l: AuditLog; index: number }) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
 

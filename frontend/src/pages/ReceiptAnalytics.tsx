@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   CircularProgress,
@@ -107,7 +107,7 @@ export default function ReceiptAnalytics() {
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
 
-  const load = async (selectedYear: number) => {
+  const load = useCallback(async (selectedYear: number) => {
     setLoading(true);
     try {
       const result = await api(`/receipts/analytics?year=${selectedYear}`);
@@ -117,11 +117,12 @@ export default function ReceiptAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load(year);
-  }, [year]);
+  }, [year, load]);
 
   const monthLabels = [
     t('pages.receiptAnalytics.months.jan'),

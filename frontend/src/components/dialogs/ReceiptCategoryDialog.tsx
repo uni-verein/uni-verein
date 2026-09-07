@@ -10,7 +10,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { api } from '../../api';
-import { useSnackbar } from '../SnackbarContext';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 
 export function ReceiptCategoryDialog({

@@ -18,7 +18,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import { login } from '../api';
 import { useTranslation } from 'react-i18next';
-import { usePageConfig } from '../components/PageConfigContext';
+import { usePageConfig } from '../hooks/usePageConfig';
 import { DemoDialog } from '../components/dialogs/DemoDialog';
 
 export default function Login({
@@ -54,6 +54,7 @@ export default function Login({
 
   useEffect(() => {
     if (countdown === null || countdown <= 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (countdown === 0) setError('');
       return;
     }
@@ -71,7 +72,7 @@ export default function Login({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [countdown]);
+  }, [countdown, t]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

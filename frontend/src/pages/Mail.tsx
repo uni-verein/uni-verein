@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import EmailEditor from '../components/EmailEditor';
 import RecipientList from '../components/RecipientList';
 import SendProgress from '../components/SendProgress';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { NIL as NIL_UUID, UUIDTypes } from 'uuid';
 
@@ -64,11 +64,14 @@ export default function Mail() {
       .withAutomaticReconnect()
       .build();
 
-    conn.on('ProgressUpdate', (data: any) => {
-      setProgress(data.progress);
-      setProcessed(data.processed);
-      setLogEntries((prev) => [...prev, data.lastResult]);
-    });
+    conn.on(
+      'ProgressUpdate',
+      (data: { progress: number; processed: number; lastResult: ProgressData }) => {
+        setProgress(data.progress);
+        setProcessed(data.processed);
+        setLogEntries((prev) => [...prev, data.lastResult]);
+      },
+    );
 
     conn.on('SendComplete', (data: SummaryData) => {
       setSummary(data);
@@ -161,7 +164,7 @@ export default function Mail() {
     setLogEntries([]);
     setSummary(null);
     setActiveTab('progress');
-    let categoryId: any = null;
+    let categoryId: UUIDTypes | null = null;
     if (filter.categoryId !== NIL_UUID) categoryId = filter.categoryId;
 
     try {

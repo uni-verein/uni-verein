@@ -1,21 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ResolvedThemeMode = 'light' | 'dark';
+import { useEffect, useMemo, useState, ReactNode } from 'react';
+import { ThemeMode, ResolvedThemeMode, ThemeModeContext } from '../hooks/useThemeMode';
 
 const STORAGE_KEY = 'themeMode';
-
-type ThemeModeContextType = {
-  mode: ThemeMode;
-  resolvedMode: ResolvedThemeMode;
-  setMode: (mode: ThemeMode) => void;
-};
-
-const ThemeModeContext = createContext<ThemeModeContextType>({
-  mode: 'system',
-  resolvedMode: 'light',
-  setMode: () => {},
-});
 
 const getSystemPreference = (): ResolvedThemeMode =>
   window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -25,7 +11,7 @@ const getStoredMode = (): ThemeMode => {
   return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
 };
 
-export const ThemeModeProvider = ({ children }: any) => {
+export const ThemeModeProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setModeState] = useState<ThemeMode>(getStoredMode);
   const [systemPreference, setSystemPreference] = useState<ResolvedThemeMode>(getSystemPreference);
 
@@ -52,5 +38,3 @@ export const ThemeModeProvider = ({ children }: any) => {
     </ThemeModeContext.Provider>
   );
 };
-
-export const useThemeMode = () => useContext(ThemeModeContext);

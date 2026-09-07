@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { UUIDTypes } from 'uuid';
 import {
   Box,
@@ -48,7 +48,7 @@ import ReceiptForm from '../components/dialogs/ReceiptForm';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { MarkReceiptPaidDialog } from '../components/dialogs/MarkReceiptPaidDialog';
 import { useConfirm } from '../hooks/useConfirm';
-import { useSnackbar } from '../components/SnackbarContext';
+import { useSnackbar } from '../hooks/useSnackbar';
 import { MobileListCard } from '../components/MobileListCard';
 import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 import { useTranslation } from 'react-i18next';
@@ -117,51 +117,66 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     const data = await api('/receipt-categories');
     if (data) setCategories(data.items);
-  };
-
-  useEffect(() => {
-    loadCategories();
   }, []);
 
-  const fetchData = async (
-    from: Date | null,
-    to: Date | null,
-    cat: string,
-    deleted: boolean,
-    paid: boolean | undefined,
-    p: number,
-    l: number,
-  ) => {
-    setLoading(true);
-    try {
-      const offset = p * l;
-      const params = new URLSearchParams({
-        limit: l.toString(),
-        offset: offset.toString(),
-      });
-      if (from) params.set('dateFrom', from.toISOString());
-      if (to) params.set('dateTo', to.toISOString());
-      if (cat) params.set('categoryId', cat);
-      if (deleted) params.set('deleted', 'true');
-      if (paid !== undefined) params.set('paid', paid ? 'true' : 'false');
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadCategories();
+  }, [loadCategories]);
 
-      const response = await api(`/receipts?${params.toString()}`);
-      setReceipts(response.items);
-      setTotalCount(response.total);
-    } catch (error) {
-      console.error('Loading error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchData = useCallback(
+    async (
+      from: Date | null,
+      to: Date | null,
+      cat: string,
+      deleted: boolean,
+      paid: boolean | undefined,
+      p: number,
+      l: number,
+    ) => {
+      setLoading(true);
+      try {
+        const offset = p * l;
+        const params = new URLSearchParams({
+          limit: l.toString(),
+          offset: offset.toString(),
+        });
+        if (from) params.set('dateFrom', from.toISOString());
+        if (to) params.set('dateTo', to.toISOString());
+        if (cat) params.set('categoryId', cat);
+        if (deleted) params.set('deleted', 'true');
+        if (paid !== undefined) params.set('paid', paid ? 'true' : 'false');
 
-  const debouncedFetch = useCallback(
-    // @ts-expect-error - lodash.debounce's generic signature doesn't line up with fetchData's typed args
-    debounce((...args: any) => fetchData(...args), 400),
+        const response = await api(`/receipts?${params.toString()}`);
+        setReceipts(response.items);
+        setTotalCount(response.total);
+      } catch (error) {
+        console.error('Loading error:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
     [],
+  );
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(
+        (
+          from: Date | null,
+          to: Date | null,
+          cat: string,
+          deleted: boolean,
+          paid: boolean | undefined,
+          p: number,
+          l: number,
+        ) => fetchData(from, to, cat, deleted, paid, p, l),
+        400,
+      ),
+    [fetchData],
   );
 
   useEffect(() => {

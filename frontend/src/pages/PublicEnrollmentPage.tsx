@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { NIL as NIL_UUID } from 'uuid';
 import { api } from '../api';
 import MemberForm from '../components/dialogs/MemberForm';
-import { usePageConfig } from '../components/PageConfigContext';
+import { usePageConfig } from '../hooks/usePageConfig';
 import {
   BulkMail,
   ContributionPlans,
@@ -129,6 +129,7 @@ export default function PublicEnrollmentPage() {
 
   useEffect(() => {
     if (config.selfEnrollmentEnabled) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadFormData();
     }
   }, [config.selfEnrollmentEnabled, loadFormData]);

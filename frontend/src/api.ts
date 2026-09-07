@@ -1,6 +1,6 @@
 const API = '/api';
 
-export async function apiFile(path: string, options: any = {}) {
+export async function apiFile(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
   return await fetch(`${API}${path}`, {
     ...options,
@@ -11,7 +11,7 @@ export async function apiFile(path: string, options: any = {}) {
   });
 }
 
-export async function api(path: string, options: any = {}) {
+export async function api(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
   const res = await fetch(`${API}${path}`, {
     ...options,

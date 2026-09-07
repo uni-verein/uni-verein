@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -49,12 +49,13 @@ const RecipientList: FC<RecipientListProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const debouncedSetName = useCallback(
-    debounce((value: string) => {
-      setPage(0);
-      onFilter((prev) => ({ ...prev, name: value, offset: 0 }));
-    }, 500),
-    [],
+  const debouncedSetName = useMemo(
+    () =>
+      debounce((value: string) => {
+        setPage(0);
+        onFilter((prev) => ({ ...prev, name: value, offset: 0 }));
+      }, 500),
+    [onFilter],
   );
 
   const getCategoryTranslation = (category: MemberCategory) => {

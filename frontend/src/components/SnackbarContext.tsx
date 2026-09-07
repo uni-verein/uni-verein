@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react';
+import { useState, ReactNode } from 'react';
 import { CustomSnackbar } from './CustomSnackbar';
 import { SNACKBAR_INITIAL_STATE, SnackbarState } from '../types';
+import { SnackbarContext } from '../hooks/useSnackbar';
 
-const SnackbarContext = createContext<Dispatch<SetStateAction<SnackbarState>>>(null!);
-
-export const SnackbarProvider = ({ children }: any) => {
+export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
   const [deleteOrUpdateMember, setDeleteOrUpdateMember] =
     useState<SnackbarState>(SNACKBAR_INITIAL_STATE);
 
@@ -19,5 +18,3 @@ export const SnackbarProvider = ({ children }: any) => {
     </SnackbarContext.Provider>
   );
 };
-
-export const useSnackbar = () => useContext(SnackbarContext);
