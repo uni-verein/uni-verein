@@ -314,6 +314,7 @@ export default function ReceiptForm({
                   label={t('components.receiptForm.fields.category')}
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
+                  slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
                 >
                   <MenuItem value="">{t('components.receiptForm.fields.noCategory')}</MenuItem>
                   {categories.map((c) => (
@@ -332,6 +333,7 @@ export default function ReceiptForm({
                     label={t('components.receiptForm.fields.paymentMethod')}
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
+                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
                   >
                     <MenuItem value="">
                       {t('components.receiptForm.fields.noPaymentMethod')}

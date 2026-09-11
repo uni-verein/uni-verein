@@ -64,6 +64,7 @@
         "startOfStudies": "Studienbeginn",
         "endOfStudies": "Studienende",
         "academicDegree": "Akademischer Grad",
+        "noAcademicDegree": "Kein akademischer Grad",
         "courseOfStudy": "Studiengang",
         "taskWithinTheClub": "Aufgabe im Verein",
         "memberCategory": "Mitgliederkategorie",

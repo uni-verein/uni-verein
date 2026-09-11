@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed UV-19
+- Independently of the above, focusing then blurring an empty outlined field (label shrinking then unshrinking) left a stray fragment of the old border visible in Safari until something else forced a repaint (hovering the field, resizing the window) - a known, still-open WebKit rendering bug in MUI's `notchedOutline`/`legend` mechanism ([mui/material-ui#46891](https://github.com/mui/material-ui/issues/46891)). Fixed globally via the theme with the community-verified workaround: forcing the notch's `<legend>` to stay `visibility: visible` under `@supports (-webkit-appearance: none)`, scoping it to WebKit-based browsers.
+
 ### Changed UV-20
 - Cleared out every remaining frontend ESLint/TypeScript warning: `any`-typed props, state, and API helpers (`api`/`apiFile`, `AuditLog`, `Contribution`/`ContributionInfo`, SignalR payloads, TipTap's `toggleUnderline`, the iOS `navigator.standalone` check, …) were replaced with concrete types; data-loading functions used inside `useEffect` are now wrapped in `useCallback` and listed in their effect's dependency array instead of being omitted, and the `useCallback`-plus-`@ts-expect-error`-wrapped `lodash.debounce` calls (Members, Receipts, Sepa, Contributions, RecipientList) were replaced with properly typed `useMemo`-based debouncing so no dependency is silently dropped.
 - Every remaining unavoidable `setState` call inside an effect body (token/session checks, responsive layout resets, debounced search effects, etc.) is now explicitly annotated with `// eslint-disable-next-line react-hooks/set-state-in-effect` instead of triggering a warning.

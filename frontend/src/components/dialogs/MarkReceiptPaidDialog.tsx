@@ -64,6 +64,7 @@ export function MarkReceiptPaidDialog({
           label={t('components.receiptForm.fields.paymentMethod')}
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
+          slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
           helperText={
             methodAlreadySet
               ? undefined
