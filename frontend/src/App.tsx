@@ -41,6 +41,19 @@ export default function App() {
         typography: {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
         },
+        components: {
+          MuiOutlinedInput: {
+            styleOverrides: {
+              notchedOutline: {
+                '@supports (-webkit-appearance: none)': {
+                  '& legend': {
+                    visibility: 'visible !important',
+                  },
+                },
+              },
+            },
+          },
+        },
       }),
     [resolvedMode],
   );

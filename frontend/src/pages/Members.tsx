@@ -348,10 +348,11 @@ export default function Members({ role }: UserRoleProps) {
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <FormControl fullWidth>
-            <InputLabel>{t('pages.members.filter.memberCategory')}</InputLabel>
+            <InputLabel shrink>{t('pages.members.filter.memberCategory')}</InputLabel>
             <Select
               value={selectValue}
               label={t('pages.members.filter.memberCategory')}
+              displayEmpty
               onChange={(e) => {
                 setStatus(e.target.value.toString());
                 setPage(0);

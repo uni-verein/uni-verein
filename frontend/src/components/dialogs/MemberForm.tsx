@@ -19,6 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { api } from '../../api';
 import {
+  AcademicDegree,
   BulkMail,
   ContributionPlans,
   Gender,
@@ -487,9 +488,10 @@ export default function MemberForm({
                   label={t('components.memberForm.fields.countryCode')}
                   fullWidth
                   required
-                  value={m.countryCode}
+                  value={m.countryCode ?? ''}
                   onChange={handleChange('countryCode')}
                   select
+                  slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
                 >
                   {countryOptions.map(({ value, label }) => (
                     <MenuItem key={value} value={value}>
@@ -594,10 +596,18 @@ export default function MemberForm({
                   disabled={view}
                   label={t('components.memberForm.fields.academicDegree')}
                   variant="outlined"
-                  value={m.academicDegree}
-                  onChange={handleChange('academicDegree')}
+                  value={m.academicDegree ?? ''}
+                  onChange={(event) =>
+                    setM({
+                      ...m,
+                      academicDegree:
+                        event.target.value === '' ? null : (event.target.value as AcademicDegree),
+                    })
+                  }
                   select
+                  slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
                 >
+                  <MenuItem value="">{t('components.memberForm.fields.noAcademicDegree')}</MenuItem>
                   {Object.entries(ACADEMIC_DEGREE_LABELS).map(([value, label]) => (
                     <MenuItem key={value} value={value}>
                       {label}

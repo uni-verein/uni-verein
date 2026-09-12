@@ -172,11 +172,12 @@ export function ContributionPlanDialog({
           }}
         />
         <FormControl fullWidth>
-          <InputLabel>{t('pages.contributionPlanConfig.dialog.intervalLabel')}</InputLabel>
+          <InputLabel shrink>{t('pages.contributionPlanConfig.dialog.intervalLabel')}</InputLabel>
           <Select
             error={errors.interval !== undefined}
             value={formData.interval || ''}
             label={t('pages.contributionPlanConfig.dialog.intervalLabel')}
+            displayEmpty
             onChange={(e) => {
               setFormData({ ...formData, interval: e.target.value });
               setErrors({ ...errors, interval: undefined });
