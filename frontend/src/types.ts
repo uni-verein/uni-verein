@@ -112,10 +112,55 @@ export interface Member {
   deletedAt: Date | null;
 }
 
+export interface PendingSelfEnrollment {
+  id: UUIDTypes;
+  gender: Gender;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  email: string;
+  memberCategoryId: UUIDTypes | null;
+  memberCategoryName: string | null;
+  contributionPlanId: UUIDTypes | null;
+  submittedAt: string;
+  submittedIp: string;
+  confirmedAt: string | null;
+}
+
+export interface PendingSelfEnrollmentDetail {
+  id: UUIDTypes;
+  gender: Gender;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  birthday: Date | null;
+  street: string;
+  postalCode: string;
+  city: string;
+  countryCode: string | null;
+  email: string;
+  phone: string;
+  bulkMail: BulkMail | null;
+  startOfStudies: Date | null;
+  endOfStudies: Date | null;
+  academicDegree: AcademicDegree | null;
+  courseOfStudy: string;
+  motivation: string;
+  memberCategoryId: UUIDTypes | null;
+  memberCategoryName: string | null;
+  iban: string;
+  bic: string;
+  contributionPlanId: UUIDTypes | null;
+  submittedAt: string;
+  submittedIp: string;
+  confirmedAt: string | null;
+}
+
 export interface MemberErrors {
   birthday?: string;
   city?: string;
   contributionPlanId?: string;
+  countryCode?: string;
   courseOfStudy?: string;
   email?: string;
   endOfStudies?: string;
@@ -129,6 +174,7 @@ export interface MemberErrors {
   memberCategoryId?: string;
   memberNumber?: string;
   middleName?: string;
+  motivation?: string;
   postalCode?: string;
   sepaConsent?: string;
   startOfStudies?: string;
@@ -206,6 +252,7 @@ export enum Role {
 
 export enum UserSettingType {
   RECEIPT_NOTIFICATION = 'RECEIPT_NOTIFICATION',
+  SELF_ENROLLMENT_NOTIFICATION = 'SELF_ENROLLMENT_NOTIFICATION',
 }
 
 export interface UserSetting {

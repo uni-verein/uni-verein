@@ -16,6 +16,7 @@ import {
 
 export const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:80/api';
 export const APP_BASE = process.env.APP_BASE_URL ?? 'http://localhost:80';
+export const PAPERCUT_BASE = process.env.PAPERCUT_BASE_URL ?? 'http://localhost:8080';
 const ADMIN_USER = process.env.TEST_ADMIN_USER ?? 'Admin';
 const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? 'admin123';
 
@@ -356,6 +357,10 @@ export class BackendClient {
   }
 
   async setSelfEnrollmentEnabled(enabled: boolean): Promise<void> {
+    if (enabled) {
+      await this.updateMailSettings();
+    }
+
     const ctx = await this.ctx();
     let pageName = 'Test web page';
     let logo = '';
@@ -576,6 +581,71 @@ export class BackendClient {
       throw new Error(`Failed to set user setting: ${res.status()} ${await res.text()}`);
     }
     await ctx.dispose();
+  }
+
+  // ---------------------------------------------------------------
+  // Self-enrollment / pending self-enrollments
+  // ---------------------------------------------------------------
+
+  async getPendingSelfEnrollments(): Promise<
+    { id: string; firstName: string; lastName: string; email: string }[]
+  > {
+    const ctx = await this.ctx();
+    const res = await ctx.get('/api/pending-self-enrollments?limit=100');
+    if (!res.ok()) {
+      throw new Error(`Failed to list pending self-enrollments: ${res.status()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body.items;
+  }
+
+  async rejectPendingSelfEnrollment(id: string): Promise<number> {
+    const ctx = await this.ctx();
+    const res = await ctx.post(`/api/pending-self-enrollments/${id}/reject`, { data: {} });
+    const status = res.status();
+    await ctx.dispose();
+    return status;
+  }
+
+  async deleteAllPendingSelfEnrollments(): Promise<void> {
+    const items = await this.getPendingSelfEnrollments();
+    for (const item of items) {
+      await this.rejectPendingSelfEnrollment(item.id);
+    }
+  }
+
+  async waitForConfirmationToken(toEmail: string, timeoutMs = 10_000): Promise<string> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const ctx = await request.newContext({ baseURL: PAPERCUT_BASE });
+      const listRes = await ctx.get('/api/messages');
+      const list = await listRes.json();
+
+      for (const entry of list.messages ?? []) {
+        const detailRes = await ctx.get(`/api/messages/${encodeURIComponent(entry.id)}`);
+        const detail = await detailRes.json();
+        const to = (detail.to ?? []).map((r: { address: string }) => r.address);
+        if (to.includes(toEmail)) {
+          const match = /token=([A-Za-z0-9_-]+)/.exec(detail.htmlBody ?? '');
+          await ctx.dispose();
+          if (match) return match[1];
+        }
+      }
+      await ctx.dispose();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    throw new Error(`No confirmation mail for ${toEmail} received within ${timeoutMs}ms`);
+  }
+
+  async deleteAllPapercutMessages(): Promise<void> {
+    const ctx = await request.newContext({ baseURL: PAPERCUT_BASE });
+    await ctx.delete('/api/messages');
+    await ctx.dispose();
+  }
+
+  async setSelfEnrollmentNotificationSetting(token: string, enabled: boolean): Promise<void> {
+    await this.setUserSetting(token, 'SELF_ENROLLMENT_NOTIFICATION', enabled);
   }
 
   async payReceipt(token: string, receiptId: string, paymentMethod?: string): Promise<void> {

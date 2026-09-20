@@ -18,7 +18,8 @@ public class AuditService
 
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new JsonStringEnumConverter() }
     };
 
     public AuditService(AppDbContext db, IHttpContextAccessor http)

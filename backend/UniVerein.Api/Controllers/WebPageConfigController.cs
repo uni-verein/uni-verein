@@ -49,6 +49,17 @@ public class WebPageConfigController : ControllerBase
     [HttpPut]
     public async Task<ActionResult<WebPageConfigResult>> UpdateAsync([FromBody] WebPageConfigRequest request)
     {
+        if (request.SelfEnrollmentEnabled)
+        {
+            bool mailConfigured = await _db.MailSettings.AnyAsync(x => x.DeletedAt == null);
+            if (!mailConfigured)
+                return UnprocessableEntity(new ApiResults.ErrorResults.UnprocessableEntityResult(
+                    errorCode: ApiErrorCodes.UNPROCESSABLE_ENTITY,
+                    errorMessage: "Mail settings required.",
+                    moreInfo: "Self-enrollment requires mail settings to be configured first, " +
+                              "so confirmation and notification emails can be sent."));
+        }
+
         WebPageConfigEntity? webPageConfig = await _db.WebPageConfigs.FirstOrDefaultAsync();
         if (webPageConfig == null)
         {

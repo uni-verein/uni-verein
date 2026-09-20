@@ -54,15 +54,13 @@ public static class MemberAuditDelta
 
     private static void Check(List<MemberAuditDeltaEntry> delta, string field, string? oldVal, string? newVal)
     {
-        if (newVal == null) return;
-        if (oldVal == newVal) return;
+        if (newVal == null || oldVal == newVal) return;
         delta.Add(new MemberAuditDeltaEntry { Field = field, OldValue = oldVal, NewValue = newVal });
     }
 
     private static void CheckSensitive(List<MemberAuditDeltaEntry> delta, string field, string? oldVal, string? newVal)
     {
-        if (newVal == null) return;
-        if (oldVal == newVal) return;
+        if (newVal == null || oldVal == newVal) return;
         delta.Add(new MemberAuditDeltaEntry { Field = field, OldValue = "@@", NewValue = "@@" });
     }
 }

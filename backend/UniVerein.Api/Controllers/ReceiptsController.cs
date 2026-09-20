@@ -534,6 +534,11 @@ public class ReceiptsController : ControllerBase
                 errorMessage: "Receipt not found.",
                 moreInfo: $"No receipt with the ID {id} could be found."));
 
+        if (!hardDelete && !_isPrivileged && receipt.Paid != null)
+            return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
+                errorMessage: "Receipt has already been marked as paid and can no longer be deleted.",
+                moreInfo: $"Receipt {id} is locked because it has been marked as paid."));
+
         _db.Remove(receipt);
 
         if (hardDelete)

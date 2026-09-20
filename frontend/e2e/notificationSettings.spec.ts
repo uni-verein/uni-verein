@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, request } from '@playwright/test';
 import { BackendClient, APP_BASE } from './BackendClient';
 import { Role, TestUser } from '../src/types';
 
@@ -72,30 +72,53 @@ test.describe('Notification settings tab', () => {
     ).not.toBeChecked();
   });
 
-  test('Regular user sees the tab but no receipt notification toggle', async ({ page }) => {
+  test('Regular user sees the self-enrollment toggle (off by default) but no receipt notification toggle', async ({
+    page,
+  }) => {
     await tc.setup(Role.USER);
     await openDashboard(page, tc.get().token);
     await openNotificationSettingsTab(page);
 
     await expect(
-      page.getByText('Für Ihre Rolle sind aktuell keine Benachrichtigungseinstellungen verfügbar.'),
-    ).toBeVisible();
-    await expect(
       page.getByRole('switch', { name: 'Bei neuem Beleg per E-Mail benachrichtigen' }),
     ).not.toBeVisible();
+    const selfEnrollmentToggle = page.getByRole('switch', {
+      name: 'Bei neuer Selbstregistrierung per E-Mail benachrichtigen',
+    });
+    await expect(selfEnrollmentToggle).toBeVisible();
+    await expect(selfEnrollmentToggle).not.toBeChecked();
   });
 
-  test('Admin sees the tab but no receipt notification toggle', async ({ page }) => {
+  test('Admin sees the self-enrollment toggle but no receipt notification toggle, and can opt in', async ({
+    page,
+  }) => {
     await tc.setup(Role.ADMIN);
     await openDashboard(page, tc.get().token);
     await openNotificationSettingsTab(page);
 
     await expect(
-      page.getByText('Für Ihre Rolle sind aktuell keine Benachrichtigungseinstellungen verfügbar.'),
-    ).toBeVisible();
-    await expect(
       page.getByRole('switch', { name: 'Bei neuem Beleg per E-Mail benachrichtigen' }),
     ).not.toBeVisible();
+
+    const selfEnrollmentToggle = page.getByRole('switch', {
+      name: 'Bei neuer Selbstregistrierung per E-Mail benachrichtigen',
+    });
+    await expect(selfEnrollmentToggle).not.toBeChecked();
+
+    await selfEnrollmentToggle.click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Einstellung erfolgreich gespeichert.' }),
+    ).toBeVisible();
+    await expect(selfEnrollmentToggle).toBeChecked();
+
+    await page.reload();
+    await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
+    await openNotificationSettingsTab(page);
+    await expect(
+      page.getByRole('switch', {
+        name: 'Bei neuer Selbstregistrierung per E-Mail benachrichtigen',
+      }),
+    ).toBeChecked();
   });
 });
 
@@ -161,5 +184,72 @@ test.describe('Receipt notification email delivery', () => {
 
     await page.goto('http://localhost:8080');
     await expect(page.getByRole('link', { name: 'Inbox (0)' })).toBeVisible({ timeout: 10000 });
+  });
+});
+
+test.describe('Self-enrollment notification email delivery', () => {
+  let createdUserIds: string[] = [];
+
+  test.beforeEach(async () => {
+    createdUserIds = [];
+    await backend.deleteAllPapercutMessages();
+    await backend.updateMailSettings();
+    await backend.setSelfEnrollmentEnabled(true);
+  });
+
+  test.afterEach(async () => {
+    for (const id of createdUserIds) {
+      await backend.deleteUser(id);
+    }
+    await backend.deleteWebPageSettings();
+    await backend.deleteAllPendingSelfEnrollments();
+    await backend.deleteMailSettings();
+    await backend.deleteAllPapercutMessages();
+  });
+
+  test('Opted-in user is notified only after the self-enrollment email is confirmed', async ({
+    page,
+  }) => {
+    const subscriber = await backend.createUser(Role.USER, `subscriber_${Date.now()}@test.de`);
+    createdUserIds.push(subscriber.id);
+    const subscriberToken = await backend.loginUser(subscriber.username, subscriber.password);
+    await backend.setSelfEnrollmentNotificationSetting(subscriberToken, true);
+
+    const email = `notifyenroll_${Date.now()}@test.de`;
+    const ctx = await request.newContext({ baseURL: APP_BASE });
+    const res = await ctx.post('/api/self-enrollment', {
+      data: {
+        gender: 'MALE',
+        firstName: 'Notify',
+        lastName: 'Enroll',
+        birthday: '2000-01-01T00:00:00Z',
+        street: 'street',
+        postalCode: '24103',
+        city: 'Kiel',
+        countryCode: 'DE',
+        email,
+        bulkMail: 'ALLOWED',
+        startOfStudies: '2020-01-01T00:00:00Z',
+        motivation: 'Studiere Informatik, möchte mich engagieren.',
+        iban: 'DE1234567890',
+        bic: 'DEUTDEDEXXX',
+        entryDate: '2020-01-01T00:00:00Z',
+      },
+    });
+    if (!res.ok()) throw new Error(`Self-enrollment submission failed: ${res.status()}`);
+    await ctx.dispose();
+
+    // Only the confirmation mail exists so far - the subscriber must not be notified yet.
+    await page.goto('http://localhost:8080');
+    await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible({ timeout: 10000 });
+
+    const token = await backend.waitForConfirmationToken(email);
+    const confirmCtx = await request.newContext({ baseURL: APP_BASE });
+    const confirmRes = await confirmCtx.post('/api/self-enrollment/confirm', { data: { token } });
+    if (!confirmRes.ok()) throw new Error(`Confirm failed: ${confirmRes.status()}`);
+    await confirmCtx.dispose();
+
+    await page.goto('http://localhost:8080');
+    await expect(page.getByRole('link', { name: 'Inbox (2)' })).toBeVisible({ timeout: 10000 });
   });
 });

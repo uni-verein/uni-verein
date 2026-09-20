@@ -20,6 +20,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tab,
+  Tabs,
   TextField,
   Tooltip,
   Typography,
@@ -27,6 +29,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { MembersMobileView } from '../components/MembersMobileView';
+import { PendingEnrollmentsTab } from '../components/PendingEnrollmentsTab';
 import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
 import debounce from 'lodash.debounce';
 import EditIcon from '@mui/icons-material/Edit';
@@ -53,17 +56,25 @@ import { NIL as NIL_UUID, UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../hooks/useSnackbar';
+import { usePageConfig } from '../hooks/usePageConfig';
 import { useTranslation } from 'react-i18next';
 
 export default function Members({ role }: UserRoleProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { open, confirm, handleClose } = useConfirm();
+  const { config } = usePageConfig();
   const [confirmDialog, setConfirmDialog] = useState<{
     message: string;
     buttonText: string;
     confirmColor: ButtonProps['color'];
   }>({ message: '', buttonText: '', confirmColor: 'error' });
+  const [activeTab, setActiveTab] = useState(0);
+  // Independent of whether the "pending" tab is currently open, so its visibility can be decided even
+  // before it's ever been mounted; null = not yet known (avoids a flash of the tab before hiding it).
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const showPendingTab =
+    config.selfEnrollmentEnabled || (pendingCount !== null && pendingCount > 0);
   const [members, setMembers] = useState<Member[]>([]);
   const [contributionPlans, setContributionPlans] = useState<ContributionPlans[]>([]);
   const [memberCategories, setMemberCategories] = useState<MemberCategory[]>([]);
@@ -93,6 +104,27 @@ export default function Members({ role }: UserRoleProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  const loadPendingCount = useCallback(async () => {
+    try {
+      const response = await api('/pending-self-enrollments?limit=1');
+      setPendingCount(response.total);
+    } catch {
+      setPendingCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPendingCount();
+  }, [loadPendingCount]);
+
+  useEffect(() => {
+    if (!showPendingTab && activeTab === 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab(0);
+    }
+  }, [showPendingTab, activeTab]);
 
   const fetchData = useCallback(
     async (
@@ -308,266 +340,295 @@ export default function Members({ role }: UserRoleProps) {
         />
       )}
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <TextField
-            label={t('pages.members.filter.searchName')}
-            fullWidth
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(0);
-            }}
-          />
-        </Grid>
+      {showPendingTab && (
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tab label={t('pages.members.tabs.members')} />
+          <Tab label={t('pages.members.tabs.pendingEnrollments')} />
+        </Tabs>
+      )}
 
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel>{t('pages.members.filter.taskInClub')}</InputLabel>
-            <Select
-              value={task === null ? 'all' : task}
-              label={t('pages.members.filter.taskInClub')}
-              onChange={(e) => {
-                setTask(
-                  e.target.value in TaskWithinTheClub
-                    ? TaskWithinTheClub[e.target.value as keyof typeof TaskWithinTheClub]
-                    : null,
-                );
-                setPage(0);
-              }}
-            >
-              <MenuItem value="all">{t('pages.members.filter.allTasks')}</MenuItem>
-              {Object.entries(TASK_WITHIN_THE_CLUB_LABELS).map(([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {t(`components.taskWithinTheClubOptions.${label}`)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel shrink>{t('pages.members.filter.memberCategory')}</InputLabel>
-            <Select
-              value={selectValue}
-              label={t('pages.members.filter.memberCategory')}
-              displayEmpty
-              onChange={(e) => {
-                setStatus(e.target.value.toString());
-                setPage(0);
-              }}
-            >
-              {memberCategories.map((e) => {
-                return (
-                  <MenuItem key={e.id.toString()} value={e.id.toString()}>
-                    {getCategoryTranslation(e)}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-        </Grid>
-        {role === Role.ADMIN && (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={showDeleted}
-                  onChange={(e) => {
-                    setShowDeleted(e.target.checked);
-                    setPage(0);
-                  }}
-                />
-              }
-              label={t('pages.members.filter.showDeleted')}
-            />
-          </Grid>
-        )}
-        {isFiltered && (
-          <Grid size={{ xs: 12, md: role === Role.ADMIN ? 12 : 3 }}>
-            <Button
-              variant="outlined"
-              color="secondary"
-              fullWidth
-              onClick={() => {
-                setSearch('');
-                setTask(null);
-                setStatus(null);
-                setPage(0);
-              }}
-            >
-              {t('pages.members.filter.resetFilter')}
-            </Button>
-          </Grid>
-        )}
-      </Grid>
-
-      {isMobile ? (
-        <MembersMobileView
-          members={members}
+      {showPendingTab && activeTab === 1 ? (
+        <PendingEnrollmentsTab
+          onMemberCreated={() => {
+            load();
+            fetchData(search, task, status, showDeleted, page, rowsPerPage);
+          }}
+          onPendingCountChange={setPendingCount}
           contributionPlans={contributionPlans}
           memberCategories={memberCategories}
-          loading={loading}
-          totalCount={totalCount}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={setPage}
-          onRowsPerPageChange={(newRowsPerPage) => {
-            setRowsPerPage(newRowsPerPage);
-            setPage(0);
-          }}
-          onView={(m) => {
-            setView(true);
-            setEdit(m);
-          }}
-          onEdit={(m) => setEdit(m)}
-          onDelete={remove}
-          onRestore={restore}
         />
       ) : (
-        <TableContainer
-          component={Paper}
-          elevation={0}
-          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
-        >
-          {loading && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 1,
-              }}
-            >
-              <CircularProgress />
-            </Box>
-          )}
+        <>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                label={t('pages.members.filter.searchName')}
+                fullWidth
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+              />
+            </Grid>
 
-          <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
-            <TableHead sx={{ bgcolor: 'action.hover' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  {t('pages.members.table.colNumber')}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  {t('pages.members.table.colName')}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  {t('pages.members.table.colTask')}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  {t('pages.members.table.colEmail')}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  {t('pages.members.table.colContribution')}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  {t('pages.members.table.colMemberCategory')}
-                </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', minWidth: '130px' }}>
-                  {t('pages.members.table.colActions')}
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {members.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                    {t('pages.members.table.noMembers')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                members.map((m) => (
-                  <TableRow
-                    key={m.id.toString()}
-                    hover
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  >
-                    <TableCell>
-                      <Chip
-                        label={m.memberNumber}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 500 }}
-                      />
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <FormControl fullWidth>
+                <InputLabel>{t('pages.members.filter.taskInClub')}</InputLabel>
+                <Select
+                  value={task === null ? 'all' : task}
+                  label={t('pages.members.filter.taskInClub')}
+                  onChange={(e) => {
+                    setTask(
+                      e.target.value in TaskWithinTheClub
+                        ? TaskWithinTheClub[e.target.value as keyof typeof TaskWithinTheClub]
+                        : null,
+                    );
+                    setPage(0);
+                  }}
+                >
+                  <MenuItem value="all">{t('pages.members.filter.allTasks')}</MenuItem>
+                  {Object.entries(TASK_WITHIN_THE_CLUB_LABELS).map(([value, label]) => (
+                    <MenuItem key={value} value={value}>
+                      {t(`components.taskWithinTheClubOptions.${label}`)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <FormControl fullWidth>
+                <InputLabel shrink>{t('pages.members.filter.memberCategory')}</InputLabel>
+                <Select
+                  value={selectValue}
+                  label={t('pages.members.filter.memberCategory')}
+                  displayEmpty
+                  onChange={(e) => {
+                    setStatus(e.target.value.toString());
+                    setPage(0);
+                  }}
+                >
+                  {memberCategories.map((e) => {
+                    return (
+                      <MenuItem key={e.id.toString()} value={e.id.toString()}>
+                        {getCategoryTranslation(e)}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </Grid>
+            {role === Role.ADMIN && (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={showDeleted}
+                      onChange={(e) => {
+                        setShowDeleted(e.target.checked);
+                        setPage(0);
+                      }}
+                    />
+                  }
+                  label={t('pages.members.filter.showDeleted')}
+                />
+              </Grid>
+            )}
+            {isFiltered && (
+              <Grid size={{ xs: 12, md: role === Role.ADMIN ? 12 : 3 }}>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  fullWidth
+                  onClick={() => {
+                    setSearch('');
+                    setTask(null);
+                    setStatus(null);
+                    setPage(0);
+                  }}
+                >
+                  {t('pages.members.filter.resetFilter')}
+                </Button>
+              </Grid>
+            )}
+          </Grid>
+
+          {isMobile ? (
+            <MembersMobileView
+              members={members}
+              contributionPlans={contributionPlans}
+              memberCategories={memberCategories}
+              loading={loading}
+              totalCount={totalCount}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              onPageChange={setPage}
+              onRowsPerPageChange={(newRowsPerPage) => {
+                setRowsPerPage(newRowsPerPage);
+                setPage(0);
+              }}
+              onView={(m) => {
+                setView(true);
+                setEdit(m);
+              }}
+              onEdit={(m) => setEdit(m)}
+              onDelete={remove}
+              onRestore={restore}
+            />
+          ) : (
+            <TableContainer
+              component={Paper}
+              elevation={0}
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+            >
+              {loading && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 1,
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              )}
+
+              <Table sx={{ minWidth: 650 }} aria-label={t('pages.members.table.ariaLabel')}>
+                <TableHead sx={{ bgcolor: 'action.hover' }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colNumber')}
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>
-                      {m.firstName} {m.middleName} {m.lastName}
+                    <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colName')}
                     </TableCell>
-                    <TableCell color="text.secondary">
-                      {t(
-                        `components.taskWithinTheClubOptions.${getTaskLabel(m.taskWithinTheClub)}`,
-                      )}
+                    <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colTask')}
                     </TableCell>
-                    <TableCell color="text.secondary">{m.email}</TableCell>
-                    <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-                      {m.contributionPlanId !== null
-                        ? `${contributionPlans.find((x) => x.id === m.contributionPlanId)?.amount} €`
-                        : t('pages.members.table.noContribution')}
+                    <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colEmail')}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-                      {m.memberCategoryId !== null && m.memberCategoryId !== undefined
-                        ? getCategoryTranslation(
-                            memberCategories.find((x) => x.id === m.memberCategoryId),
-                          )
-                        : ''}
+                    <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colContribution')}
                     </TableCell>
-                    <TableCell align="right">
-                      {m.deletedAt !== null && (
-                        <Tooltip title={t('pages.members.actions.restore')}>
-                          <IconButton onClick={() => restore(m.id)} size="small" color="primary">
-                            <RestoreFromTrashIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      {m.deletedAt === null && (
-                        <Tooltip title={t('pages.members.actions.view')}>
-                          <IconButton
-                            onClick={() => {
-                              setView(true);
-                              setEdit(m);
-                            }}
-                            size="small"
-                            color="primary"
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      {m.deletedAt === null && (
-                        <Tooltip title={t('pages.members.actions.edit')}>
-                          <IconButton onClick={() => setEdit(m)} size="small" color="primary">
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      <Tooltip title={t('pages.members.actions.delete')}>
-                        <IconButton onClick={() => remove(m.id)} size="small" color="error">
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                    <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colMemberCategory')}
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', minWidth: '130px' }}>
+                      {t('pages.members.table.colActions')}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHead>
+                <TableBody>
+                  {members.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                        {t('pages.members.table.noMembers')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    members.map((m) => (
+                      <TableRow
+                        key={m.id.toString()}
+                        hover
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                      >
+                        <TableCell>
+                          <Chip
+                            label={m.memberNumber}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 500 }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>
+                          {m.firstName} {m.middleName} {m.lastName}
+                        </TableCell>
+                        <TableCell color="text.secondary">
+                          {t(
+                            `components.taskWithinTheClubOptions.${getTaskLabel(m.taskWithinTheClub)}`,
+                          )}
+                        </TableCell>
+                        <TableCell color="text.secondary">{m.email}</TableCell>
+                        <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                          {m.contributionPlanId !== null
+                            ? `${contributionPlans.find((x) => x.id === m.contributionPlanId)?.amount} €`
+                            : t('pages.members.table.noContribution')}
+                        </TableCell>
+                        <TableCell sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                          {m.memberCategoryId !== null && m.memberCategoryId !== undefined
+                            ? getCategoryTranslation(
+                                memberCategories.find((x) => x.id === m.memberCategoryId),
+                              )
+                            : ''}
+                        </TableCell>
+                        <TableCell align="right">
+                          {m.deletedAt !== null && (
+                            <Tooltip title={t('pages.members.actions.restore')}>
+                              <IconButton
+                                onClick={() => restore(m.id)}
+                                size="small"
+                                color="primary"
+                              >
+                                <RestoreFromTrashIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {m.deletedAt === null && (
+                            <Tooltip title={t('pages.members.actions.view')}>
+                              <IconButton
+                                onClick={() => {
+                                  setView(true);
+                                  setEdit(m);
+                                }}
+                                size="small"
+                                color="primary"
+                              >
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {m.deletedAt === null && (
+                            <Tooltip title={t('pages.members.actions.edit')}>
+                              <IconButton onClick={() => setEdit(m)} size="small" color="primary">
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          <Tooltip title={t('pages.members.actions.delete')}>
+                            <IconButton onClick={() => remove(m.id)} size="small" color="error">
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
 
-          <ResponsiveTablePagination
-            component="div"
-            count={totalCount}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-            labelRowsPerPage={t('pages.members.table.rowsPerPage')}
-          />
-        </TableContainer>
+              <ResponsiveTablePagination
+                component="div"
+                count={totalCount}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={(_, newPage) => setPage(newPage)}
+                onRowsPerPageChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value, 10));
+                  setPage(0);
+                }}
+                labelRowsPerPage={t('pages.members.table.rowsPerPage')}
+              />
+            </TableContainer>
+          )}
+        </>
       )}
     </Box>
   );

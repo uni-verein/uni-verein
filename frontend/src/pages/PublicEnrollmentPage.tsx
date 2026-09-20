@@ -2,12 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Avatar,
   Box,
-  Button,
   CircularProgress,
   Container,
-  IconButton,
   Paper,
-  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -18,6 +15,7 @@ import { NIL as NIL_UUID } from 'uuid';
 import { api } from '../api';
 import MemberForm from '../components/dialogs/MemberForm';
 import { usePageConfig } from '../hooks/usePageConfig';
+import { LanguageToggle } from '../components/LanguageToggle';
 import {
   BulkMail,
   ContributionPlans,
@@ -59,11 +57,7 @@ function emptyPublicMember(): Member {
   };
 }
 
-function LanguageToggle({ isMobile }: { isMobile: boolean }) {
-  const { t, i18n } = useTranslation();
-  const label = t('pages.dashboard.switchLanguage');
-  const toggle = () => i18n.changeLanguage(i18n.resolvedLanguage === 'de' ? 'en' : 'de');
-
+function FloatingLanguageToggle({ isMobile }: { isMobile: boolean }) {
   return (
     <Box
       sx={{
@@ -73,32 +67,7 @@ function LanguageToggle({ isMobile }: { isMobile: boolean }) {
         zIndex: (theme) => theme.zIndex.modal + 1,
       }}
     >
-      {isMobile ? (
-        <Tooltip title={label} arrow>
-          <IconButton
-            color="inherit"
-            onClick={toggle}
-            aria-label={label}
-            sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
-          >
-            <Typography sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
-              {i18n.resolvedLanguage === 'de' ? '🇬🇧' : '🇩🇪'}
-            </Typography>
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Button
-          onClick={toggle}
-          color="inherit"
-          sx={{
-            bgcolor: 'background.paper',
-            boxShadow: 2,
-            '&:hover': { bgcolor: 'background.paper' },
-          }}
-        >
-          {i18n.resolvedLanguage === 'de' ? '🇬🇧 English' : '🇩🇪 Deutsch'}
-        </Button>
-      )}
+      <LanguageToggle isMobile={isMobile} floating />
     </Box>
   );
 }
@@ -175,7 +144,7 @@ export default function PublicEnrollmentPage() {
           background,
         }}
       >
-        <LanguageToggle isMobile={isMobile} />
+        <FloatingLanguageToggle isMobile={isMobile} />
         <Container maxWidth="xs">
           <Paper
             elevation={6}
@@ -213,7 +182,7 @@ export default function PublicEnrollmentPage() {
 
   return (
     <Box sx={{ position: 'relative', minHeight: '100vh', background }}>
-      <LanguageToggle isMobile={isMobile} />
+      <FloatingLanguageToggle isMobile={isMobile} />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 4, px: 2 }}>
         <Avatar
           src={config.logo}

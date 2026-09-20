@@ -82,6 +82,7 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
         db.CreditorConfigs.RemoveRange(db.CreditorConfigs.IgnoreQueryFilters());
         db.LinkSettings.RemoveRange(db.LinkSettings.IgnoreQueryFilters());
         db.MailSettings.RemoveRange(db.MailSettings.IgnoreQueryFilters());
+        db.PendingSelfEnrollments.RemoveRange(db.PendingSelfEnrollments.IgnoreQueryFilters());
         db.MemberCategories.RemoveRange(db.MemberCategories.IgnoreQueryFilters());
         db.Members.RemoveRange(db.Members.IgnoreQueryFilters());
         db.SepaExports.RemoveRange(db.SepaExports.IgnoreQueryFilters());

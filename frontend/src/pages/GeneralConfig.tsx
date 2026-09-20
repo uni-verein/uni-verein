@@ -47,6 +47,8 @@ export default function GeneralConfig() {
     logo: '',
     selfEnrollmentEnabled: false,
   });
+
+  const [mailConfigured, setMailConfigured] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSmall = useMediaQuery('(max-width:1000px)');
   const enrollmentUrl = `${window.location.origin}/enroll`;
@@ -69,10 +71,21 @@ export default function GeneralConfig() {
     }
   }, []);
 
+  const loadMailConfigured = useCallback(async () => {
+    try {
+      await api('/mail');
+      setMailConfigured(true);
+    } catch {
+      setMailConfigured(false);
+    }
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadConfig();
-  }, [loadConfig]);
+
+    loadMailConfigured();
+  }, [loadConfig, loadMailConfigured]);
 
   const validate = () => {
     const newErrors: { pageName?: string } = {};
@@ -149,6 +162,7 @@ export default function GeneralConfig() {
     } finally {
       setLoading(false);
       await loadConfig();
+      await loadMailConfigured();
       await reloadConfig();
     }
   };
@@ -311,10 +325,16 @@ export default function GeneralConfig() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 {t('pages.generalConfig.selfEnrollment.description')}
               </Typography>
+              {!mailConfigured && (
+                <Alert severity="warning" sx={{ mb: 1, maxWidth: 480 }}>
+                  {t('pages.generalConfig.selfEnrollment.mailRequired')}
+                </Alert>
+              )}
               <FormControlLabel
                 control={
                   <Switch
                     checked={config.selfEnrollmentEnabled}
+                    disabled={!mailConfigured && !config.selfEnrollmentEnabled}
                     onChange={(e) =>
                       setConfig({ ...config, selfEnrollmentEnabled: e.target.checked })
                     }

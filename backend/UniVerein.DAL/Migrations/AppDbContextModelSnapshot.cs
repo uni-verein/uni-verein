@@ -546,6 +546,163 @@ namespace UniVerein.DAL.Migrations
                     b.ToTable("Members");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.PendingSelfEnrollmentEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AcademicDegree")
+                        .HasColumnType("text")
+                        .HasColumnName("academic_degree");
+
+                    b.Property<string>("Bic_Encrypted")
+                        .HasColumnType("text")
+                        .HasColumnName("bic_encrypted");
+
+                    b.Property<string>("BirthdayEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("birthday");
+
+                    b.Property<string>("BulkMail")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("bulk_mail");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("city");
+
+                    b.Property<DateTimeOffset>("ConfirmationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmation_token_expires_at");
+
+                    b.Property<string>("ConfirmationTokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("confirmation_token_hash");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<Guid?>("ContributionPlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("contribution_plan_id");
+
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("text")
+                        .HasColumnName("country_code");
+
+                    b.Property<string>("CourseOfStudy")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("course_of_study");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("EmailEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email_encrypted");
+
+                    b.Property<string>("EmailHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email_hash");
+
+                    b.Property<DateTimeOffset?>("EndOfStudies")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_of_studies");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("gender");
+
+                    b.Property<string>("IBAN_Encrypted")
+                        .HasColumnType("text")
+                        .HasColumnName("iban_encrypted");
+
+                    b.Property<string>("IBAN_Hash")
+                        .HasColumnType("text")
+                        .HasColumnName("iban_hash");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
+
+                    b.Property<Guid?>("MemberCategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_category_id");
+
+                    b.Property<string>("MiddleName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("middle_name");
+
+                    b.Property<string>("MotivationEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("motivation");
+
+                    b.Property<string>("PhoneEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("postal_code");
+
+                    b.Property<DateTimeOffset?>("SepaConsent")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sepa_consent");
+
+                    b.Property<DateTimeOffset>("StartOfStudies")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_of_studies");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StreetEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("street");
+
+                    b.Property<string>("SubmittedIp")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("submitted_ip");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributionPlanId");
+
+                    b.HasIndex("MemberCategoryId");
+
+                    b.ToTable("PendingSelfEnrollments");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.ReceiptCategoryEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -864,6 +1021,23 @@ namespace UniVerein.DAL.Migrations
                     b.HasOne("UniVerein.DAL.Entities.MemberCategoryEntity", "MemberCategory")
                         .WithMany()
                         .HasForeignKey("MemberCategoryId");
+
+                    b.Navigation("ContributionPlan");
+
+                    b.Navigation("MemberCategory");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.PendingSelfEnrollmentEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.ContributionPlanEntity", "ContributionPlan")
+                        .WithMany()
+                        .HasForeignKey("ContributionPlanId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("UniVerein.DAL.Entities.MemberCategoryEntity", "MemberCategory")
+                        .WithMany()
+                        .HasForeignKey("MemberCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ContributionPlan");
 

@@ -1,21 +1,17 @@
-using System;
 using System.Globalization;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.ApiResults.Receipt;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Models.Enums;
+using UniVerein.Api.Query;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
@@ -23,7 +19,6 @@ using UniVerein.DAL.Entities.Enums;
 using UniVerein.IntegrationTests.Infrastructure;
 using Shouldly;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace UniVerein.IntegrationTests.Tests;
@@ -433,9 +428,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
             // Act
             HttpResponseMessage response =
                 await client.PatchAsJsonAsync($"/receipts/{created.Id}", new UpdateReceiptRequest { Amount = 5m });
+            ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            result.ShouldNotBeNull();
+            result.ErrorMessage.ShouldBe("Receipt can no longer be edited.");
+            result.MoreInfo.ShouldBe("Receipts can only be edited within 15 minutes of their creation.");
         }
         finally
         {
@@ -448,13 +447,18 @@ public class ReceiptsControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
+        Guid unknownId = Guid.NewGuid();
 
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync(
-            $"/receipts/{Guid.NewGuid()}", new UpdateReceiptRequest { Amount = 5m });
+            $"/receipts/{unknownId}", new UpdateReceiptRequest { Amount = 5m });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {unknownId} could be found.");
     }
 
     [Theory]
@@ -471,9 +475,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync(
             $"/receipts/{receipt.Id}", new UpdateReceiptRequest { Amount = 20m });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Only the creator of a receipt may edit it.");
+        result.MoreInfo.ShouldBe($"Receipt {receipt.Id} can only be edited by the user who created it.");
     }
 
     [Fact]
@@ -504,9 +512,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync(
             $"/receipts/{receipt.Id}", new UpdateReceiptRequest { Amount = 5m });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {receipt.Id} could be found.");
     }
 
     // ---------------------------------------------------------------
@@ -533,12 +545,17 @@ public class ReceiptsControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
+        ReceiptQuery query = new() { Offset = offset, Limit = limit };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync($"/receipts?offset={offset}&limit={limit}");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Failed request validation");
+        result.MoreInfo.ShouldBe("Offset and/or Limit must be greater than or equal to 1.");
     }
 
     [Fact]
@@ -594,9 +611,10 @@ public class ReceiptsControllerTests : IntegrationTestBase
         category.ShouldNotBeNull();
         ReceiptResult categorized = await CreateReceiptAsync(client, 5m, DateTime.UtcNow, category.Id);
         ReceiptResult uncategorized = await CreateReceiptAsync(client, 6m, DateTime.UtcNow);
+        ReceiptQuery query = new() { CategoryId = category.Id };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync($"/receipts?categoryId={category.Id}");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
         AllReceiptResults? result = await response.Content.ReadFromJsonAsync<AllReceiptResults>();
 
         // Assert
@@ -612,10 +630,14 @@ public class ReceiptsControllerTests : IntegrationTestBase
         HttpClient client = CreateClient(UserRole.ADMIN);
         ReceiptResult inRange = await CreateReceiptAsync(client, 5m, new DateTime(2026, 3, 15, 0, 0, 0, DateTimeKind.Utc));
         ReceiptResult outOfRange = await CreateReceiptAsync(client, 6m, new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc));
+        ReceiptQuery query = new()
+        {
+            DateFrom = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+            DateTo = new DateTime(2026, 3, 31, 23, 59, 59, DateTimeKind.Utc)
+        };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync(
-            "/receipts?dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.000Z");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
         AllReceiptResults? result = await response.Content.ReadFromJsonAsync<AllReceiptResults>();
 
         // Assert
@@ -632,9 +654,10 @@ public class ReceiptsControllerTests : IntegrationTestBase
         ReceiptResult active = await CreateReceiptAsync(client, 5m, DateTime.UtcNow);
         ReceiptResult deleted = await CreateReceiptAsync(client, 6m, DateTime.UtcNow);
         await client.DeleteAsync($"/receipts/{deleted.Id}");
+        ReceiptQuery query = new() { Deleted = true };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts?deleted=true");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
         AllReceiptResults? result = await response.Content.ReadFromJsonAsync<AllReceiptResults>();
 
         // Assert
@@ -652,9 +675,10 @@ public class ReceiptsControllerTests : IntegrationTestBase
         HttpClient client = CreateClient(role);
         ReceiptResult deleted = await CreateReceiptAsync(client, 6m, DateTime.UtcNow);
         await client.DeleteAsync($"/receipts/{deleted.Id}");
+        ReceiptQuery query = new() { Deleted = true };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts?deleted=true");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
         AllReceiptResults? result = await response.Content.ReadFromJsonAsync<AllReceiptResults>();
 
         // Assert
@@ -688,12 +712,17 @@ public class ReceiptsControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
+        Guid unknownId = Guid.NewGuid();
 
         // Act
-        HttpResponseMessage response = await client.GetAsync($"/receipts/{Guid.NewGuid()}");
+        HttpResponseMessage response = await client.GetAsync($"/receipts/{unknownId}");
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {unknownId} could be found.");
     }
 
     [Fact]
@@ -706,9 +735,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.GetAsync($"/receipts/{otherReceipt.Id}");
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {otherReceipt.Id} could be found.");
     }
 
     // ---------------------------------------------------------------
@@ -737,12 +770,17 @@ public class ReceiptsControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
+        Guid unknownId = Guid.NewGuid();
 
         // Act
-        HttpResponseMessage response = await client.DeleteAsync($"/receipts/{Guid.NewGuid()}");
+        HttpResponseMessage response = await client.DeleteAsync($"/receipts/{unknownId}");
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {unknownId} could be found.");
     }
 
     [Fact]
@@ -755,9 +793,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.DeleteAsync($"/receipts/{otherReceipt.Id}");
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {otherReceipt.Id} could be found.");
     }
 
     [Fact]
@@ -839,9 +881,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/receipts", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Failed request validation");
+        result.MoreInfo.ShouldBe("ReceiptDate is required.");
     }
 
     [Fact]
@@ -876,9 +922,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response =
             await client.PatchAsJsonAsync($"/receipts/{receipt.Id}", new UpdateReceiptRequest { Amount = 0m });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Failed request validation");
+        result.MoreInfo.ShouldBe("Amount must be greater than 0.");
     }
 
     [Fact]
@@ -910,9 +960,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response =
             await client.PatchAsJsonAsync($"/receipts/{receipt.Id}", new UpdateReceiptRequest { Amount = 20m });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {receipt.Id} could be found.");
     }
 
     [Fact]
@@ -1073,9 +1127,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.PostAsync("/receipts", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Only admins or financial managers may set the payment method.");
+        result.MoreInfo.ShouldBe("The payment method can only be selected by ADMIN or FINANCIAL_MANAGER.");
     }
 
     [Theory]
@@ -1108,9 +1166,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync($"/receipts/{receipt.Id}",
             new UpdateReceiptRequest { PaymentMethod = ReceiptPaymentMethod.CARD });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Only admins or financial managers may set the payment method.");
+        result.MoreInfo.ShouldBe("The payment method can only be selected by ADMIN or FINANCIAL_MANAGER.");
     }
 
     [Fact]
@@ -1187,13 +1249,18 @@ public class ReceiptsControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
+        Guid unknownId = Guid.NewGuid();
 
         // Act
-        HttpResponseMessage response = await client.PostAsJsonAsync($"/receipts/{Guid.NewGuid()}/pay",
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/receipts/{unknownId}/pay",
             new MarkReceiptPaidRequest { PaymentMethod = ReceiptPaymentMethod.CASH });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {unknownId} could be found.");
     }
 
     [Fact]
@@ -1206,9 +1273,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PostAsJsonAsync($"/receipts/{receipt.Id}/pay",
             new MarkReceiptPaidRequest());
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Failed request validation");
+        result.MoreInfo.ShouldBe("PaymentMethod is required to mark a receipt as paid.");
     }
 
     [Fact]
@@ -1267,9 +1338,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PostAsJsonAsync($"/receipts/{receipt.Id}/pay",
             new MarkReceiptPaidRequest { PaymentMethod = ReceiptPaymentMethod.CARD });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt has already been marked as paid.");
+        result.MoreInfo.ShouldBe($"Receipt {receipt.Id} is already marked as paid.");
     }
 
     [Fact]
@@ -1283,9 +1358,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PostAsJsonAsync($"/receipts/{receipt.Id}/pay",
             new MarkReceiptPaidRequest { PaymentMethod = ReceiptPaymentMethod.CASH });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt not found.");
+        result.MoreInfo.ShouldBe($"No receipt with the ID {receipt.Id} could be found.");
     }
 
     [Fact]
@@ -1300,9 +1379,13 @@ public class ReceiptsControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync($"/receipts/{receipt.Id}",
             new UpdateReceiptRequest { Vendor = "Should not apply" });
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt has already been marked as paid and can no longer be edited.");
+        result.MoreInfo.ShouldBe($"Receipt {receipt.Id} is locked because it has been marked as paid.");
     }
 
     [Fact]
@@ -1314,9 +1397,10 @@ public class ReceiptsControllerTests : IntegrationTestBase
         ReceiptResult paid = await CreateReceiptAsync(client, 6m, DateTime.UtcNow);
         await client.PostAsJsonAsync($"/receipts/{paid.Id}/pay",
             new MarkReceiptPaidRequest { PaymentMethod = ReceiptPaymentMethod.CASH });
+        ReceiptQuery query = new() { Paid = true };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts?paid=true");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
         AllReceiptResults? result = await response.Content.ReadFromJsonAsync<AllReceiptResults>(JsonOptions);
 
         // Assert
@@ -1334,9 +1418,10 @@ public class ReceiptsControllerTests : IntegrationTestBase
         ReceiptResult paid = await CreateReceiptAsync(client, 6m, DateTime.UtcNow);
         await client.PostAsJsonAsync($"/receipts/{paid.Id}/pay",
             new MarkReceiptPaidRequest { PaymentMethod = ReceiptPaymentMethod.CASH });
+        ReceiptQuery query = new() { Paid = false };
 
         // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts?paid=false");
+        HttpResponseMessage response = await client.GetAsync($"/receipts{query.GetQueryString()}");
         AllReceiptResults? result = await response.Content.ReadFromJsonAsync<AllReceiptResults>();
 
         // Assert
@@ -1401,7 +1486,7 @@ public class ReceiptsControllerTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task DeleteAsync_PaidReceipt_StillSucceeds()
+    public async Task DeleteAsync_Privileged_PaidReceipt_StillSucceeds()
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
@@ -1417,5 +1502,30 @@ public class ReceiptsControllerTests : IntegrationTestBase
         ReceiptEntity? entity = await _db.Receipts.FirstOrDefaultAsync(r => r.Id == receipt.Id);
         entity.ShouldNotBeNull();
         entity.DeletedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_AsOwnerUser_PaidReceipt_ReturnsForbidden()
+    {
+        // Arrange
+        (HttpClient ownerClient, Guid _) = await CreateUserAndClientAsync(UserRole.USER, "receipt-owner");
+        ReceiptResult receipt = await CreateReceiptAsync(ownerClient, 10m, DateTime.UtcNow);
+
+        HttpClient adminClient = CreateClient(UserRole.ADMIN);
+        await adminClient.PostAsJsonAsync($"/receipts/{receipt.Id}/pay",
+            new MarkReceiptPaidRequest { PaymentMethod = ReceiptPaymentMethod.CASH });
+
+        // Act
+        HttpResponseMessage response = await ownerClient.DeleteAsync($"/receipts/{receipt.Id}");
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldBe("Receipt has already been marked as paid and can no longer be deleted.");
+        result.MoreInfo.ShouldBe($"Receipt {receipt.Id} is locked because it has been marked as paid.");
+        ReceiptEntity? entity = await _db.Receipts.FirstOrDefaultAsync(r => r.Id == receipt.Id);
+        entity.ShouldNotBeNull();
+        entity.DeletedAt.ShouldBeNull();
     }
 }

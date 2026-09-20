@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using System.Threading.Tasks;
 using UniVerein.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using UniVerein.Api.Services.Sepa;
 using UniVerein.DAL.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -62,10 +64,13 @@ namespace UniVerein.Api
             services.AddScoped<ReceiptService>();
             services.AddScoped<ReceiptNotificationService>();
             services.AddScoped<ReferenceDataService>();
+            services.AddScoped<PendingSelfEnrollmentService>();
+            services.AddScoped<SelfEnrollmentNotificationService>();
 
             services.AddHostedService<ContributionBackgroundService>();
             services.AddHttpClient<FirmwareService>();
             services.AddHostedService<FirmwareCheckBackgroundService>();
+            services.AddHostedService<PendingSelfEnrollmentCleanupService>();
             services.AddHttpContextAccessor();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -120,6 +125,34 @@ namespace UniVerein.Api
                         .AllowCredentials();
                 });
             });
+
+            static int GetPermitLimit(HttpContext httpContext, string key, int defaultValue)
+            {
+                return httpContext.RequestServices.GetRequiredService<IConfiguration>().GetValue(key, defaultValue);
+            }
+
+            static void AddSelfEnrollmentPolicy(RateLimiterOptions options, string policyName, string configKey, int defaultPermitLimit)
+            {
+                options.AddPolicy(policyName, httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.GetClientIpAddress(),
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = GetPermitLimit(httpContext, configKey, defaultPermitLimit),
+                            Window = TimeSpan.FromMinutes(15),
+                            QueueLimit = 0,
+                            AutoReplenishment = true
+                        }));
+            }
+
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                AddSelfEnrollmentPolicy(options, "self-enrollment", "RateLimiting:SelfEnrollment:PermitLimit", 5);
+                AddSelfEnrollmentPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
+                AddSelfEnrollmentPolicy(options, "self-enrollment-confirm", "RateLimiting:SelfEnrollment:ConfirmPermitLimit", 10);
+            });
         }
 
         public void Configure(IApplicationBuilder app)
@@ -132,6 +165,7 @@ namespace UniVerein.Api
             });
 
             app.UseCors("AllowFrontend");
+            app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
         }

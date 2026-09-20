@@ -2,17 +2,18 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
+using UniVerein.Api.Models;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
-using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using UniVerein.Api.Models;
-using UniVerein.Api.Models.Enums;
 
 namespace UniVerein.Api.Controllers;
 
@@ -22,13 +23,14 @@ namespace UniVerein.Api.Controllers;
 public class SelfEnrollmentController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly MemberService _memberService;
+    private readonly PendingSelfEnrollmentService _pendingSelfEnrollmentService;
     private readonly ReferenceDataService _referenceDataService;
 
-    public SelfEnrollmentController(AppDbContext db, MemberService memberService, ReferenceDataService referenceDataService)
+    public SelfEnrollmentController(AppDbContext db, PendingSelfEnrollmentService pendingSelfEnrollmentService,
+        ReferenceDataService referenceDataService)
     {
         _db = db;
-        _memberService = memberService;
+        _pendingSelfEnrollmentService = pendingSelfEnrollmentService;
         _referenceDataService = referenceDataService;
     }
 
@@ -39,6 +41,7 @@ public class SelfEnrollmentController : ControllerBase
         return config?.SelfEnrollmentEnabled ?? false;
     }
 
+    [EnableRateLimiting("self-enrollment-read")]
     [HttpGet("form-data")]
     public async Task<ActionResult<SelfEnrollmentFormDataResult>> GetFormDataAsync()
     {
@@ -52,8 +55,9 @@ public class SelfEnrollmentController : ControllerBase
         return Ok(result);
     }
 
+    [EnableRateLimiting("self-enrollment")]
     [HttpPost]
-    public async Task<ActionResult<MemberResult>> CreateAsync([FromBody] SelfEnrollmentRequest request)
+    public async Task<ActionResult<SelfEnrollmentSubmitResult>> CreateAsync([FromBody] SelfEnrollmentRequest request)
     {
         Log.Information(
             $"SelfEnrollmentController: CreateAsync -> Try to self-enroll member: {request.FirstName} {request.LastName}");
@@ -66,89 +70,39 @@ public class SelfEnrollmentController : ControllerBase
                 moreInfo: "Self-enrollment is currently not enabled for this club."));
         }
 
-        MemberCreationResult result = await _memberService.CreateMemberAsync(new MemberCreationInput
-        {
-            Gender = request.Gender,
-            FirstName = request.FirstName,
-            MiddleName = request.MiddleName,
-            LastName = request.LastName,
-            Birthday = request.Birthday,
-            Street = request.Street,
-            PostalCode = request.PostalCode,
-            City = request.City,
-            CountryCode = request.CountryCode,
-            Email = request.Email,
-            Phone = request.Phone,
-            BulkMail = request.BulkMail,
-            StartOfStudies = request.StartOfStudies,
-            EndOfStudies = request.EndOfStudies,
-            AcademicDegree = request.AcademicDegree,
-            CourseOfStudy = request.CourseOfStudy,
-            TaskWithinTheClub = TaskWithinTheClub.MEMBER,
-            MemberCategoryId = request.MemberCategoryId,
-            IBAN = request.IBAN,
-            Bic = request.Bic,
-            SepaConsent = request.SepaConsent,
-            EntryDate = request.EntryDate,
-            ExitDate = null,
-            ContributionPlanId = request.ContributionPlanId
-        });
+        string confirmBaseUrl = $"{Request.Scheme}://{Request.Host}/enroll/confirm";
+        PendingSelfEnrollmentSubmitResult result = await _pendingSelfEnrollmentService.SubmitAsync(request,
+            HttpContext.GetClientIpAddress(), confirmBaseUrl);
 
         switch (result.Status)
         {
             case MemberCreationStatus.DUPLICATE_CONFLICT:
-                Log.Warning("SelfEnrollmentController: CreateAsync -> Member already exists");
+                Log.Warning("SelfEnrollmentController: CreateAsync -> Member or pending submission already exists");
                 return Conflict(new ApiResults.ErrorResults.ConflictResult(errorCode: ApiErrorCodes.CONFLICT_RESOURCE_ALREADY_EXISTS,
                     errorMessage: "Member already exists.",
-                    moreInfo: "A member with the same email address or IBAN already exists."));
-            case MemberCreationStatus.CONTRIBUTION_PLAN_NOT_FOUND:
-                Log.Warning(
-                    $"SelfEnrollmentController: CreateAsync -> ContributionPlan with ID: {request.ContributionPlanId} not found");
-                return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
-                    errorMessage: "Contribution plan not found.",
-                    moreInfo: $"No contribution plan found with ID {request.ContributionPlanId}."));
-            case MemberCreationStatus.MEMBER_CATEGORY_NOT_FOUND:
-                Log.Warning(
-                    $"SelfEnrollmentController: CreateAsync -> Member category with ID: {request.MemberCategoryId} not found");
-                return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
-                    errorMessage: "Member category not found.",
-                    moreInfo: $"No member category found with ID {request.MemberCategoryId}."));
+                    moreInfo: "A member or a pending self-enrollment with the same email address or IBAN already exists."));
         }
 
-        MemberEntity member = result.Member!;
-
-        MemberResult memberResult = new()
-        {
-            Id = member.Id,
-            MemberNumber = member.MemberNumber,
-            Gender = member.Gender,
-            FirstName = member.FirstName,
-            MiddleName = member.MiddleName,
-            LastName = member.LastName,
-            Birthday = request.Birthday,
-            Street = request.Street,
-            PostalCode = member.PostalCode,
-            City = member.City,
-            CountryCode = member.CountryCode ?? string.Empty,
-            Email = request.Email,
-            Phone = request.Phone,
-            BulkMail = member.BulkMail,
-            StartOfStudies = member.StartOfStudies,
-            EndOfStudies = member.EndOfStudies,
-            AcademicDegree = member.AcademicDegree,
-            CourseOfStudy = member.CourseOfStudy,
-            TaskWithinTheClub = member.TaskWithinTheClub,
-            MemberCategoryId = member.MemberCategoryId,
-            IBAN = request.IBAN ?? string.Empty,
-            Bic = request.Bic,
-            SepaConsent = member.SepaConsent,
-            EntryDate = member.EntryDate,
-            ExitDate = member.ExitDate,
-            ContributionPlanId = member.ContributionPlanId
-        };
-
         Log.Information(
-            $"SelfEnrollmentController: CreateAsync -> Member: {request.FirstName} {request.LastName} successfully self-enrolled.");
-        return Created(string.Empty, memberResult);
+            $"SelfEnrollmentController: CreateAsync -> Submission from {request.FirstName} {request.LastName} accepted, confirmation mail sent.");
+        return Created(string.Empty, new SelfEnrollmentSubmitResult());
+    }
+
+    [EnableRateLimiting("self-enrollment-confirm")]
+    [HttpPost("confirm")]
+    public async Task<IActionResult> ConfirmAsync([FromBody] ConfirmSelfEnrollmentRequest request)
+    {
+        PendingSelfEnrollmentActionStatus status = await _pendingSelfEnrollmentService.ConfirmAsync(request.Token);
+
+        if (status == PendingSelfEnrollmentActionStatus.NOT_FOUND)
+        {
+            Log.Warning("SelfEnrollmentController: ConfirmAsync -> Invalid, expired or already used token");
+            return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
+                errorMessage: "Confirmation link invalid or expired.",
+                moreInfo: "This confirmation link is invalid, expired or was already used."));
+        }
+
+        Log.Information("SelfEnrollmentController: ConfirmAsync -> Self-enrollment confirmed.");
+        return Ok();
     }
 }

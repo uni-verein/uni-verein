@@ -43,6 +43,7 @@ public class SelfEnrollmentRequest
     public required string CountryCode { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [EmailAddress]
     [JsonPropertyName("email")]
     public required string Email { get; set; }
 
@@ -66,15 +67,20 @@ public class SelfEnrollmentRequest
     [JsonPropertyName("courseOfStudy")]
     public string CourseOfStudy { get; set; } = string.Empty;
 
-    [Required]
-    [JsonPropertyName("memberCategoryId")]
-    public Guid MemberCategoryId { get; set; }
+    // What the applicant does professionally/academically and why they want to join - replaces letting
+    // the applicant pick their own MemberCategoryId (removed below). A reviewer reads this and assigns
+    // the category themselves before approving (see PendingEnrollmentForm.tsx).
+    [Required(AllowEmptyStrings = false)]
+    [JsonPropertyName("motivation")]
+    public required string Motivation { get; set; }
 
+    [Required(AllowEmptyStrings = false)]
     [JsonPropertyName("iban")]
-    public string IBAN { get; set; } = string.Empty;
+    public required string IBAN { get; set; }
 
+    [Required(AllowEmptyStrings = false)]
     [JsonPropertyName("bic")]
-    public string Bic { get; set; } = string.Empty;
+    public required string Bic { get; set; }
 
     [JsonPropertyName("sepaConsent")]
     public DateTimeOffset? SepaConsent { get; set; }
@@ -83,6 +89,7 @@ public class SelfEnrollmentRequest
     [JsonPropertyName("entryDate")]
     public DateTimeOffset EntryDate { get; set; }
 
-    [JsonPropertyName("contributionPlanId")]
-    public Guid? ContributionPlanId { get; set; }
+    // MemberCategoryId/ContributionPlanId are deliberately not part of this request at all (not just
+    // optional) - it doesn't make sense for a self-enrolling applicant to assign their own category or
+    // contribution tier. A reviewer assigns both via PendingEnrollmentForm.tsx before approving.
 }

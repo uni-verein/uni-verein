@@ -11,6 +11,44 @@
       "alumniOfficer": "Alumni-Beauftragter",
       "studentCouncilRepresentative": "Fachschafts-Beauftragter"
     },
+    "pendingEnrollments": {
+      "info": "Diese Anmeldungen haben ihre E-Mail-Adresse bereits bestätigt und warten auf Freigabe. Erst nach der Freigabe entsteht ein aktives Mitglied.",
+      "table": {
+        "ariaLabel": "Tabelle der ausstehenden Anmeldungen",
+        "colName": "Name",
+        "colEmail": "E-Mail",
+        "colMemberCategory": "Mitgliederkategorie",
+        "colSubmittedAt": "Eingereicht am",
+        "colActions": "Aktionen",
+        "noItems": "Keine ausstehenden Anmeldungen.",
+        "rowsPerPage": "Zeilen pro Seite:",
+        "categoryNotAssigned": "–"
+      },
+      "actions": {
+        "edit": "Überprüfen",
+        "reject": "Löschen"
+      },
+      "confirmDialog": {
+        "rejectQuestion": "Anmeldung von {{name}} wirklich löschen?",
+        "reject": "Löschen",
+        "reasonLabel": "Grund (optional, nur für das Audit-Log)"
+      },
+      "responseMessages": {
+        "approved": "Anmeldung freigegeben, Mitglied wurde angelegt.",
+        "approveConflict": "Freigabe fehlgeschlagen. Mitglied mit gleicher IBAN oder E-Mail existiert bereits.",
+        "approveError": "Freigabe fehlgeschlagen. Bitte erneut versuchen.",
+        "rejected": "Anmeldung gelöscht.",
+        "rejectError": "Löschen fehlgeschlagen. Bitte erneut versuchen."
+      }
+    },
+    "pendingEnrollmentForm": {
+      "title": "Anmeldung überprüfen",
+      "subtitle": "Vervollständige die fehlenden Angaben, bevor du das Mitglied anlegst.",
+      "loadError": "Anmeldung konnte nicht geladen werden. Sie wurde möglicherweise bereits bearbeitet.",
+      "buttons": {
+        "saveAndCreate": "Speichern & anlegen"
+      }
+    },
     "confirmDialog": {
       "confirm": "Bestätigung",
       "cancel": "Abbrechen",
@@ -35,8 +73,9 @@
       },
       "subtitle": "Geben Sie hier die Stammdaten des Vereinsmitglieds ein.",
       "publicSuccess": {
-        "title": "Willkommen im Verein!",
-        "subtitle": "Du wurdest erfolgreich als Mitglied angelegt."
+        "title": "Bitte bestätige deine E-Mail-Adresse",
+        "subtitle": "Wir haben dir einen Bestätigungslink per E-Mail geschickt. Deine Anmeldung wird erst nach der Bestätigung geprüft.",
+        "confirm": "OK"
       },
       "fields": {
         "memberNumber": "Mitgliedsnummer",
@@ -66,6 +105,8 @@
         "academicDegree": "Akademischer Grad",
         "noAcademicDegree": "Kein akademischer Grad",
         "courseOfStudy": "Studiengang",
+        "motivation": "Motivation",
+        "motivationPlaceholder": "Was machst du beruflich/studentisch, und warum möchtest du beitreten?",
         "taskWithinTheClub": "Aufgabe im Verein",
         "memberCategory": "Mitgliederkategorie",
         "memberCategoryOptions": {
@@ -97,13 +138,18 @@
         "postalCodeMaxLength": "PLZ darf maximal 10 Zeichen lang sein.",
         "cityRequired": "Stadt darf nicht leer sein.",
         "cityMaxLength": "Stadt darf maximal 100 Zeichen lang sein.",
+        "countryCodeRequired": "Ländercode muss ausgewählt sein.",
         "emailRequired": "E-Mail darf nicht leer sein.",
         "emailMaxLength": "E-Mail darf maximal 50 Zeichen lang sein.",
+        "emailInvalid": "E-Mail-Adresse ist ungültig.",
         "startOfStudiesRequired": "Studienbeginn muss gesetzt werden.",
         "startOfStudiesInvalid": "Studienbeginn muss in der Vergangenheit liegen.",
         "endOfStudiesInvalid": "Studienende muss später als Studienbeginn sein.",
         "courseOfStudyMaxLength": "Studiengang darf maximal 100 Zeichen lang sein.",
         "memberCategoryRequired": "Mitgliederkategorie muss gesetzt werden.",
+        "motivationRequired": "Motivation darf nicht leer sein.",
+        "ibanRequired": "IBAN darf nicht leer sein.",
+        "bicRequired": "BIC darf nicht leer sein.",
         "entryDateRequired": "Eintrittsdatum muss gesetzt werden.",
         "entryDateInvalid": "Eintrittsdatum muss in der Vergangenheit liegen.",
         "exitDateInvalid": "Austrittsdatum muss später als Eintrittsdatum sein.",
@@ -116,7 +162,8 @@
         "invalidInputs": "Fehlerhafte Eingaben",
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "duplicateIbanOrEmail": "Speichern fehlgeschlagen. Mitglied mit gleicher IBAN oder E-Mail existiert bereits.",
-        "duplicateIbanOrEmailShort": "Mitglied mit gleicher IBAN oder E-Mail existiert bereits."
+        "duplicateIbanOrEmailShort": "Mitglied mit gleicher IBAN oder E-Mail existiert bereits.",
+        "rateLimited": "Zu viele Anfragen. Bitte versuche es in ein paar Minuten erneut."
       },
       "snackbar": {
         "createSuccess": "Nutzer erfolgreich erstellt.",
@@ -681,7 +728,8 @@
       "selfEnrollment": {
         "sectionTitle": "Selbstregistrierung",
         "description": "Wenn aktiviert, können Besucher über den unten stehenden Link ohne Login selbst ein Mitglied anlegen, z. B. an einem Messestand.",
-        "toggleLabel": "Selbstregistrierung aktiviert",
+        "toggleLabel": "Selbstregistrierung aktivieren",
+        "mailRequired": "Selbstregistrierung benötigt konfigurierte E-Mail-Einstellungen, damit Bestätigungs- und Benachrichtigungsmails verschickt werden können. Bitte zuerst unter „E-Mail konfigurieren\" einrichten.",
         "linkLabel": "Öffentlicher Link",
         "copyButton": "Link kopieren"
       },
@@ -714,6 +762,13 @@
       "closedTitle": "Selbstregistrierung nicht verfügbar",
       "closedMessage": "Die Selbstregistrierung ist derzeit nicht aktiv. Bitte wende dich an einen Vereinsverantwortlichen.",
       "loadError": "Die Seite konnte nicht geladen werden. Bitte versuche es erneut."
+    },
+    "confirmEnrollment": {
+      "loading": "Deine Anmeldung wird bestätigt...",
+      "successTitle": "E-Mail bestätigt!",
+      "successMessage": "Deine Anmeldung wird nun von einem Vereinsverantwortlichen geprüft. Du wirst benachrichtigt, sobald sie freigeschaltet wurde.",
+      "errorTitle": "Link ungültig oder abgelaufen",
+      "errorMessage": "Dieser Bestätigungslink ist ungültig, abgelaufen oder wurde bereits verwendet. Bitte registriere dich erneut."
     },
     "login": {
       "login": "Anmelden",
@@ -877,6 +932,10 @@
     },
     "members": {
       "title": "Mitgliederverwaltung",
+      "tabs": {
+        "members": "Mitglieder",
+        "pendingEnrollments": "Ausstehende Mitglieder"
+      },
       "refresh": "Aktualisieren",
       "addMember": "Mitglied hinzufügen",
       "unknownTask": "Unbekannte Aufgabe",
@@ -1027,6 +1086,7 @@
       "notificationSettings": {
         "title": "Benachrichtigungseinstellungen",
         "receiptNotification": "Bei neuem Beleg per E-Mail benachrichtigen",
+        "selfEnrollmentNotification": "Bei neuer Selbstregistrierung per E-Mail benachrichtigen",
         "noSettingsAvailable": "Für Ihre Rolle sind aktuell keine Benachrichtigungseinstellungen verfügbar.",
         "saveSuccess": "Einstellung erfolgreich gespeichert.",
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
