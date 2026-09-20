@@ -51,6 +51,8 @@ import { CustomSnackbar } from '../CustomSnackbar';
 import { useTranslation } from 'react-i18next';
 countries.registerLocale(deLocale);
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function ValidateRequiredStringLength(value: string, name: string, maxLength: number) {
   if (!value.trim()) {
     return `${name} darf nicht leer sein.`;
@@ -84,6 +86,9 @@ export default function MemberForm({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const [m, setM] = useState<Member>(member);
+  // Public-only: what the applicant does professionally/academically and why they want to join.
+  // Deliberately NOT on Member/m - it has no meaning for an already-created member.
+  const [motivation, setMotivation] = useState('');
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState<MemberErrors>({});
   const [editOrUpdateMember, setEditOrUpdateMember] =
@@ -146,9 +151,15 @@ export default function MemberForm({
       newErrors.city = value;
     }
 
+    if (!m.countryCode) {
+      newErrors.countryCode = t('components.memberForm.validation.countryCodeRequired');
+    }
+
     value = ValidateRequiredStringLength(m.email, t('components.memberForm.fields.email'), 50);
     if (value !== undefined) {
       newErrors.email = value;
+    } else if (!EMAIL_REGEX.test(m.email)) {
+      newErrors.email = t('components.memberForm.validation.emailInvalid');
     }
 
     if (!m.startOfStudies) {
@@ -168,8 +179,19 @@ export default function MemberForm({
       newErrors.courseOfStudy = t('components.memberForm.validation.courseOfStudyMaxLength');
     }
 
-    if (!m.memberCategoryId) {
+    if (mode === 'admin' && !m.memberCategoryId) {
       newErrors.memberCategoryId = t('components.memberForm.validation.memberCategoryRequired');
+    }
+
+    if (mode === 'public') {
+      const motivationError = ValidateRequiredStringLength(
+        motivation,
+        t('components.memberForm.fields.motivation'),
+        1000,
+      );
+      if (motivationError !== undefined) {
+        newErrors.motivation = motivationError;
+      }
     }
 
     if (!m.entryDate) {
@@ -182,11 +204,15 @@ export default function MemberForm({
       newErrors.exitDate = t('components.memberForm.validation.exitDateInvalid');
     }
 
-    if (m.iban && !validateIBAN(m.iban)) {
+    if (mode === 'public' && !m.iban.trim()) {
+      newErrors.iban = t('components.memberForm.validation.ibanRequired');
+    } else if (m.iban && !validateIBAN(m.iban)) {
       newErrors.iban = t('components.memberForm.validation.ibanError');
     }
 
-    if (m.bic && !validateBIC(m.bic)) {
+    if (mode === 'public' && !m.bic.trim()) {
+      newErrors.bic = t('components.memberForm.validation.bicRequired');
+    } else if (m.bic && !validateBIC(m.bic)) {
       newErrors.bic = t('components.memberForm.validation.bicError');
     }
 
@@ -201,7 +227,7 @@ export default function MemberForm({
     try {
       if (m.id === NIL_UUID) {
         const createEndpoint = mode === 'public' ? '/self-enrollment' : '/members';
-        const payload = mode === 'public' ? { ...m, entryDate: new Date() } : m;
+        const payload = mode === 'public' ? { ...m, entryDate: new Date(), motivation } : m;
         const response = await api(createEndpoint, {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -213,9 +239,14 @@ export default function MemberForm({
             status: 'error',
             message: t('components.memberForm.alerts.duplicateIbanOrEmailShort'),
           });
+        } else if (response === 429) {
+          setApiError(t('components.memberForm.alerts.rateLimited'));
+          setEditOrUpdateMember({
+            status: 'error',
+            message: t('components.memberForm.alerts.rateLimited'),
+          });
         } else if (mode === 'public') {
           setPublicSuccess(true);
-          setTimeout(onClose, 3000);
         } else {
           setSuccessMember({
             status: 'success',
@@ -318,17 +349,29 @@ export default function MemberForm({
       }}
     >
       {publicSuccess ? (
-        <DialogContent sx={{ textAlign: 'center', py: 8 }}>
-          <CheckCircleIcon color="success" sx={{ fontSize: 64, mb: 2 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-            {t('components.memberForm.publicSuccess.title')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t('components.memberForm.publicSuccess.subtitle')}
-          </Typography>
-        </DialogContent>
+        <>
+          <DialogContent sx={{ textAlign: 'center', py: 8 }}>
+            <CheckCircleIcon color="success" sx={{ fontSize: 64, mb: 2 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+              {t('components.memberForm.publicSuccess.title')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('components.memberForm.publicSuccess.subtitle')}
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
+            <Button
+              onClick={onClose}
+              variant="contained"
+              color="primary"
+              sx={{ textTransform: 'none', borderRadius: 2, px: 4 }}
+            >
+              {t('components.memberForm.publicSuccess.confirm')}
+            </Button>
+          </DialogActions>
+        </>
       ) : (
-        <form onSubmit={save}>
+        <form onSubmit={save} noValidate>
           <DialogTitle>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
               {m.id !== NIL_UUID
@@ -491,6 +534,8 @@ export default function MemberForm({
                   value={m.countryCode ?? ''}
                   onChange={handleChange('countryCode')}
                   select
+                  error={!!errors.countryCode}
+                  helperText={errors.countryCode}
                   slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
                 >
                   {countryOptions.map(({ value, label }) => (
@@ -647,37 +692,59 @@ export default function MemberForm({
                   </TextField>
                 </Grid>
               )}
-              <Grid size={mode === 'public' ? 12 : 6}>
-                <TextField
-                  fullWidth
-                  disabled={view}
-                  label={t('components.memberForm.fields.memberCategory')}
-                  variant="outlined"
-                  value={
-                    !m.memberCategoryId || m.memberCategoryId === '' ? allId : m.memberCategoryId
-                  }
-                  onChange={handleChange('memberCategoryId')}
-                  select
-                  required
-                  error={!!errors.memberCategoryId}
-                  helperText={errors.memberCategoryId}
-                >
-                  {memberCategories.map((e) => {
-                    if (e.category === 'ALL') return null;
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <TextField
+                    fullWidth
+                    disabled={view}
+                    label={t('components.memberForm.fields.memberCategory')}
+                    variant="outlined"
+                    value={
+                      !m.memberCategoryId || m.memberCategoryId === '' ? allId : m.memberCategoryId
+                    }
+                    onChange={handleChange('memberCategoryId')}
+                    select
+                    required
+                    error={!!errors.memberCategoryId}
+                    helperText={errors.memberCategoryId}
+                  >
+                    {memberCategories.map((e) => {
+                      if (e.category === 'ALL') return null;
 
-                    const translationKey = `components.memberForm.fields.memberCategoryOptions.${e.category}`;
-                    const label = t(translationKey).startsWith(translationKey)
-                      ? e.name
-                      : t(translationKey);
+                      const translationKey = `components.memberForm.fields.memberCategoryOptions.${e.category}`;
+                      const label = t(translationKey).startsWith(translationKey)
+                        ? e.name
+                        : t(translationKey);
 
-                    return (
-                      <MenuItem key={e.id.toString()} value={e.id.toString()}>
-                        {label}
-                      </MenuItem>
-                    );
-                  })}
-                </TextField>
-              </Grid>
+                      return (
+                        <MenuItem key={e.id.toString()} value={e.id.toString()}>
+                          {label}
+                        </MenuItem>
+                      );
+                    })}
+                  </TextField>
+                </Grid>
+              )}
+              {mode === 'public' && (
+                <Grid size={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label={t('components.memberForm.fields.motivation')}
+                    placeholder={t('components.memberForm.fields.motivationPlaceholder')}
+                    variant="outlined"
+                    value={motivation}
+                    onChange={(e) => {
+                      setMotivation(e.target.value);
+                      setErrors({ ...errors, motivation: undefined });
+                    }}
+                    required
+                    error={!!errors.motivation}
+                    helperText={errors.motivation ?? `${motivation.length}/1000`}
+                  />
+                </Grid>
+              )}
               {mode === 'admin' && (
                 <Grid size={6}>
                   <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
@@ -736,6 +803,7 @@ export default function MemberForm({
                   placeholder="DE00 0000 0000 0000 0000 00"
                   value={formattedIBAN}
                   onChange={handleIbanChange}
+                  required={mode === 'public'}
                   error={errors.iban !== undefined}
                   helperText={errors.iban}
                 />
@@ -749,6 +817,7 @@ export default function MemberForm({
                   placeholder="DEUTDEXXX"
                   value={m.bic}
                   onChange={handleBicChange}
+                  required={mode === 'public'}
                   error={errors.bic !== undefined}
                   helperText={errors.bic}
                 />
@@ -778,33 +847,35 @@ export default function MemberForm({
                   </LocalizationProvider>
                 </Grid>
               )}
-              <Grid size={mode === 'public' ? 12 : 6}>
-                <TextField
-                  fullWidth
-                  disabled={view}
-                  label={t('components.memberForm.fields.contributionPlan')}
-                  variant="outlined"
-                  value={m.contributionPlanId === null ? NIL_UUID : m.contributionPlanId}
-                  onChange={(event) =>
-                    event.target.value !== NIL_UUID
-                      ? setM({
-                          ...m,
-                          ['contributionPlanId']: event.target.value,
-                        })
-                      : null
-                  }
-                  select
-                  error={!!errors.contributionPlanId}
-                  helperText={errors.contributionPlanId}
-                >
-                  <MenuItem value={NIL_UUID}>
-                    {t('components.memberForm.fields.noContribution')}
-                  </MenuItem>
-                  {contributionPlans.map((x) => {
-                    return <MenuItem value={x.id.toString()}>{x.name}</MenuItem>;
-                  })}
-                </TextField>
-              </Grid>
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <TextField
+                    fullWidth
+                    disabled={view}
+                    label={t('components.memberForm.fields.contributionPlan')}
+                    variant="outlined"
+                    value={m.contributionPlanId === null ? NIL_UUID : m.contributionPlanId}
+                    onChange={(event) =>
+                      event.target.value !== NIL_UUID
+                        ? setM({
+                            ...m,
+                            ['contributionPlanId']: event.target.value,
+                          })
+                        : null
+                    }
+                    select
+                    error={!!errors.contributionPlanId}
+                    helperText={errors.contributionPlanId}
+                  >
+                    <MenuItem value={NIL_UUID}>
+                      {t('components.memberForm.fields.noContribution')}
+                    </MenuItem>
+                    {contributionPlans.map((x) => {
+                      return <MenuItem value={x.id.toString()}>{x.name}</MenuItem>;
+                    })}
+                  </TextField>
+                </Grid>
+              )}
             </Grid>
 
             {Object.keys(errors).length !== 0 &&

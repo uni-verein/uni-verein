@@ -572,4 +572,52 @@ test.describe('Receipt payment method & paid status', () => {
     await backend.deleteUser(otherUser.id);
     createdUserIds.delete(otherUser.id);
   });
+
+  test('Delete action is not available for USER once receipt is marked as paid', async ({
+    page,
+  }) => {
+    const financialManager = await backend.createUser(Role.FINANCIAL_MANAGER);
+    createdUserIds.add(financialManager.id);
+    const financialManagerToken = await backend.loginUser(
+      financialManager.username,
+      financialManager.password,
+    );
+
+    await tc.setup(Role.USER);
+    const receipt = await backend.createTestReceipt(tc.get().token, {
+      amount: '11.00',
+      vendor: 'Paid by financial manager',
+    });
+    await backend.payReceipt(financialManagerToken, receipt.id, 'CASH');
+
+    await openDashboard(page, tc.get().token);
+    await goToReceipts(page);
+
+    await expect(page.getByRole('cell', { name: 'Bezahlt' })).toBeVisible();
+    await expect(page.getByLabel('Löschen')).toHaveCount(0);
+    await expect(page.getByLabel('Ansehen')).toHaveCount(1);
+
+    await backend.deleteUser(financialManager.id);
+    createdUserIds.delete(financialManager.id);
+  });
+
+  test('ADMIN can still delete a paid receipt', async ({ page }) => {
+    await tc.setup(Role.ADMIN);
+    const receipt = await backend.createTestReceipt(tc.get().token, {
+      amount: '11.00',
+      vendor: 'Paid receipt',
+    });
+    await backend.payReceipt(tc.get().token, receipt.id, 'CASH');
+
+    await openDashboard(page, tc.get().token);
+    await goToReceipts(page);
+
+    await expect(page.getByRole('cell', { name: 'Bezahlt' })).toBeVisible();
+    await page.getByLabel('Löschen').first().click();
+    await page.getByRole('button', { name: 'Löschen', exact: true }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Beleg erfolgreich gelöscht.' }),
+    ).toBeVisible();
+  });
 });

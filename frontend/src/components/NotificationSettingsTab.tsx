@@ -18,16 +18,24 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
   const { t } = useTranslation();
   const setSnackbar = useSnackbar();
   const [receiptNotificationEnabled, setReceiptNotificationEnabled] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [selfEnrollmentNotificationEnabled, setSelfEnrollmentNotificationEnabled] = useState(false);
+  const [savingReceipt, setSavingReceipt] = useState(false);
+  const [savingSelfEnrollment, setSavingSelfEnrollment] = useState(false);
 
   useEffect(() => {
-    if (role !== Role.FINANCIAL_MANAGER) return;
-
     const loadSettings = async () => {
       try {
         const settings: UserSetting[] = await api('/users/account/settings');
-        const setting = settings.find((s) => s.type === UserSettingType.RECEIPT_NOTIFICATION);
-        setReceiptNotificationEnabled(setting?.enabled ?? true);
+        if (role === Role.FINANCIAL_MANAGER) {
+          const receiptSetting = settings.find(
+            (s) => s.type === UserSettingType.RECEIPT_NOTIFICATION,
+          );
+          setReceiptNotificationEnabled(receiptSetting?.enabled ?? true);
+        }
+        const selfEnrollmentSetting = settings.find(
+          (s) => s.type === UserSettingType.SELF_ENROLLMENT_NOTIFICATION,
+        );
+        setSelfEnrollmentNotificationEnabled(selfEnrollmentSetting?.enabled ?? false);
       } catch {
         setSnackbar({
           status: 'error',
@@ -38,8 +46,8 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
     loadSettings().catch();
   }, [role, setSnackbar, t]);
 
-  const handleToggle = async (checked: boolean) => {
-    setSaving(true);
+  const handleReceiptToggle = async (checked: boolean) => {
+    setSavingReceipt(true);
     setReceiptNotificationEnabled(checked);
     try {
       await api(`/users/account/settings/${UserSettingType.RECEIPT_NOTIFICATION}`, {
@@ -57,7 +65,30 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
         message: t('pages.userManagement.notificationSettings.saveFailed'),
       });
     } finally {
-      setSaving(false);
+      setSavingReceipt(false);
+    }
+  };
+
+  const handleSelfEnrollmentToggle = async (checked: boolean) => {
+    setSavingSelfEnrollment(true);
+    setSelfEnrollmentNotificationEnabled(checked);
+    try {
+      await api(`/users/account/settings/${UserSettingType.SELF_ENROLLMENT_NOTIFICATION}`, {
+        method: 'PUT',
+        body: JSON.stringify({ enabled: checked }),
+      });
+      setSnackbar({
+        status: 'success',
+        message: t('pages.userManagement.notificationSettings.saveSuccess'),
+      });
+    } catch {
+      setSelfEnrollmentNotificationEnabled(!checked);
+      setSnackbar({
+        status: 'error',
+        message: t('pages.userManagement.notificationSettings.saveFailed'),
+      });
+    } finally {
+      setSavingSelfEnrollment(false);
     }
   };
 
@@ -72,7 +103,7 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {role === Role.FINANCIAL_MANAGER ? (
+          {role === Role.FINANCIAL_MANAGER && (
             <TableRow hover>
               <TableCell>
                 {t('pages.userManagement.notificationSettings.receiptNotification')}
@@ -80,8 +111,8 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
               <TableCell align="right">
                 <Switch
                   checked={receiptNotificationEnabled}
-                  disabled={saving}
-                  onChange={(e) => handleToggle(e.target.checked)}
+                  disabled={savingReceipt}
+                  onChange={(e) => handleReceiptToggle(e.target.checked)}
                   slotProps={{
                     input: {
                       role: 'switch',
@@ -93,13 +124,27 @@ export function NotificationSettingsTab({ role }: { role?: Role | string }) {
                 />
               </TableCell>
             </TableRow>
-          ) : (
-            <TableRow>
-              <TableCell colSpan={2} sx={{ color: 'text.secondary' }}>
-                {t('pages.userManagement.notificationSettings.noSettingsAvailable')}
-              </TableCell>
-            </TableRow>
           )}
+          <TableRow hover>
+            <TableCell>
+              {t('pages.userManagement.notificationSettings.selfEnrollmentNotification')}
+            </TableCell>
+            <TableCell align="right">
+              <Switch
+                checked={selfEnrollmentNotificationEnabled}
+                disabled={savingSelfEnrollment}
+                onChange={(e) => handleSelfEnrollmentToggle(e.target.checked)}
+                slotProps={{
+                  input: {
+                    role: 'switch',
+                    'aria-label': t(
+                      'pages.userManagement.notificationSettings.selfEnrollmentNotification',
+                    ),
+                  },
+                }}
+              />
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
     </TableContainer>

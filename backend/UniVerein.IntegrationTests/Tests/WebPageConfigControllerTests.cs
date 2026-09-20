@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
+using UniVerein.Api.Exceptions;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
@@ -187,6 +188,7 @@ public class WebPageConfigControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMailSettingsEntity();
         WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
 
         // Act
@@ -203,6 +205,51 @@ public class WebPageConfigControllerTests : IntegrationTestBase
             WebPageConfigEntity? webPageConfigEntity = await db.WebPageConfigs.FirstOrDefaultAsync();
             webPageConfigEntity.ShouldNotBeNull();
             webPageConfigEntity!.SelfEnrollmentEnabled.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public async Task EnableSelfEnrollment_WithoutMailSettings_UnprocessableEntity()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
+        ErrorDetailsResult? result =
+            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        result.ShouldNotBeNull();
+        result!.ErrorCode.ShouldBe(ApiErrorCodes.UNPROCESSABLE_ENTITY);
+        await WithDbContext(async db =>
+        {
+            (await db.WebPageConfigs.AnyAsync(x => x.SelfEnrollmentEnabled)).ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public async Task DisableSelfEnrollment_WithoutMailSettings_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateWebPageConfigEntity(selfEnrollmentEnabled: true);
+        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: false);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
+        WebPageConfigResult? results =
+            await response.Content.ReadFromJsonAsync<WebPageConfigResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.SelfEnrollmentEnabled.ShouldBeFalse();
+        await WithDbContext(async db =>
+        {
+            (await db.WebPageConfigs.AnyAsync(x => x.SelfEnrollmentEnabled)).ShouldBeFalse();
         });
     }
 

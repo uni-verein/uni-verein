@@ -65,6 +65,10 @@ function isReceiptEditable(receipt: Receipt, userId: string | undefined): boolea
   );
 }
 
+function isReceiptDeletable(receipt: Receipt, isPrivileged: boolean): boolean {
+  return receipt.deletedAt === null && (isPrivileged || !receipt.paid);
+}
+
 function ReceiptStatusChip({ paid, t }: { paid: boolean; t: (key: string) => string }) {
   return paid ? (
     <Chip
@@ -338,7 +342,7 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
                       </IconButton>
                     </Tooltip>
                   )}
-                  {r.deletedAt === null && (
+                  {isReceiptDeletable(r, isPrivileged) && (
                     <Tooltip title={t('pages.receipts.actions.delete')}>
                       <IconButton
                         onClick={() => remove(r.id.toString())}
@@ -406,7 +410,7 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
                     </IconButton>
                   </Tooltip>
                 )}
-                {r.deletedAt === null && (
+                {isReceiptDeletable(r, isPrivileged) && (
                   <Tooltip title={t('pages.receipts.actions.delete')}>
                     <IconButton onClick={() => remove(r.id.toString())} size="small" color="error">
                       <DeleteIcon fontSize="small" />

@@ -58,6 +58,7 @@ test.describe('Web page – Configure', () => {
   });
   test.afterEach(async () => {
     await tc.teardown();
+    await backend.deleteMailSettings();
   });
 
   test('Open webpage config', async ({ page }) => {
@@ -127,7 +128,9 @@ test.describe('Web page – Configure', () => {
 
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
-    await expect(page.getByRole('switch', { name: 'Selbstregistrierung aktiviert' })).toBeChecked();
+    await expect(
+      page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
+    ).toBeChecked();
 
     await page.getByRole('button', { name: 'Zurücksetzen' }).click();
     await page.getByRole('button', { name: 'Zurücksetzen' }).click();
@@ -135,8 +138,32 @@ test.describe('Web page – Configure', () => {
       page.getByRole('alert').filter({ hasText: 'Zurücksetzen erfolgreich.' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('switch', { name: 'Selbstregistrierung aktiviert' }),
+      page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
     ).not.toBeChecked();
+  });
+
+  test('Self-enrollment toggle is disabled with a hint until mail settings are configured', async ({
+    page,
+  }) => {
+    await backend.deleteMailSettings();
+    await openDashboard(page, tc.get().token);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+
+    const toggle = page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' });
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toBeDisabled();
+    await expect(page.getByText(/benötigt konfigurierte E-Mail-Einstellungen/)).toBeVisible();
+
+    await backend.updateMailSettings();
+    await page.reload();
+    await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await expect(
+      page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
+    ).toBeEnabled();
+    await expect(page.getByText(/benötigt konfigurierte E-Mail-Einstellungen/)).not.toBeVisible();
   });
 
   test('Show changed webpage name', async ({ page }) => {

@@ -24,7 +24,7 @@ export async function api(path: string, options: RequestInit = {}) {
 
   if (!res.ok && res.status === 400) throw new Error('Bad Request');
 
-  if (!res.ok && res.status !== 409) throw new Error('API Error');
+  if (!res.ok && res.status !== 409 && res.status !== 429) throw new Error('API Error');
   if (!res.ok) return res.status;
 
   if (res.status === 204) return;

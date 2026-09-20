@@ -38,6 +38,7 @@ import { Role } from '../types';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
 import { SidebarContent } from '../components/SidebarContent';
+import { LanguageToggle } from '../components/LanguageToggle';
 import { useThemeMode, ThemeMode } from '../hooks/useThemeMode';
 
 const Members = lazy(() => import('./Members'));
@@ -109,7 +110,7 @@ export default function Dashboard({
     latestVersion?: string;
   } | null>(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState<HTMLElement | null>(null);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { mode, setMode } = useThemeMode();
 
   const drawerWidth = collapsed ? drawerWidthCollapsed : drawerWidthExpanded;
@@ -345,25 +346,7 @@ export default function Dashboard({
               </Tooltip>
             )}
 
-            {isMobile ? (
-              <Tooltip title={t('pages.dashboard.switchLanguage')} arrow>
-                <IconButton
-                  color="inherit"
-                  onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'de' ? 'en' : 'de')}
-                  aria-label={t('pages.dashboard.switchLanguage')}
-                >
-                  <Typography sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
-                    {i18n.resolvedLanguage === 'de' ? '🇬🇧' : '🇩🇪'}
-                  </Typography>
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Button
-                onClick={() => i18n.changeLanguage(i18n.resolvedLanguage === 'de' ? 'en' : 'de')}
-              >
-                {i18n.resolvedLanguage === 'de' ? '🇬🇧 English' : '🇩🇪 Deutsch'}
-              </Button>
-            )}
+            <LanguageToggle isMobile={isMobile} />
 
             {!isMobile && <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />}
 

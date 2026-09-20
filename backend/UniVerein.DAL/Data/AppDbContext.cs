@@ -39,6 +39,7 @@ public class AppDbContext : DbContext
     public DbSet<ReceiptCategoryEntity> ReceiptCategories => Set<ReceiptCategoryEntity>();
     public DbSet<ReceiptFileEntity> ReceiptFiles => Set<ReceiptFileEntity>();
     public DbSet<UserSettingEntity> UserSettings => Set<UserSettingEntity>();
+    public DbSet<PendingSelfEnrollmentEntity> PendingSelfEnrollments => Set<PendingSelfEnrollmentEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -128,6 +129,35 @@ public class AppDbContext : DbContext
             .HasOne(x => x.User)
             .WithMany()
             .HasForeignKey(x => x.UserId);
+
+
+        modelBuilder.Entity<PendingSelfEnrollmentEntity>()
+            .Property(x => x.Status)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<PendingSelfEnrollmentEntity>()
+            .Property(x => x.Gender)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<PendingSelfEnrollmentEntity>()
+            .Property(x => x.BulkMail)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<PendingSelfEnrollmentEntity>()
+            .Property(x => x.AcademicDegree)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<PendingSelfEnrollmentEntity>()
+            .HasOne(x => x.MemberCategory)
+            .WithMany()
+            .HasForeignKey(x => x.MemberCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PendingSelfEnrollmentEntity>()
+            .HasOne(x => x.ContributionPlan)
+            .WithMany()
+            .HasForeignKey(x => x.ContributionPlanId)
+            .OnDelete(DeleteBehavior.SetNull);
 
 
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")

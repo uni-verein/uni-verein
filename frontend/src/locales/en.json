@@ -11,6 +11,44 @@
       "alumniOfficer": "Alumni officer",
       "studentCouncilRepresentative": "Student council representative"
     },
+    "pendingEnrollments": {
+      "info": "These registrations already confirmed their email address and are waiting for approval. An active member is only created once approved.",
+      "table": {
+        "ariaLabel": "Pending enrollments table",
+        "colName": "Name",
+        "colEmail": "Email",
+        "colMemberCategory": "Member category",
+        "colSubmittedAt": "Submitted at",
+        "colActions": "Actions",
+        "noItems": "No pending enrollments.",
+        "rowsPerPage": "Rows per page:",
+        "categoryNotAssigned": "–"
+      },
+      "actions": {
+        "edit": "Review",
+        "reject": "Delete"
+      },
+      "confirmDialog": {
+        "rejectQuestion": "Really delete {{name}}'s registration?",
+        "reject": "Delete",
+        "reasonLabel": "Reason (optional, audit log only)"
+      },
+      "responseMessages": {
+        "approved": "Registration approved, member was created.",
+        "approveConflict": "Approval failed. A member with the same IBAN or email already exists.",
+        "approveError": "Approval failed. Please try again.",
+        "rejected": "Registration deleted.",
+        "rejectError": "Deleting failed. Please try again."
+      }
+    },
+    "pendingEnrollmentForm": {
+      "title": "Review registration",
+      "subtitle": "Complete the missing details before creating the member.",
+      "loadError": "Could not load registration. It may have already been processed.",
+      "buttons": {
+        "saveAndCreate": "Save & create"
+      }
+    },
     "confirmDialog": {
       "confirm": "Confirm",
       "cancel": "Cancel",
@@ -35,8 +73,9 @@
       },
       "subtitle": "Please enter the master data of the club member here.",
       "publicSuccess": {
-        "title": "Welcome to the club!",
-        "subtitle": "You've been successfully added as a member."
+        "title": "Please confirm your email address",
+        "subtitle": "We've sent you a confirmation link by email. Your registration will only be reviewed after you confirm it.",
+        "confirm": "OK"
       },
       "fields": {
         "memberNumber": "Member Number",
@@ -66,6 +105,8 @@
         "academicDegree": "Academic degree",
         "noAcademicDegree": "No academic degree",
         "courseOfStudy": "Course of study",
+        "motivation": "Motivation",
+        "motivationPlaceholder": "What do you do professionally/as a student, and why do you want to join?",
         "taskWithinTheClub": "Task within the club",
         "memberCategory": "Member category",
         "memberCategoryOptions": {
@@ -97,13 +138,18 @@
         "postalCodeMaxLength": "Postal code must not exceed 10 characters.",
         "cityRequired": "City must not be empty.",
         "cityMaxLength": "City must not exceed 100 characters.",
+        "countryCodeRequired": "Country code must be selected.",
         "emailRequired": "E-Mail must not be empty.",
         "emailMaxLength": "E-Mail must not exceed 50 characters.",
+        "emailInvalid": "Email address is invalid.",
         "startOfStudiesRequired": "The start date of the studies must be set.",
         "startOfStudiesInvalid": "The start of studies must be in the past.",
         "endOfStudiesInvalid": "The end of studies must be later than the start of studies.",
         "courseOfStudyMaxLength": "The course of study must not exceed 100 characters.",
         "memberCategoryRequired": "Member category must be established.",
+        "motivationRequired": "Motivation must not be empty.",
+        "ibanRequired": "IBAN must not be empty.",
+        "bicRequired": "BIC must not be empty.",
         "entryDateRequired": "Entry date must be set.",
         "entryDateInvalid": "Entry date must be in the past.",
         "exitDateInvalid": "The exit date must be later than the entry date.",
@@ -116,7 +162,8 @@
         "invalidInputs": "Invalid inputs",
         "saveFailed": "Saving failed. Please try again.",
         "duplicateIbanOrEmail": "Saving failed. A member with the same IBAN or E-Mail already exists.",
-        "duplicateIbanOrEmailShort": "A member with the same IBAN or E-Mail already exists."
+        "duplicateIbanOrEmailShort": "A member with the same IBAN or E-Mail already exists.",
+        "rateLimited": "Too many requests. Please try again in a few minutes."
       },
       "snackbar": {
         "createSuccess": "User successfully created.",
@@ -681,7 +728,8 @@
       "selfEnrollment": {
         "sectionTitle": "Self-enrollment",
         "description": "When enabled, visitors can create their own member record without logging in via the link below, e.g. at a trade fair booth.",
-        "toggleLabel": "Self-enrollment enabled",
+        "toggleLabel": "Enable self-enrollment",
+        "mailRequired": "Self-enrollment requires mail settings to be configured first, so confirmation and notification emails can be sent. Please set them up under \"Configure email\" first.",
         "linkLabel": "Public link",
         "copyButton": "Copy link"
       },
@@ -714,6 +762,13 @@
       "closedTitle": "Self-enrollment unavailable",
       "closedMessage": "Self-enrollment is currently not active. Please contact a club administrator.",
       "loadError": "The page could not be loaded. Please try again."
+    },
+    "confirmEnrollment": {
+      "loading": "Confirming your registration...",
+      "successTitle": "Email confirmed!",
+      "successMessage": "Your registration will now be reviewed by a club administrator. You'll be notified once it has been approved.",
+      "errorTitle": "Link invalid or expired",
+      "errorMessage": "This confirmation link is invalid, expired, or was already used. Please register again."
     },
     "login": {
       "login": "Login",
@@ -877,6 +932,10 @@
     },
     "members": {
       "title": "Member Management",
+      "tabs": {
+        "members": "Members",
+        "pendingEnrollments": "Pending members"
+      },
       "refresh": "Refresh",
       "addMember": "Add member",
       "unknownTask": "Unknown task",
@@ -1027,6 +1086,7 @@
       "notificationSettings": {
         "title": "Notification settings",
         "receiptNotification": "Notify me by email when a new receipt is submitted",
+        "selfEnrollmentNotification": "Notify me by email when a new self-enrollment comes in",
         "noSettingsAvailable": "No notification settings are currently available for your role.",
         "saveSuccess": "Setting saved successfully.",
         "saveFailed": "Saving failed. Please try again.",

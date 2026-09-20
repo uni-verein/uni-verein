@@ -32,6 +32,13 @@ services:
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
       Version: ${VERSION}
+      # This compose file is used for local dev and CI e2e runs (see .github/workflows/ci.yml), which
+      # hammer /self-enrollment from a single shared IP far more than any real visitor would - raise the
+      # limits here so the Playwright suite doesn't trip its own rate limiter. Production uses
+      # docker-compose-prod*.yml instead, which keeps the tighter built-in defaults (see Startup.cs).
+      RateLimiting__SelfEnrollment__PermitLimit: "50"
+      RateLimiting__SelfEnrollment__ReadPermitLimit: "200"
+      RateLimiting__SelfEnrollment__ConfirmPermitLimit: "50"
     volumes:
       - ./receipts:/app/receipts
     depends_on:

@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createTheme, ThemeProvider, CssBaseline, Typography, useMediaQuery } from '@mui/material';
+import type {} from '@mui/x-date-pickers/themeAugmentation';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PublicEnrollmentPage from './pages/PublicEnrollmentPage';
+import ConfirmEnrollmentPage from './pages/ConfirmEnrollmentPage';
 import { isTokenValid } from './utils';
 import { usePageConfig } from './hooks/usePageConfig';
 import { useThemeMode } from './hooks/useThemeMode';
@@ -43,6 +45,17 @@ export default function App() {
         },
         components: {
           MuiOutlinedInput: {
+            styleOverrides: {
+              notchedOutline: {
+                '@supports (-webkit-appearance: none)': {
+                  '& legend': {
+                    visibility: 'visible !important',
+                  },
+                },
+              },
+            },
+          },
+          MuiPickersOutlinedInput: {
             styleOverrides: {
               notchedOutline: {
                 '@supports (-webkit-appearance: none)': {
@@ -98,7 +111,9 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      {window.location.pathname === '/enroll' ? (
+      {window.location.pathname === '/enroll/confirm' ? (
+        <ConfirmEnrollmentPage />
+      ) : window.location.pathname === '/enroll' ? (
         <PublicEnrollmentPage />
       ) : !logged ? (
         <Login onLogin={handleLoginSuccess} demo={demo} />
