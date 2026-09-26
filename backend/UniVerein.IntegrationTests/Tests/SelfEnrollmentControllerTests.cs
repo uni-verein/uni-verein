@@ -152,6 +152,24 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task PostSelfEnrollment_EnabledButNoPublicBaseUrlConfigured_InternalServerError()
+    {
+        // Arrange
+        await WithDbContext(async db =>
+        {
+            await db.WebPageConfigs.AddAsync(new WebPageConfigEntity { SelfEnrollmentEnabled = true });
+            await db.SaveChangesAsync();
+        });
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", CreateSelfEnrollmentRequest());
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+    }
+
+    [Fact]
     public async Task PostSelfEnrollment_Enabled_CreatesPendingRowAwaitingConfirmation_NoMemberYet()
     {
         // Arrange
@@ -519,7 +537,11 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
     // ---------------------------------------------------------------
     private async Task<WebPageConfigEntity> CreateSelfEnrollmentConfigEntity(bool enabled)
     {
-        WebPageConfigEntity config = new() { SelfEnrollmentEnabled = enabled };
+        WebPageConfigEntity config = new()
+        {
+            SelfEnrollmentEnabled = enabled,
+            PublicBaseUrl = enabled ? "https://club.test.invalid" : null
+        };
 
         await WithDbContext(async db =>
         {

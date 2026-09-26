@@ -7,4 +7,5 @@ public static class ApiErrorCodes
     public const string RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND";
     public const string CONFLICT_RESOURCE_ALREADY_EXISTS = "CONFLICT_RESOURCE_ALREADY_EXISTS";
     public const string UNPROCESSABLE_ENTITY = "UNPROCESSABLE_ENTITY";
+    public const string INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
 }

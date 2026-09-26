@@ -62,6 +62,36 @@ public class AuthControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Login_FailedAttemptsOlderThanLockoutWindow_DoNotCountTowardsLockout()
+    {
+        // Arrange
+        HttpClient client = CreateClient();
+        LoginRequest request = new()
+        {
+            Username = "admin",
+            Password = "Test1234"
+        };
+
+        DateTimeOffset originalTime = Factory.FakeTime.GetUtcNow();
+        try
+        {
+            // Act
+            await client.PostAsJsonAsync("/auth/login", request);
+            await client.PostAsJsonAsync("/auth/login", request);
+
+            Factory.FakeTime.SetUtcNow(originalTime.AddMinutes(16));
+            HttpResponseMessage response = await client.PostAsJsonAsync("/auth/login", request);
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+        finally
+        {
+            Factory.FakeTime.SetUtcNow(originalTime);
+        }
+    }
+
+    [Fact]
     public async Task Login_WithValidCredentials_ReturnsOkAndToken()
     {
         // Arrange

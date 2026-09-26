@@ -13,6 +13,7 @@ using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace UniVerein.Api.Controllers;
@@ -168,7 +169,14 @@ public class UsersController : ControllerBase
         }
 
         if (request.Role != null)
+        {
+            if (user.Role == UserRole.ADMIN && IsCurrentUser(id))
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
+                    errorMessage: "Admins cannot change their own role.",
+                    moreInfo: "Role changes for your own account are not allowed."));
+
             user.Role = (UserRole)request.Role!;
+        }
 
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
@@ -191,8 +199,19 @@ public class UsersController : ControllerBase
                 errorMessage: "User not found.",
                 moreInfo: $"User with ID {id} not found."));
 
+        if (user.Role == UserRole.ADMIN && IsCurrentUser(id))
+            return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
+                errorMessage: "Admins cannot delete their own account.",
+                moreInfo: "Self-deletion is not allowed for admin accounts."));
+
         _db.Remove(user);
         await _db.SaveChangesAsync();
         return Ok();
+    }
+
+    private bool IsCurrentUser(Guid userId)
+    {
+        string? currentUserIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(currentUserIdClaim, out Guid currentUserId) && currentUserId == userId;
     }
 }

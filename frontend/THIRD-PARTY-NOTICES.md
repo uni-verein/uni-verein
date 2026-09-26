@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-09-05
+Generated automatically on 2026-09-26
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -227,7 +227,7 @@ Generated automatically on 2026-09-05
 | @types/json-schema@7.0.15 | - | MIT |
 | @types/lodash.debounce@4.0.9 | - | MIT |
 | @types/lodash@4.17.25 | - | MIT |
-| @types/node@25.9.5 | - | MIT |
+| @types/node@25.9.8 | - | MIT |
 | @types/parse-json@4.0.2 | - | MIT |
 | @types/prop-types@15.7.15 | - | MIT |
 | @types/react-dom@19.2.7 | - | MIT |
@@ -236,17 +236,17 @@ Generated automatically on 2026-09-05
 | @types/resolve@1.20.2 | - | MIT |
 | @types/trusted-types@2.0.7 | - | MIT |
 | @types/use-sync-external-store@0.0.6 | - | MIT |
-| @typescript-eslint/eslint-plugin@8.69.0 | - | MIT |
-| @typescript-eslint/parser@8.69.0 | - | MIT |
-| @typescript-eslint/project-service@8.69.0 | - | MIT |
-| @typescript-eslint/scope-manager@8.69.0 | - | MIT |
-| @typescript-eslint/tsconfig-utils@8.69.0 | - | MIT |
-| @typescript-eslint/type-utils@8.69.0 | - | MIT |
-| @typescript-eslint/types@8.69.0 | - | MIT |
-| @typescript-eslint/typescript-estree@8.69.0 | - | MIT |
-| @typescript-eslint/utils@8.69.0 | - | MIT |
-| @typescript-eslint/visitor-keys@8.69.0 | - | MIT |
-| @vite-pwa/assets-generator@1.0.2 | - | MIT |
+| @typescript-eslint/eslint-plugin@8.70.1 | - | MIT |
+| @typescript-eslint/parser@8.70.1 | - | MIT |
+| @typescript-eslint/project-service@8.70.1 | - | MIT |
+| @typescript-eslint/scope-manager@8.70.1 | - | MIT |
+| @typescript-eslint/tsconfig-utils@8.70.1 | - | MIT |
+| @typescript-eslint/type-utils@8.70.1 | - | MIT |
+| @typescript-eslint/types@8.70.1 | - | MIT |
+| @typescript-eslint/typescript-estree@8.70.1 | - | MIT |
+| @typescript-eslint/utils@8.70.1 | - | MIT |
+| @typescript-eslint/visitor-keys@8.70.1 | - | MIT |
+| @vite-pwa/assets-generator@1.0.4 | - | MIT |
 | @vitejs/plugin-react@4.7.0 | - | MIT |
 | abort-controller@3.0.0 | - | MIT |
 | acorn-jsx@5.3.2 | - | MIT |
@@ -331,11 +331,11 @@ Generated automatically on 2026-09-05
 | eslint-config-prettier@10.1.8 | - | MIT |
 | eslint-plugin-prettier@5.5.6 | - | MIT |
 | eslint-plugin-react-hooks@7.1.1 | - | MIT |
-| eslint-plugin-react-refresh@0.5.6 | - | MIT |
+| eslint-plugin-react-refresh@0.5.7 | - | MIT |
 | eslint-scope@9.1.2 | - | BSD-2-Clause |
 | eslint-visitor-keys@3.4.3 | - | Apache-2.0 |
 | eslint-visitor-keys@5.0.1 | - | Apache-2.0 |
-| eslint@10.10.0 | - | MIT |
+| eslint@10.11.0 | - | MIT |
 | espree@11.2.0 | - | BSD-2-Clause |
 | esquery@1.7.0 | - | BSD-3-Clause |
 | esrecurse@4.3.0 | - | BSD-2-Clause |
@@ -398,7 +398,7 @@ Generated automatically on 2026-09-05
 | idb-keyval@6.3.0 | - | Apache-2.0 |
 | idb@7.1.1 | - | ISC |
 | ignore@5.3.2 | - | MIT |
-| ignore@7.0.8 | - | MIT |
+| ignore@7.0.10 | - | MIT |
 | import-fresh@3.3.1 | - | MIT |
 | imurmurhash@0.1.4 | - | MIT |
 | internal-slot@1.1.0 | - | MIT |
@@ -497,7 +497,7 @@ Generated automatically on 2026-09-05
 | postcss@8.5.28 | - | MIT |
 | prelude-ls@1.2.1 | - | MIT |
 | prettier-linter-helpers@1.0.1 | - | MIT |
-| prettier@3.9.6 | - | MIT |
+| prettier@3.9.8 | - | MIT |
 | pretty-bytes@5.6.0 | - | MIT |
 | pretty-bytes@6.1.1 | - | MIT |
 | prop-types@15.8.1 | - | MIT |
@@ -520,7 +520,7 @@ Generated automatically on 2026-09-05
 | quansync@1.0.0 | - | MIT |
 | querystringify@2.2.0 | - | MIT |
 | react-dom@18.3.1 | - | MIT |
-| react-i18next@17.0.13 | - | MIT |
+| react-i18next@17.0.15 | - | MIT |
 | react-is@16.13.1 | - | MIT |
 | react-is@19.2.8 | - | MIT |
 | react-refresh@0.17.0 | - | MIT |
@@ -593,7 +593,7 @@ Generated automatically on 2026-09-05
 | typed-array-byte-length@1.0.3 | - | MIT |
 | typed-array-byte-offset@1.0.4 | - | MIT |
 | typed-array-length@1.0.8 | - | MIT |
-| typescript-eslint@8.69.0 | - | MIT |
+| typescript-eslint@8.70.1 | - | MIT |
 | typescript@5.9.3 | - | Apache-2.0 |
 | unbox-primitive@1.1.0 | - | MIT |
 | unconfig-core@7.5.0 | - | MIT |

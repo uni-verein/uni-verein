@@ -2,6 +2,8 @@ import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 
 GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
+export const RECEIPT_MAX_PDF_BYTES = 10 * 1024 * 1024;
+
 export function isPdfFile(file: File | Blob): boolean {
   return file.type === 'application/pdf';
 }

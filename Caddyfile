@@ -1,0 +1,8 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy proxy:8080
+}

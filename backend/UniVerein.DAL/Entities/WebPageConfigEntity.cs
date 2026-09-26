@@ -13,4 +13,7 @@ public class WebPageConfigEntity : BaseEntity
 
     [Column("self_enrollment_enabled")]
     public bool SelfEnrollmentEnabled { get; set; }
+
+    [Column("public_base_url")]
+    public string? PublicBaseUrl { get; set; }
 }

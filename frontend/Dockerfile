@@ -13,15 +13,18 @@ RUN npm ci || (echo "npm ci failed, retrying..." && sleep 5 && npm ci)
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine
 
+USER root
 RUN apk upgrade --no-cache
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+USER nginx
+
+EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=5 \
-    CMD wget -qO- http://127.0.0.1:80/ || exit 1
+    CMD wget -qO- http://127.0.0.1:8080/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

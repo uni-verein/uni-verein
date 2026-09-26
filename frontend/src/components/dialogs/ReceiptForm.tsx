@@ -33,7 +33,11 @@ import { api, apiFile } from '../../api';
 import { Receipt, ReceiptCategory, ReceiptPaymentMethod, Role } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { compressImageFile } from '../../utils/imageProcessing';
-import { isPdfFile, renderPdfFirstPageToBlob } from '../../utils/pdfProcessing';
+import {
+  isPdfFile,
+  RECEIPT_MAX_PDF_BYTES,
+  renderPdfFirstPageToBlob,
+} from '../../utils/pdfProcessing';
 import { runReceiptOcr } from '../../utils/receiptOcr';
 import { useIsPwaInstalled } from '../../hooks/useIsPwaInstalled';
 
@@ -161,6 +165,10 @@ export default function ReceiptForm({
     try {
       for (const file of selected) {
         const pdf = isPdfFile(file);
+        if (pdf && file.size > RECEIPT_MAX_PDF_BYTES) {
+          setApiError(t('components.receiptForm.alerts.fileTooLarge'));
+          continue;
+        }
         const uploadBlob: Blob = pdf ? file : await compressImageFile(file);
         const previewBlob = pdf ? await renderPdfFirstPageToBlob(uploadBlob) : uploadBlob;
         setFiles((prev) => [

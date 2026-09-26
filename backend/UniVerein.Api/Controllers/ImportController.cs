@@ -29,6 +29,8 @@ namespace UniVerein.Api.Controllers;
 [Route("[controller]")]
 public class ImportController : ControllerBase
 {
+    private const long MaxCsvFileSizeBytes = 10L * 1024 * 1024;
+
     private readonly AppDbContext _db;
     private readonly CryptoService _crypto;
 
@@ -129,6 +131,12 @@ public class ImportController : ControllerBase
         {
             Log.Error("ImportController: UploadCsvAsync -> CSV file is not valid because file is empty");
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Please upload a valid CSV-File."));
+        }
+
+        if (file.Length > MaxCsvFileSizeBytes)
+        {
+            Log.Error("ImportController: UploadCsvAsync -> CSV file is not valid because file is too large");
+            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "CSV file must not exceed 10 MB."));
         }
 
         List<ErrorResultTranslation> importErrors = new();

@@ -1,0 +1,53 @@
+version: 2
+
+# All ecosystems are bundled into a single weekly PR. Dependabot labels it
+# 'ready-for-ci' so the full pipeline runs exactly once per PR; each other label
+# would start an extra `pull_request: labeled` run whose gate fails. The
+# pipeline needs the application secrets as Dependabot secrets.
+# Major updates are ignored so the bundled PR stays mergeable; they are done
+# manually.
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: "weekly"
+    labels: ["ready-for-ci"]
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
+    labels: ["ready-for-ci"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "nuget"
+    directory: "/backend"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
+    labels: ["ready-for-ci"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/frontend"
+      - "/backend"
+      - "/backend/UniVerein.DbMigrator"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
+    labels: ["ready-for-ci"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
+    labels: ["ready-for-ci"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

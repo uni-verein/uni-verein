@@ -122,6 +122,25 @@ public class NotificationControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task GetFirmwareUpdate_CurrentVersionNewerThanStaleDbEntry_NoUpdateAvailable()
+    {
+        // Arrange
+        HttpClient client = CreateClientWithVersion("1.8.0");
+        await CreateFirmwareVersionEntity(tagName: "1.7.0", version: "1.7.0");
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/notifications/firmware-update");
+        FirmwareUpdateResult? result = await response.Content.ReadFromJsonAsync<FirmwareUpdateResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result!.NewFirmwareAvailable.ShouldBeFalse();
+        result.CurrentVersion.ShouldBe("1.8.0");
+        result.LatestVersion.ShouldBe("1.7.0");
+    }
+
+    [Fact]
     public async Task GetFirmwareUpdate_MultipleFirmwareVersions_ReturnsMostRecent()
     {
         // Arrange

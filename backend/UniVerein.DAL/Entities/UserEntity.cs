@@ -27,4 +27,7 @@ public class UserEntity : BaseEntity
 
     [Column("blocking_login_timeout")]
     public DateTimeOffset? BlockingLoginTimeout { get; set; }
+
+    [Column("last_failed_login_attempt")]
+    public DateTimeOffset? LastFailedLoginAttempt { get; set; }
 }

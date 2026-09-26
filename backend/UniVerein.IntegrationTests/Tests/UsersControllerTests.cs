@@ -530,6 +530,77 @@ public class UsersControllerTests : IntegrationTestBase
         });
     }
 
+    [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    [InlineData(UserRole.ADMIN)]
+    public async Task UpdateUser_OwnRoleAsAdmin_Forbidden(UserRole requestedRole)
+    {
+        // Arrange
+        (HttpClient client, Guid adminId) = await CreateUserAndClientAsync(UserRole.ADMIN, "self-role");
+        UserUpdateRequest request = new() { Role = requestedRole };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{adminId}", request);
+        ErrorDetailsResult? result =
+            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.StatusCode.ShouldBe((int)HttpStatusCode.Forbidden);
+
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(adminId);
+            user.ShouldNotBeNull();
+            user.Role.ShouldBe(UserRole.ADMIN);
+            user.Username.ShouldBe("self-role");
+        });
+    }
+
+    [Fact]
+    public async Task UpdateUser_OwnUsernameWithoutRoleChange_Success()
+    {
+        // Arrange
+        (HttpClient client, Guid adminId) = await CreateUserAndClientAsync(UserRole.ADMIN, "self-update");
+        UserUpdateRequest request = new() { Username = "self-update-renamed" };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{adminId}", request);
+        UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Username.ShouldBe("self-update-renamed");
+        result.Role.ShouldBe(UserRole.ADMIN);
+    }
+
+    [Fact]
+    public async Task UpdateUser_OtherAdminRole_Success()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        UserEntity otherAdmin = await CreateUserEntity(role: UserRole.ADMIN);
+        UserUpdateRequest request = CreateUpdateUserRequest();
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{otherAdmin.Id}", request);
+        UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Role.ShouldBe(UserRole.USER);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(otherAdmin.Id);
+            user.ShouldNotBeNull();
+            user.Role.ShouldBe(UserRole.USER);
+        });
+    }
+
     // ---------------------------------------------------------------
     // UPDATE /api/users/account
     // ---------------------------------------------------------------
@@ -755,6 +826,29 @@ public class UsersControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteUser_SelfAsAdmin_Forbidden()
+    {
+        // Arrange
+        (HttpClient client, Guid adminId) = await CreateUserAndClientAsync(UserRole.ADMIN, "self-admin");
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/users/{adminId}");
+        ErrorDetailsResult? result =
+            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        result.ShouldNotBeNull();
+        result.StatusCode.ShouldBe((int)HttpStatusCode.Forbidden);
+
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(adminId);
+            user.ShouldNotBeNull();
+        });
     }
 
     // ---------------------------------------------------------------

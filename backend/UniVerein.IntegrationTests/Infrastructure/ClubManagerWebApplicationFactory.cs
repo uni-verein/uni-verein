@@ -105,7 +105,7 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
                 Role = UserRole.ADMIN,
                 CreatedAt = DateTimeOffset.UtcNow,
                 FailedAttempts = 0,
-                BlockingLoginTimeout = DateTimeOffset.UtcNow
+                BlockingLoginTimeout = null
             });
 
             foreach ((string id, string name) category in Program.DefaultMemberCategories)

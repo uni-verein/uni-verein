@@ -25,6 +25,7 @@ public class WebPageConfigController : ControllerBase
         _db = db;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<WebPageConfigResult>> GetAsync()
     {
@@ -60,6 +61,8 @@ public class WebPageConfigController : ControllerBase
                               "so confirmation and notification emails can be sent."));
         }
 
+        string? publicBaseUrl = request.SelfEnrollmentEnabled ? $"{Request.Scheme}://{Request.Host}" : null;
+
         WebPageConfigEntity? webPageConfig = await _db.WebPageConfigs.FirstOrDefaultAsync();
         if (webPageConfig == null)
         {
@@ -67,7 +70,8 @@ public class WebPageConfigController : ControllerBase
             {
                 PageName = request.PageName,
                 Logo = request.Logo,
-                SelfEnrollmentEnabled = request.SelfEnrollmentEnabled
+                SelfEnrollmentEnabled = request.SelfEnrollmentEnabled,
+                PublicBaseUrl = publicBaseUrl
             };
             await _db.WebPageConfigs.AddAsync(webPageConfig);
         }
@@ -77,6 +81,8 @@ public class WebPageConfigController : ControllerBase
             webPageConfig.Logo = request.Logo;
             webPageConfig.SelfEnrollmentEnabled = request.SelfEnrollmentEnabled;
             webPageConfig.DeletedAt = null;
+            if (publicBaseUrl != null)
+                webPageConfig.PublicBaseUrl = publicBaseUrl;
             _db.WebPageConfigs.Update(webPageConfig);
         }
 

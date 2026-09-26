@@ -56,7 +56,7 @@ try
         {
             db.Database.Migrate();
             Guid id = Guid.Parse(AdminUserId);
-            if (!db.Users.IgnoreQueryFilters().Any(x => x.Id == id))
+            if (!db.Users.IgnoreQueryFilters().Any())
             {
                 db.Users.Add(new UserEntity
                 {
@@ -98,7 +98,7 @@ try
     }
 
     app.UseSerilogRequestLogging();
-    app.MapGet("/health", () => Results.Ok());
+    app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
     app.MapControllers().RequireCors("AllowFrontend");
     app.MapHub<EmailProgressHub>("/emailProgress");
     app.Run();

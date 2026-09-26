@@ -183,6 +183,88 @@ public class ReceiptsControllerTests : IntegrationTestBase
         result.Files[0].ContentType.ShouldBe("image/png");
     }
 
+    [Fact]
+    public async Task CreateAsync_WithSvgFileDeclaredAsImage_ReturnsBadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateReceiptFormData(
+            Encoding.UTF8.GetBytes("<svg onload=\"alert(1)\"></svg>"),
+            fileName: "receipt.svg",
+            contentType: "image/svg+xml");
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/receipts", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.MoreInfo.ShouldBe("Only image or PDF files are allowed.");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithFileLargerThan10Mb_ReturnsBadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        byte[] fileBytes = new byte[10 * 1024 * 1024 + 1];
+        MinimalPdfBytes.CopyTo(fileBytes, 0);
+        using MultipartFormDataContent content = CreateReceiptFormData(fileBytes);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/receipts", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.MoreInfo.ShouldBe("Each file must not exceed 10 MB.");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithMismatchedDeclaredContentType_UsesSniffedTypeNotDeclaredType()
+    {
+        // Arrange: real PNG magic bytes, but declared as application/pdf.
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateReceiptFormData(
+            new byte[] { 0x89, 0x50, 0x4E, 0x47 },
+            fileName: "receipt.pdf",
+            contentType: "application/pdf");
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/receipts", content);
+        ReceiptResult? result = await response.Content.ReadFromJsonAsync<ReceiptResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result.ShouldNotBeNull();
+        result.Files[0].ContentType.ShouldBe("image/png");
+    }
+
+    [Fact]
+    public async Task GetFileAsync_ReturnsAttachmentDispositionAndNosniffHeader()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateReceiptFormData(MinimalPdfBytes);
+        HttpResponseMessage createResponse = await client.PostAsync("/receipts", content);
+        ReceiptResult? created = await createResponse.Content.ReadFromJsonAsync<ReceiptResult>();
+        created.ShouldNotBeNull();
+        Guid fileId = created.Files[0].Id;
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/receipts/{created.Id}/files/{fileId}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentDisposition?.DispositionType.ShouldBe("attachment");
+        response.Content.Headers.ContentDisposition?.FileName?.Trim('"').ShouldBe($"{fileId}.pdf");
+        response.Headers.TryGetValues("X-Content-Type-Options", out IEnumerable<string>? nosniffValues)
+            .ShouldBeTrue();
+        nosniffValues.ShouldContain("nosniff");
+    }
+
     [Theory]
     [InlineData(UserRole.USER)]
     public async Task ExportAsync_Forbidden_WhenNotPrivileged(UserRole role)
