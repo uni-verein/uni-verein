@@ -68,6 +68,10 @@ jobs:
         working-directory: frontend
         run: npm run format:check
 
+      - name: Audit dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
   # ─────────────────────────────────────────────
   # BACKEND LINT
   # `dotnet restore`/`build` can execute code from a PR's NuGet dependencies
@@ -151,6 +155,9 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
+
+      - name: Prepare receipts directory
+        run: mkdir -p receipts && sudo chown 1654:1654 receipts
 
       - name: Start Stack
         env:

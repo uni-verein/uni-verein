@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiResults;
@@ -30,23 +32,28 @@ public class NotificationController : ControllerBase
     [HttpGet("firmware-update")]
     public async Task<ActionResult<FirmwareUpdateResult>> GetAsync()
     {
-        FirmwareVersionEntity? firmware = await _db.FirmwareVersions.OrderByDescending(x => x.CreatedAt).FirstOrDefaultAsync();
-        if (firmware == null)
+        List<FirmwareVersionEntity> firmwareVersions = await _db.FirmwareVersions.ToListAsync();
+        if (firmwareVersions.Count == 0)
             return NoContent();
 
-        string? currentVersion = _configuration.GetValue<string>("Version");
+        string? currentVersionRaw = _configuration.GetValue<string>("Version");
+        Version.TryParse(currentVersionRaw?.TrimStart('v'), out Version? currentVersion);
 
-        FirmwareUpdateResult firmwareUpdateResult = new()
+        FirmwareVersionEntity latestFirmware = firmwareVersions
+            .Select(f => (Entity: f, Parsed: Version.TryParse(f.Version.TrimStart('v'), out Version? parsed) ? parsed : null))
+            .Where(x => x.Parsed != null)
+            .OrderByDescending(x => x.Parsed)
+            .Select(x => x.Entity)
+            .FirstOrDefault() ?? firmwareVersions.OrderByDescending(x => x.CreatedAt).First();
+
+        Version.TryParse(latestFirmware.Version.TrimStart('v'), out Version? latestVersion);
+        bool newFirmwareAvailable = currentVersion != null && latestVersion != null && latestVersion > currentVersion;
+
+        return Ok(new FirmwareUpdateResult
         {
-            NewFirmwareAvailable = false,
-            CurrentVersion = currentVersion,
-            LatestVersion = firmware?.Version
-        };
-
-        if (firmware!.TagName.Equals(currentVersion))
-            return Ok(firmwareUpdateResult);
-
-        firmwareUpdateResult.NewFirmwareAvailable = true;
-        return Ok(firmwareUpdateResult);
+            NewFirmwareAvailable = newFirmwareAvailable,
+            CurrentVersion = currentVersionRaw,
+            LatestVersion = latestFirmware.Version
+        });
     }
 }

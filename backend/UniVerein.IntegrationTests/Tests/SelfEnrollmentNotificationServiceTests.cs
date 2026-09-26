@@ -119,6 +119,26 @@ public class SelfEnrollmentNotificationServiceTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task PostSelfEnrollment_SpoofedHostHeader_ConfirmationLinkUsesConfiguredPublicBaseUrl()
+    {
+        // Arrange
+        await SetMailSettingsAsync();
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient publicClient = CreateClient();
+        publicClient.DefaultRequestHeaders.Host = "evil.attacker.example";
+
+        // Act
+        await publicClient.PostAsJsonAsync("/self-enrollment", CreateSelfEnrollmentRequest());
+        await WaitForConditionAsync(() => _receivedMails.Count >= 1);
+
+        // Assert: the link must use the domain captured when self-enrollment was enabled
+        // by an admin, never a Host header supplied by this anonymous, unauthenticated request.
+        string body = _receivedMails[0].HtmlBody ?? _receivedMails[0].TextBody ?? string.Empty;
+        body.ShouldContain("https://club.test.invalid/enroll/confirm");
+        body.ShouldNotContain("evil.attacker.example");
+    }
+
+    [Fact]
     public async Task ConfirmSelfEnrollment_NoOneOptedIn_NoNotificationMail()
     {
         // Arrange
@@ -318,7 +338,11 @@ public class SelfEnrollmentNotificationServiceTests : IntegrationTestBase
     {
         await WithDbContext(async db =>
         {
-            await db.WebPageConfigs.AddAsync(new WebPageConfigEntity { SelfEnrollmentEnabled = enabled });
+            await db.WebPageConfigs.AddAsync(new WebPageConfigEntity
+            {
+                SelfEnrollmentEnabled = enabled,
+                PublicBaseUrl = enabled ? "https://club.test.invalid" : null
+            });
             await db.SaveChangesAsync();
         });
     }

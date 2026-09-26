@@ -153,6 +153,24 @@ public class ImportControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task UploadCsvAsync_WhenFileExceeds10Mb_ReturnsBadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateCsvFormFile(new string('a', 10 * 1024 * 1024 + 1));
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/import/upload", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.MoreInfo.ShouldBe("CSV file must not exceed 10 MB.");
+        (await _db.Members.CountAsync()).ShouldBe(0);
+    }
+
+    [Fact]
     public async Task UploadCsvAsync_WithValidCsv_ReturnsCorrectCount()
     {
         // Arrange

@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -9,7 +10,9 @@ using UniVerein.Api.Services;
 using UniVerein.Api.Services.Sepa;
 using UniVerein.DAL.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +21,7 @@ using Serilog;
 using UniVerein.Api.Services.Firmware;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Http;
+using IPNetwork = System.Net.IPNetwork;
 
 namespace UniVerein.Api
 {
@@ -106,23 +110,26 @@ namespace UniVerein.Api
                     };
                 });
 
-            services.AddAuthorization();
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
             services.AddExceptionHandler<GlobalExceptionHandler>();
             services.AddProblemDetails();
+
+            string[] corsAllowedOrigins = _configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                                          ?? Array.Empty<string>();
 
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
                     policy
-                        .SetIsOriginAllowed(origin =>
-                        {
-                            Uri uri = new Uri(origin);
-                            return uri.Host == "localhost";
-                        })
+                        .WithOrigins(corsAllowedOrigins)
                         .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
+                        .AllowAnyMethod();
                 });
             });
 
@@ -131,7 +138,7 @@ namespace UniVerein.Api
                 return httpContext.RequestServices.GetRequiredService<IConfiguration>().GetValue(key, defaultValue);
             }
 
-            static void AddSelfEnrollmentPolicy(RateLimiterOptions options, string policyName, string configKey, int defaultPermitLimit)
+            static void AddIpRateLimitPolicy(RateLimiterOptions options, string policyName, string configKey, int defaultPermitLimit)
             {
                 options.AddPolicy(policyName, httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
@@ -149,14 +156,26 @@ namespace UniVerein.Api
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-                AddSelfEnrollmentPolicy(options, "self-enrollment", "RateLimiting:SelfEnrollment:PermitLimit", 5);
-                AddSelfEnrollmentPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
-                AddSelfEnrollmentPolicy(options, "self-enrollment-confirm", "RateLimiting:SelfEnrollment:ConfirmPermitLimit", 10);
+                AddIpRateLimitPolicy(options, "self-enrollment", "RateLimiting:SelfEnrollment:PermitLimit", 5);
+                AddIpRateLimitPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
+                AddIpRateLimitPolicy(options, "self-enrollment-confirm", "RateLimiting:SelfEnrollment:ConfirmPermitLimit", 10);
+                AddIpRateLimitPolicy(options, "auth-login", "RateLimiting:AuthLogin:PermitLimit", 20);
             });
         }
 
         public void Configure(IApplicationBuilder app)
         {
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor,
+                ForwardedForHeaderName = "X-Real-IP",
+                KnownIPNetworks =
+                {
+                    IPNetwork.Parse("172.16.0.0/12"),
+                    IPNetwork.Parse("192.168.0.0/16")
+                }
+            });
+
             app.UseExceptionHandler();
             app.Use(async (ctx, next) =>
             {

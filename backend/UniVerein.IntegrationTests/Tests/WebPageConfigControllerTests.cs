@@ -209,6 +209,27 @@ public class WebPageConfigControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task EnableSelfEnrollment_CapturesPublicBaseUrlFromAdminRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMailSettingsEntity();
+        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            WebPageConfigEntity? webPageConfigEntity = await db.WebPageConfigs.FirstOrDefaultAsync();
+            webPageConfigEntity.ShouldNotBeNull();
+            webPageConfigEntity!.PublicBaseUrl.ShouldBe($"{client.BaseAddress!.Scheme}://{client.BaseAddress.Host}");
+        });
+    }
+
+    [Fact]
     public async Task EnableSelfEnrollment_WithoutMailSettings_UnprocessableEntity()
     {
         // Arrange

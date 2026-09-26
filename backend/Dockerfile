@@ -32,6 +32,9 @@ RUN apt-get update -o Acquire::Retries=3 \
     && apt-get install -y -o Acquire::Retries=3 --no-install-recommends postgresql-client-17 \
     && rm -rf /var/lib/apt/lists/*
 
+RUN chown -R app:app /app
+USER app
+
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
     CMD curl -fsS http://127.0.0.1:8095/health || exit 1
 

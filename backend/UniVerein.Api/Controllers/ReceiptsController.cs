@@ -10,6 +10,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Helper;
 using UniVerein.Api.Models;
 using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Query;
@@ -37,6 +38,7 @@ public class ReceiptsController : ControllerBase
     // How long after creation a receipt may still be corrected (e.g. fixing a typo) instead of
     // having to be deleted and re-submitted from scratch.
     private static readonly TimeSpan EditWindow = TimeSpan.FromMinutes(15);
+    private const long MaxCreateRequestSizeBytes = 100L * 1024 * 1024;
 
     private readonly AppDbContext _db;
     private readonly ReceiptService _receiptService;
@@ -298,10 +300,17 @@ public class ReceiptsController : ControllerBase
                 moreInfo: $"File for ID {fileId} could not be found on disk."));
 
         byte[] bytes = await System.IO.File.ReadAllBytesAsync(path);
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        string extension = ReceiptService.GetExtensionFromContentType(receiptFile.ContentType);
+        Response.Headers.ContentDisposition = $"attachment; filename=\"{receiptFile.Id}.{extension}\"";
+
         return File(bytes, receiptFile.ContentType);
     }
 
     [HttpPost]
+    [RequestSizeLimit(MaxCreateRequestSizeBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxCreateRequestSizeBytes)]
     public async Task<ActionResult<ReceiptResult>> CreateAsync([FromForm] CreateReceiptRequest request)
     {
         if (request.Amount <= 0)
@@ -314,9 +323,22 @@ public class ReceiptsController : ControllerBase
             !await _db.ReceiptCategories.AnyAsync(c => c.Id == request.CategoryId))
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Category not found."));
 
-        if (request.Files != null && request.Files.Any(f =>
-                !f.ContentType.StartsWith("image/") && f.ContentType != "application/pdf"))
-            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Only image or PDF files are allowed."));
+        Dictionary<IFormFile, string> sniffedContentTypes = new();
+        if (request.Files != null)
+        {
+            foreach (IFormFile file in request.Files)
+            {
+                if (file.Length > ReceiptService.MaxFileSizeBytes)
+                    return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+                        moreInfo: "Each file must not exceed 10 MB."));
+
+                string? detected = await FileSignatureHelper.DetectContentTypeAsync(file);
+                if (detected == null)
+                    return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+                        moreInfo: "Only image or PDF files are allowed."));
+                sniffedContentTypes[file] = detected;
+            }
+        }
 
         if (!_isPrivileged && request.PaymentMethod != null)
             return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
@@ -346,7 +368,8 @@ public class ReceiptsController : ControllerBase
             int position = 0;
             foreach (IFormFile file in request.Files)
             {
-                ReceiptFileEntity receiptFile = await _receiptService.SaveFileAsync(receipt, file, position++);
+                ReceiptFileEntity receiptFile =
+                    await _receiptService.SaveFileAsync(receipt, file, sniffedContentTypes[file], position++);
                 await _db.ReceiptFiles.AddAsync(receiptFile);
             }
         }

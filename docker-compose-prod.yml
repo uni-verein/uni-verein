@@ -15,9 +15,13 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    security_opt:
+      - no-new-privileges:true
 
   db-backup:
     image: postgres:17-alpine
+    security_opt:
+      - no-new-privileges:true
     command: >
       sh -c 'while true; do
         BACKUP_FILE="/backup/$$(date +%Y-%m-%d_%H-%M-%S)_uni_verein_db.sql"
@@ -62,6 +66,10 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./receipts:/app/receipts
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       db:
         condition: service_healthy
@@ -74,19 +82,27 @@ services:
         - VITE_APP_VERSION=${VERSION}
         - VITE_APP_DEMO=${DEMO}
     restart: always
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       backend:
         condition: service_healthy
 
   proxy:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine
     restart: always
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "80:80"
+      - "80:8080"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
       interval: 10s
       timeout: 5s
       retries: 5

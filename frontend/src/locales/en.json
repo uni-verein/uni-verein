@@ -217,7 +217,8 @@
         "receiptDateRequired": "Receipt date is required."
       },
       "alerts": {
-        "saveFailed": "Save failed. Please try again."
+        "saveFailed": "Save failed. Please try again.",
+        "fileTooLarge": "A PDF file must not exceed 10 MB."
       }
     },
     "markReceiptPaidDialog": {
@@ -780,6 +781,21 @@
       "loginError": "Login failed. Please check your details.",
       "toManyLoginError": "Too many failed login attempts. Wait {{seconds}} seconds to try again.",
       "offline": "You're offline. Please check your internet connection.",
+      "forcePasswordChange": {
+        "title": "Change your password",
+        "description": "You're using the default password. For security reasons, please set a new password before continuing.",
+        "newPassword": "New password",
+        "confirmPassword": "Confirm new password",
+        "save": "Set password",
+        "validation": {
+          "empty": "Password must not be empty.",
+          "tooShort": "Password must be at least 11 characters long.",
+          "tooLong": "Password must not exceed 50 characters.",
+          "isDefault": "Please choose a password other than \"admin123\".",
+          "mismatch": "Passwords do not match."
+        },
+        "error": "Could not set the new password. Please try again."
+      },
       "demo": {
         "header": "Demo version",
         "caption": "This is a demo version. All data will be deleted every night. Please do not enter any personal data!",

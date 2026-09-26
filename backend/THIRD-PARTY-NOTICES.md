@@ -1,10 +1,9 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-09-05
+Generated automatically on 2026-09-25
 
 | Package | Version | License |
 |---------|---------|---------|
-| BCrypt.Net-Next | 4.2.0 | MIT |
 | BouncyCastle.Cryptography | 2.6.2 | MIT |
 | Castle.Core | 5.1.1 | Apache-2.0 |
 | CsvHelper | 33.1.0 | MS-PL OR Apache-2.0 |
@@ -132,7 +131,7 @@ Generated automatically on 2026-09-05
 | SourceGear.sqlite3 | 3.50.4.5 | LICENSE.txt |
 | String.Similarity | 3.0.0 |  |
 | System.AppContext | 4.3.0 | MS-EULA |
-| System.Buffers | 4.6.1 | MIT |
+| System.Buffers | 4.3.0 | MS-EULA |
 | System.CodeDom | 6.0.0 | MIT |
 | System.Collections | 4.3.0 | MS-EULA |
 | System.Collections.Concurrent | 4.3.0 | MS-EULA |
@@ -174,12 +173,12 @@ Generated automatically on 2026-09-05
 | System.Linq | 4.3.0 | MS-EULA |
 | System.Linq.Expressions | 4.3.0 | MS-EULA |
 | System.Management | 6.0.1 | MIT |
-| System.Memory | 4.6.3 | MIT |
+| System.Memory | 4.5.0 | MIT |
 | System.Net.Http | 4.3.0 | MS-EULA |
 | System.Net.Primitives | 4.3.0 | MS-EULA |
 | System.Net.ServerSentEvents | 9.0.8 | MIT |
 | System.Net.Sockets | 4.3.0 | MS-EULA |
-| System.Numerics.Vectors | 4.6.1 | MIT |
+| System.Numerics.Vectors | 4.4.0 | MIT |
 | System.ObjectModel | 4.3.0 | MS-EULA |
 | System.Reflection | 4.3.0 | MS-EULA |
 | System.Reflection.Emit | 4.3.0 | MS-EULA |
@@ -191,7 +190,7 @@ Generated automatically on 2026-09-05
 | System.Reflection.TypeExtensions | 4.3.0 | MS-EULA |
 | System.Resources.ResourceManager | 4.3.0 | MS-EULA |
 | System.Runtime | 4.3.0 | MS-EULA |
-| System.Runtime.CompilerServices.Unsafe | 6.1.2 | MIT |
+| System.Runtime.CompilerServices.Unsafe | 4.5.3 | MIT |
 | System.Runtime.Extensions | 4.3.0 | MS-EULA |
 | System.Runtime.Handles | 4.3.0 | MS-EULA |
 | System.Runtime.InteropServices | 4.3.0 | MS-EULA |

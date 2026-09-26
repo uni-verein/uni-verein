@@ -16,6 +16,8 @@ permissions:
 jobs:
   update-notices:
     runs-on: ubuntu-latest
+    # Commits from other authors make Dependabot stop rebasing/updating its PRs.
+    if: github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v5
 

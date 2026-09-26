@@ -26,8 +26,13 @@ services:
 
         CURRENT=$$(grep '^VERSION=' $$ENV_FILE 2>/dev/null | cut -d'=' -f2-);
 
+        COMPOSE_FILE=docker-compose-prod-image.yml;
+        if [ -f docker-compose-tls.yml ]; then
+          COMPOSE_FILE=docker-compose-tls.yml;
+        fi;
+
         IS_MARIADB=false;
-        if [ -f docker-compose-prod-image.yml ] && grep -q 'image: *mariadb' docker-compose-prod-image.yml; then
+        if [ -f \"$$COMPOSE_FILE\" ] && grep -q 'image: *mariadb' \"$$COMPOSE_FILE\"; then
           IS_MARIADB=true;
         fi;
 
@@ -68,16 +73,20 @@ services:
 
         RAW_BASE=https://raw.githubusercontent.com/$$REPO/refs/tags/$$TAG;
 
-        echo \"[UPDATE] Downloading docker-compose-ini.yml, nginx.conf and docker-compose-prod-image.yml for $$TAG...\";
+        echo \"[UPDATE] Downloading docker-compose-ini.yml, nginx.conf and $$COMPOSE_FILE for $$TAG...\";
         curl -fsSL -o docker-compose-ini.yml $$RAW_BASE/docker-compose-ini.yml;
         curl -fsSL -o nginx.conf $$RAW_BASE/nginx.conf;
-        curl -fsSL -o docker-compose-prod-image.yml.new $$RAW_BASE/docker-compose-prod-image.yml;
+        curl -fsSL -o \"$$COMPOSE_FILE.new\" \"$$RAW_BASE/$$COMPOSE_FILE\";
+        if [ \"$$COMPOSE_FILE\" = docker-compose-tls.yml ]; then
+          echo '[UPDATE] Downloading Caddyfile...';
+          curl -fsSL -o Caddyfile $$RAW_BASE/Caddyfile;
+        fi;
 
         echo '[UPDATE] Applying new variables to .env (existing values are kept)...';
         docker compose -f docker-compose-ini.yml up;
 
         NEW_IS_POSTGRES=false;
-        if grep -q 'image: *postgres' docker-compose-prod-image.yml.new; then
+        if grep -q 'image: *postgres' \"$$COMPOSE_FILE.new\"; then
           NEW_IS_POSTGRES=true;
         fi;
 
@@ -86,15 +95,15 @@ services:
           echo '[UPDATE] This update migrates the database engine from MariaDB to PostgreSQL.';
           echo '[UPDATE] Your existing MariaDB data volume is kept (not deleted) once the migration succeeds, as a safety net.';
 
-          cp docker-compose-prod-image.yml docker-compose-prod-image.yml.mariadb-backup;
+          cp \"$$COMPOSE_FILE\" \"$$COMPOSE_FILE.mariadb-backup\";
 
-          OLD_DB_CONTAINER=$$(docker compose -f docker-compose-prod-image.yml ps -q db 2>/dev/null);
+          OLD_DB_CONTAINER=$$(docker compose -f \"$$COMPOSE_FILE\" ps -q db 2>/dev/null);
           if [ -z \"$$OLD_DB_CONTAINER\" ]; then
             echo '[UPDATE] ERROR: Could not find the currently running MariaDB container to migrate from.';
             exit 1;
           fi;
           NETWORK=$$(docker inspect --format '{{range $$k, $$v := .NetworkSettings.Networks}}{{$$k}}{{end}}' \"$$OLD_DB_CONTAINER\");
-          PG_VOLUME=$$(docker compose -f docker-compose-prod-image.yml.new config --format json | jq -r '.volumes.db_data_pg.name');
+          PG_VOLUME=$$(docker compose -f \"$$COMPOSE_FILE.new\" config --format json | jq -r '.volumes.db_data_pg.name');
 
           DB_NAME=$$(grep '^DB_NAME=' $$ENV_FILE | cut -d'=' -f2-);
           DB_USER=$$(grep '^DB_USER=' $$ENV_FILE | cut -d'=' -f2-);
@@ -135,25 +144,25 @@ services:
           echo '[UPDATE] Migration succeeded. Stopping the old MariaDB container (its data volume is kept as a safety net)...';
           docker stop \"$$OLD_DB_CONTAINER\" >/dev/null;
           docker rm -f pg_migration_tmp >/dev/null 2>&1 || true;
-          echo '[UPDATE] To roll back manually if needed: restore docker-compose-prod-image.yml.mariadb-backup as docker-compose-prod-image.yml, reset VERSION in .env, and run \"docker compose -f docker-compose-prod-image.yml up -d\" again - your MariaDB data volume was kept untouched.';
+          echo \"[UPDATE] To roll back manually if needed: restore $$COMPOSE_FILE.mariadb-backup as $$COMPOSE_FILE, reset VERSION in .env, and run \\\"docker compose -f $$COMPOSE_FILE up -d\\\" again - your MariaDB data volume was kept untouched.\";
           echo '[UPDATE] Once you have verified everything works on PostgreSQL, remove the old MariaDB volume manually to reclaim disk space (find it via \"docker volume ls\").';
         fi;
 
-        mv docker-compose-prod-image.yml.new docker-compose-prod-image.yml;
+        mv \"$$COMPOSE_FILE.new\" \"$$COMPOSE_FILE\";
 
         echo \"[UPDATE] Setting VERSION=$$TAG in .env...\";
         sed -i '/^VERSION=/d' $$ENV_FILE;
         echo \"VERSION=$$TAG\" >> $$ENV_FILE;
 
         echo '[UPDATE] Pulling new images...';
-        docker compose -f docker-compose-prod-image.yml pull;
+        docker compose -f \"$$COMPOSE_FILE\" pull;
 
         echo '[UPDATE] Restarting stack on the new version...';
-        docker compose -f docker-compose-prod-image.yml up -d --remove-orphans;
+        docker compose -f \"$$COMPOSE_FILE\" up -d --remove-orphans;
 
-        if [ -f docker-compose-prod-image.yml.mariadb-backup ]; then
-          echo '[UPDATE] Update successful - removing the temporary docker-compose-prod-image.yml.mariadb-backup (the MariaDB data volume itself remains as the safety net).';
-          rm -f docker-compose-prod-image.yml.mariadb-backup;
+        if [ -f \"$$COMPOSE_FILE.mariadb-backup\" ]; then
+          echo \"[UPDATE] Update successful - removing the temporary $$COMPOSE_FILE.mariadb-backup (the MariaDB data volume itself remains as the safety net).\";
+          rm -f \"$$COMPOSE_FILE.mariadb-backup\";
         fi;
 
         echo \"[UPDATE] Done. Now running version $$TAG.\";

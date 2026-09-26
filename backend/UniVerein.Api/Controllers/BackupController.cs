@@ -17,6 +17,9 @@ namespace UniVerein.Api.Controllers;
 [EnableCors("AllowFrontend")]
 public class BackupController : ControllerBase
 {
+    // Must match client_max_body_size for /api/backup/restore in nginx.conf.
+    private const long MaxRestoreSizeBytes = 10L * 1024 * 1024 * 1024;
+
     private readonly BackupService _backup;
 
     public BackupController(BackupService backup)
@@ -66,6 +69,8 @@ public class BackupController : ControllerBase
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     [HttpPost("restore")]
+    [RequestSizeLimit(MaxRestoreSizeBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxRestoreSizeBytes)]
     public async Task<IActionResult> RestoreAsync(IFormFile file)
     {
         Log.Information($"BackupController: Try to restore {file.FileName}");

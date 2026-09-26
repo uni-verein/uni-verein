@@ -13,11 +13,11 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
 
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.17" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.17" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.20" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.17" />
-        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.20" />
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     </ItemGroup>
 
     <ItemGroup>

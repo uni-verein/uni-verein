@@ -4,16 +4,26 @@ namespace UniVerein.Api.Security;
 
 public static class LoginGuard
 {
-    private const int ONE_DAY_IN_SECONDS = 86400;
+    public const int LockoutWindowSeconds = 900; // 15 minutes
 
-    public static DateTime? GetLockoutReleaseTime(int failedAttempts)
+    public static int GetEffectiveFailedAttempts(int failedAttempts, DateTimeOffset? lastFailedLoginAttempt, DateTimeOffset now)
+    {
+        if (lastFailedLoginAttempt.HasValue && (now - lastFailedLoginAttempt.Value).TotalSeconds > LockoutWindowSeconds)
+        {
+            return 0;
+        }
+
+        return failedAttempts;
+    }
+
+    public static DateTimeOffset? GetLockoutReleaseTime(int failedAttempts, DateTimeOffset now)
     {
         if (failedAttempts < 3)
         {
             return null;
         }
 
-        double secondsToWait = Math.Min(30 * Math.Pow(2, failedAttempts - 3), ONE_DAY_IN_SECONDS);
-        return DateTime.UtcNow.AddSeconds(secondsToWait);
+        double secondsToWait = Math.Min(30 * Math.Pow(2, failedAttempts - 3), LockoutWindowSeconds);
+        return now.AddSeconds(secondsToWait);
     }
 }

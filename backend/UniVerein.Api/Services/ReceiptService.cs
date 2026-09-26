@@ -12,6 +12,8 @@ namespace UniVerein.Api.Services;
 
 public class ReceiptService
 {
+    public const long MaxFileSizeBytes = 10L * 1024 * 1024;
+
     private readonly string _storagePath;
 
     public ReceiptService(IConfiguration config)
@@ -24,7 +26,8 @@ public class ReceiptService
         get { return _storagePath; }
     }
 
-    public async Task<ReceiptFileEntity> SaveFileAsync(ReceiptEntity receipt, IFormFile file, int position)
+    public async Task<ReceiptFileEntity> SaveFileAsync(ReceiptEntity receipt, IFormFile file, string contentType,
+        int position)
     {
         Directory.CreateDirectory(_storagePath);
 
@@ -33,7 +36,7 @@ public class ReceiptService
             Id = Guid.NewGuid(),
             ReceiptId = receipt.Id,
             Receipt = receipt,
-            ContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
+            ContentType = contentType,
             Position = position
         };
 
@@ -82,7 +85,7 @@ public class ReceiptService
         }
     }
 
-    private static string GetExtensionFromContentType(string contentType)
+    internal static string GetExtensionFromContentType(string contentType)
     {
         if (contentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
             return "pdf";

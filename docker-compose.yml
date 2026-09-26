@@ -14,6 +14,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    security_opt:
+      - no-new-privileges:true
     volumes:
       - db_data_pg:/var/lib/postgresql/data
 
@@ -33,14 +35,20 @@ services:
       HMAC_KEY: ${HMAC_KEY}
       Version: ${VERSION}
       # This compose file is used for local dev and CI e2e runs (see .github/workflows/ci.yml), which
-      # hammer /self-enrollment from a single shared IP far more than any real visitor would - raise the
-      # limits here so the Playwright suite doesn't trip its own rate limiter. Production uses
-      # docker-compose-prod*.yml instead, which keeps the tighter built-in defaults (see Startup.cs).
+      # hammer /self-enrollment and /auth/login from a single shared IP far more than any real visitor
+      # would (nearly every Playwright spec logs in at least once) - raise the limits here so the
+      # Playwright suite doesn't trip its own rate limiter. Production uses docker-compose-prod*.yml
+      # instead, which keeps the tighter built-in defaults (see Startup.cs).
       RateLimiting__SelfEnrollment__PermitLimit: "50"
       RateLimiting__SelfEnrollment__ReadPermitLimit: "200"
       RateLimiting__SelfEnrollment__ConfirmPermitLimit: "50"
+      RateLimiting__AuthLogin__PermitLimit: "1000"
     volumes:
       - ./receipts:/app/receipts
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       db:
         condition: service_healthy
@@ -53,19 +61,27 @@ services:
         - VITE_APP_VERSION=${VERSION}
         - VITE_APP_DEMO=${DEMO}
     restart: always
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       backend:
         condition: service_healthy
 
   proxy:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine
     restart: always
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "80:80"
+      - "80:8080"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
       interval: 10s
       timeout: 5s
       retries: 5

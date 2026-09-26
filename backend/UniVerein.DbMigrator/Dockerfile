@@ -15,4 +15,7 @@ FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
 COPY --from=build /app/out .
 
+RUN chown -R app:app /app
+USER app
+
 ENTRYPOINT ["dotnet", "UniVerein.DbMigrator.dll"]

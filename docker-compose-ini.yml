@@ -3,6 +3,8 @@ services:
     image: alpine/openssl
     volumes:
       - ./.env:/app/.env
+      - ./logs:/app/logs
+      - ./receipts:/app/receipts
     entrypoint:
       - sh
       - -c
@@ -11,6 +13,10 @@ services:
         ENV_FILE=/app/.env
 
         [ ! -f "$$ENV_FILE" ] && touch "$$ENV_FILE" && echo "[INIT] New .env file created."
+
+        mkdir -p /app/logs /app/receipts
+        chown -R 1654:1654 /app/logs /app/receipts
+        echo "[INIT] logs/ and receipts/ prepared for non-root backend (uid 1654)"
 
         remove_key() {
           KEY=$$1
@@ -43,10 +49,10 @@ services:
         check_and_set JWT_ISSUER        uni-verein
         check_and_set HMAC_KEY          "$$(openssl rand -base64 32)"
         check_and_set CRYPTO_KEY        "$$(openssl rand -base64 32)"
-        check_and_set DB_ROOT_PASSWORD  root_password
+        check_and_set DB_ROOT_PASSWORD  "$$(openssl rand -hex 24)"
         check_and_set DB_NAME           uni_verein
         check_and_set DB_USER           uni_verein_user
-        check_and_set DB_PASSWORD       password
+        check_and_set DB_PASSWORD       "$$(openssl rand -hex 24)"
         check_and_set BACKUP_PATH       ./backup
 
         API_RESPONSE=$$(curl -fsSL https://api.github.com/repos/uni-verein/uni-verein/releases/latest 2>&1)
@@ -58,7 +64,7 @@ services:
         set_always VERSION "$$LATEST_VERSION"
 
         echo ""
-        echo "[INIT] Final .env:"
-        cat "$$ENV_FILE"
-        echo "[INIT] Setup complete!"        
+        echo "[INIT] Final .env keys:"
+        cut -d'=' -f1 "$$ENV_FILE"
+        echo "[INIT] Setup complete!"
     restart: "no"

@@ -217,7 +217,8 @@
         "receiptDateRequired": "Belegdatum ist ein Pflichtfeld."
       },
       "alerts": {
-        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "fileTooLarge": "Eine PDF-Datei darf höchstens 10 MB groß sein."
       }
     },
     "markReceiptPaidDialog": {
@@ -780,6 +781,21 @@
       "loginError": "Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Daten.",
       "toManyLoginError": "Zu viele fehlerhafte Anmeldeversuche. Warte {{seconds}} Sekunden, um es erneut zu versuchen.",
       "offline": "Du bist offline. Bitte überprüfe deine Internetverbindung.",
+      "forcePasswordChange": {
+        "title": "Passwort ändern",
+        "description": "Du verwendest das Standardpasswort. Bitte lege aus Sicherheitsgründen ein neues Passwort fest, bevor du fortfährst.",
+        "newPassword": "Neues Passwort",
+        "confirmPassword": "Neues Passwort bestätigen",
+        "save": "Passwort festlegen",
+        "validation": {
+          "empty": "Das Passwort darf nicht leer sein.",
+          "tooShort": "Das Passwort muss mindestens 11 Zeichen lang sein.",
+          "tooLong": "Das Passwort darf höchstens 50 Zeichen lang sein.",
+          "isDefault": "Bitte wähle ein anderes Passwort als \"admin123\".",
+          "mismatch": "Die Passwörter stimmen nicht überein."
+        },
+        "error": "Das neue Passwort konnte nicht gesetzt werden. Bitte versuche es erneut."
+      },
       "demo": {
         "header": "Demoversion",
         "caption": "Dies ist eine Demoversion. Alle Daten werden jede Nacht gelöscht. Bitte gib keine persönlichen Daten ein!",

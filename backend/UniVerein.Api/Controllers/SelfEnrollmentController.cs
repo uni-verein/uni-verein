@@ -1,3 +1,4 @@
+using System.Net;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
@@ -8,6 +9,7 @@ using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +22,7 @@ namespace UniVerein.Api.Controllers;
 [ApiController]
 [Route("self-enrollment")]
 [EnableCors("AllowFrontend")]
+[AllowAnonymous]
 public class SelfEnrollmentController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -34,11 +37,11 @@ public class SelfEnrollmentController : ControllerBase
         _referenceDataService = referenceDataService;
     }
 
-    private async Task<bool> IsEnabledAsync()
+    private async Task<WebPageConfigEntity?> GetEnabledConfigAsync()
     {
         WebPageConfigEntity? config = await _db.WebPageConfigs.FirstOrDefaultAsync(x => x.DeletedAt == null);
 
-        return config?.SelfEnrollmentEnabled ?? false;
+        return config is { SelfEnrollmentEnabled: true } ? config : null;
     }
 
     [EnableRateLimiting("self-enrollment-read")]
@@ -46,7 +49,7 @@ public class SelfEnrollmentController : ControllerBase
     public async Task<ActionResult<SelfEnrollmentFormDataResult>> GetFormDataAsync()
     {
         SelfEnrollmentFormDataResult result = new();
-        if (!await IsEnabledAsync())
+        if (await GetEnabledConfigAsync() == null)
             return Ok(result);
 
         result.MemberCategories = await _referenceDataService.GetMemberCategoriesAsync();
@@ -62,7 +65,8 @@ public class SelfEnrollmentController : ControllerBase
         Log.Information(
             $"SelfEnrollmentController: CreateAsync -> Try to self-enroll member: {request.FirstName} {request.LastName}");
 
-        if (!await IsEnabledAsync())
+        WebPageConfigEntity? config = await GetEnabledConfigAsync();
+        if (config == null)
         {
             Log.Warning("SelfEnrollmentController: CreateAsync -> Self-enrollment is disabled");
             return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
@@ -70,7 +74,17 @@ public class SelfEnrollmentController : ControllerBase
                 moreInfo: "Self-enrollment is currently not enabled for this club."));
         }
 
-        string confirmBaseUrl = $"{Request.Scheme}://{Request.Host}/enroll/confirm";
+        if (string.IsNullOrEmpty(config.PublicBaseUrl))
+        {
+            Log.Error(
+                "SelfEnrollmentController: CreateAsync -> Self-enrollment is enabled but no public base URL is configured. " +
+                "An admin must re-save the web page config to capture it.");
+            throw new BaseHttpException(ApiErrorCodes.INTERNAL_SERVER_ERROR, HttpStatusCode.InternalServerError,
+                errorMessage: "Self-enrollment is misconfigured.",
+                moreInfo: "No public base URL is configured for this club. An admin must re-save the web page settings.");
+        }
+
+        string confirmBaseUrl = $"{config.PublicBaseUrl.TrimEnd('/')}/enroll/confirm";
         PendingSelfEnrollmentSubmitResult result = await _pendingSelfEnrollmentService.SubmitAsync(request,
             HttpContext.GetClientIpAddress(), confirmBaseUrl);
 

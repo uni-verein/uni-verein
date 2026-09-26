@@ -20,6 +20,9 @@ import { login } from '../api';
 import { useTranslation } from 'react-i18next';
 import { usePageConfig } from '../hooks/usePageConfig';
 import { DemoDialog } from '../components/dialogs/DemoDialog';
+import { ForcePasswordChangeDialog } from '../components/dialogs/ForcePasswordChangeDialog';
+
+const DEFAULT_PASSWORD = 'admin123';
 
 export default function Login({
   onLogin,
@@ -37,6 +40,7 @@ export default function Login({
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [browserOnline, setBrowserOnline] = useState(navigator.onLine);
+  const [forcePasswordChange, setForcePasswordChange] = useState(false);
   const { t } = useTranslation();
 
   const isOffline = !browserOnline || !serverReachable;
@@ -86,7 +90,11 @@ export default function Login({
 
       if (response.ok) {
         localStorage.setItem('token', (await response.json()).token);
-        onLogin();
+        if (pass === DEFAULT_PASSWORD) {
+          setForcePasswordChange(true);
+        } else {
+          onLogin();
+        }
       }
 
       if (response.status === 403) {
@@ -226,6 +234,14 @@ export default function Login({
           &copy; {new Date().getFullYear()} {config.pageName} {t('pages.login.clubManagement')}
         </Typography>
       </Container>
+      {forcePasswordChange && (
+        <ForcePasswordChangeDialog
+          onChanged={() => {
+            setForcePasswordChange(false);
+            onLogin();
+          }}
+        />
+      )}
     </Box>
   );
 }
