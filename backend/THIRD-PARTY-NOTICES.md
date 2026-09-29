@@ -1,6 +1,6 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-09-27
+Generated automatically on 2026-09-29
 
 | Package | Version | License |
 |---------|---------|---------|
