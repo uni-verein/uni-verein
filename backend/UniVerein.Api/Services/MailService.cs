@@ -73,7 +73,7 @@ public class MailService
         MimeMessage message = BuildMessage(new Recipient()
         {
             Email = mailSettings.FromMail,
-            FirstName = mailSettings.Username
+            FirstName = SenderDisplayName(mailSettings)
         }, request, mailSettings, preparedAttachments);
 
         foreach (Recipient bcc in bccRecipients)
@@ -90,7 +90,7 @@ public class MailService
         {
             await ConnectSmtpClientAsync(smtpClient, settings);
             EmailResult result = await SendOnExistingConnectionAsync(smtpClient, message,
-                new Recipient() { Email = settings.FromMail, FirstName = settings.FromMail, LastName = string.Empty });
+                new Recipient() { Email = settings.FromMail, FirstName = SenderDisplayName(settings), LastName = string.Empty });
             await BccProgressUpdate(message, connectionId, result.Success);
         }
         catch (Exception ex)
@@ -309,11 +309,16 @@ public class MailService
         }
     }
 
+    private static string SenderDisplayName(MailSettingsEntity settings)
+    {
+        return string.IsNullOrWhiteSpace(settings.FromName) ? settings.FromMail : settings.FromName;
+    }
+
     private static MimeMessage BuildMessage(Recipient recipient, EmailRequest request, MailSettingsEntity settings,
         List<PreparedAttachment> preparedAttachments)
     {
         MimeMessage message = new();
-        message.From.Add(new MailboxAddress(settings.FromMail, settings.FromMail));
+        message.From.Add(new MailboxAddress(SenderDisplayName(settings), settings.FromMail));
         message.To.Add(new MailboxAddress($"{recipient.FirstName} {recipient.LastName}", recipient.Email));
         message.Subject = request.Subject;
 

@@ -575,6 +575,7 @@ public class MailControllerTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         result.ShouldNotBeNull();
         result.Username.ShouldBe(request.Username);
+        result.FromName.ShouldBe(request.FromName);
         await WithDbContext(async db =>
         {
             MailSettingsEntity? mailSettings =
@@ -582,6 +583,21 @@ public class MailControllerTests : IntegrationTestBase
             mailSettings.ShouldNotBeNull();
             CompareMailSetting(mailSettings, result);
         });
+    }
+
+    [Fact]
+    public async Task CreateMailSetting_FromMailNotAnEmail_BadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MailSettingsRequest request = CreateMailSettingRequest();
+        request.FromMail = "Vorstand Test";
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/mail", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     // ---------------------------------------------------------------
@@ -741,6 +757,9 @@ public class MailControllerTests : IntegrationTestBase
         Assert.Single(_receivedMails);
         Assert.All(_receivedMails, m => Assert.Equal($"Test mail from {mailSetting.FromMail}", m.Subject));
         Assert.All(_receivedMails, m => Assert.Equal("Email successfully configured", m.HtmlBody));
+        MailboxAddress from = _receivedMails.Single().From.Mailboxes.Single();
+        from.Name.ShouldBe(mailSetting.FromName);
+        from.Address.ShouldBe(mailSetting.FromMail);
     }
 
     // ---------------------------------------------------------------
@@ -896,6 +915,82 @@ public class MailControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task SendMail_RemovesDangerousHtml()
+    {
+        HttpClient client = CreateClient(UserRole.USER);
+        await CreateMailSettingsEntity(password: "test");
+        await CreateMemberEntity("test@test.de", category: Guid.Parse(Program.MemberCategoriesStudent));
+        MailSendRequest request = new()
+        {
+            ConnectionId = "123456789",
+            EmailData = new()
+            {
+                Subject = "Test",
+                HtmlBody = "<p onclick=\"x()\">Hi</p><script>alert(1)</script>" +
+                           "<a href=\"javascript:alert(1)\">x</a>" +
+                           "<a href=\"data:text/html;base64,PHNjcmlwdD4=\">y</a>" +
+                           "<img src=\"data:image/svg+xml;base64,PHN2Zz4=\">" +
+                           "<form action=\"https://evil.test\"><input name=\"pw\"></form>" +
+                           "<iframe src=\"https://evil.test\"></iframe>"
+            },
+            SelectedEmails = ["test@test.de"]
+        };
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/mail/send", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WaitForMailsAsync(1);
+        string body = _receivedMails.Single().HtmlBody ?? string.Empty;
+        body.ShouldContain("<p>Hi</p>");
+        body.ShouldNotContain("<script", Case.Insensitive);
+        body.ShouldNotContain("onclick", Case.Insensitive);
+        body.ShouldNotContain("javascript:", Case.Insensitive);
+        body.ShouldNotContain("data:", Case.Insensitive);
+        body.ShouldNotContain("<form", Case.Insensitive);
+        body.ShouldNotContain("<input", Case.Insensitive);
+        body.ShouldNotContain("<iframe", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task SendMail_KeepsEditorFormatting()
+    {
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMailSettingsEntity(password: "test");
+        await CreateMemberEntity("test@test.de", category: Guid.Parse(Program.MemberCategoriesStudent));
+        string inlineImage = "data:image/png;base64," + Convert.ToBase64String(new byte[300_000]);
+        MailSendRequest request = new()
+        {
+            ConnectionId = "123456789",
+            EmailData = new()
+            {
+                Subject = "Test",
+                HtmlBody = "<p style=\"text-align: center\">Hello {fullname}</p>" +
+                           "<p><span style=\"color: #ff0000\">red</span> <strong>fat</strong> <u>underline</u></p>" +
+                           "<p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://example.org\">Link</a></p>" +
+                           $"<p><img src=\"{inlineImage}\"></p>"
+            },
+            SelectedEmails = ["test@test.de"]
+        };
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/mail/send", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WaitForMailsAsync(1);
+        string body = _receivedMails.Single().HtmlBody ?? string.Empty;
+        body.ShouldContain("text-align: center");
+        body.ShouldContain("color: rgba(255, 0, 0, 1)");
+        body.ShouldContain("<strong>fat</strong>");
+        body.ShouldContain("<u>underline</u>");
+        body.ShouldContain("href=\"https://example.org\"");
+        body.ShouldContain($"src=\"{inlineImage}\"");
+        body.ShouldNotContain("{fullname}");
+    }
+
+    [Fact]
     public async Task SendMail_ExcludeDeletedAndNoMailConsent_ReturnsOk()
     {
         HttpClient client = CreateClient(UserRole.ADMIN);
@@ -1027,6 +1122,7 @@ public class MailControllerTests : IntegrationTestBase
             Username = username ?? "test",
             Password = _cryptoService.Encrypt(password ?? Guid.NewGuid().ToString()),
             FromMail = "noreply@test.de",
+            FromName = "Vorstand Test",
             EnableSsl = false
         };
 
@@ -1100,6 +1196,7 @@ public class MailControllerTests : IntegrationTestBase
         entity.Port.ShouldBe(result.Port);
         entity.Username.ShouldBe(result.Username);
         entity.FromMail.ShouldBe(result.FromMail);
+        entity.FromName.ShouldBe(result.FromName);
         entity.EnableSsl.ShouldBe(result.EnableSsl);
     }
 
@@ -1114,6 +1211,7 @@ public class MailControllerTests : IntegrationTestBase
             Username = username ?? Guid.NewGuid().ToString(),
             Password = Guid.NewGuid().ToString(),
             FromMail = "noreply@test.de",
+            FromName = "Vorstand Test",
             EnableSsl = false
         };
     }

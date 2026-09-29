@@ -35,6 +35,7 @@ public class MembersController : ControllerBase
     private readonly AuditService _auditService;
     private readonly MemberService _memberService;
     private readonly IHttpContextAccessor _http;
+    private readonly bool _isPrivileged;
 
     public MembersController(AppDbContext db, CryptoService crypto, AuditService auditService,
         MemberService memberService, IHttpContextAccessor http)
@@ -44,6 +45,7 @@ public class MembersController : ControllerBase
         _auditService = auditService;
         _memberService = memberService;
         _http = http;
+        _isPrivileged = IbanMasking.IsPrivileged(http.HttpContext?.User);
     }
 
     [HttpGet]
@@ -122,9 +124,13 @@ public class MembersController : ControllerBase
             memberResults = await memberResultQuery.ToListAsync();
         }
 
+        List<MemberResult> items = memberResults.Skip(memberQuery.Offset).Take(memberQuery.Limit).ToList();
+        if (!_isPrivileged)
+            items.ForEach(x => x.IBAN = IbanMasking.Mask(x.IBAN));
+
         AllMemberResults result = new()
         {
-            Items = memberResults.Skip(memberQuery.Offset).Take(memberQuery.Limit).ToList(),
+            Items = items,
             Total = total
         };
 
@@ -226,7 +232,7 @@ public class MembersController : ControllerBase
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
             MemberCategoryId = member.MemberCategoryId,
-            IBAN = request.IBAN ?? string.Empty,
+            IBAN = IbanMasking.MaskUnlessPrivileged(request.IBAN, _isPrivileged),
             Bic = request.Bic,
             SepaConsent = member.SepaConsent,
             EntryDate = member.EntryDate,
@@ -253,6 +259,8 @@ public class MembersController : ControllerBase
                 errorMessage: "Member with ID not found.",
                 moreInfo: $"No member with the ID {id} could be found."));
         }
+
+        request.IBAN = IbanMasking.IgnoreMasked(request.IBAN);
 
         string iban = _crypto.Hash(request.IBAN ?? "");
         string email = _crypto.Hash(request.Email ?? "");
@@ -427,7 +435,7 @@ public class MembersController : ControllerBase
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
             MemberCategoryId = member.MemberCategoryId,
-            IBAN = request.IBAN ?? _crypto.Decrypt(member.IBAN_Encrypted) ?? string.Empty,
+            IBAN = IbanMasking.MaskUnlessPrivileged(request.IBAN ?? _crypto.Decrypt(member.IBAN_Encrypted), _isPrivileged),
             Bic = request.Bic ?? _crypto.Decrypt(member.Bic_Encrypted) ?? string.Empty,
             SepaConsent = member.SepaConsent,
             EntryDate = member.EntryDate,

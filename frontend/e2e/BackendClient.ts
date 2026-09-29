@@ -259,6 +259,7 @@ export class BackendClient {
         username: 'test',
         password: 'test',
         fromMail: 'noreply@test.de',
+        fromName: 'Vorstand Test',
         enableSsl: false,
       },
     });

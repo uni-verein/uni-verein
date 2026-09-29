@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Security;
 using UniVerein.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using UniVerein.DAL.Data;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace UniVerein.Api.Controllers;
 
@@ -25,11 +27,13 @@ public class UsersController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly CryptoService _cryptoService;
+    private readonly TimeProvider _timeProvider;
 
-    public UsersController(AppDbContext db, CryptoService cryptoService)
+    public UsersController(AppDbContext db, CryptoService cryptoService, TimeProvider timeProvider)
     {
         _db = db;
         _cryptoService = cryptoService;
+        _timeProvider = timeProvider;
     }
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
@@ -137,6 +141,13 @@ public class UsersController : ControllerBase
                 errorMessage: "User not found.",
                 moreInfo: $"User with ID {id} not found."));
 
+        if (!string.IsNullOrWhiteSpace(request.Password) && IsCurrentUser(id))
+        {
+            ActionResult? verifyError = await VerifyCurrentPasswordAsync(user, request.CurrentPassword);
+            if (verifyError != null)
+                return verifyError;
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Username))
         {
             if (request.Username.Length > 50)
@@ -207,6 +218,41 @@ public class UsersController : ControllerBase
         _db.Remove(user);
         await _db.SaveChangesAsync();
         return Ok();
+    }
+
+    private async Task<ActionResult?> VerifyCurrentPasswordAsync(UserEntity user, string? currentPassword)
+    {
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+
+        if (user.BlockingLoginTimeout.HasValue && user.BlockingLoginTimeout > now)
+            return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
+                errorMessage: "To many failed password attempts.",
+                moreInfo: $"Try again in {Math.Ceiling((user.BlockingLoginTimeout.Value - now).TotalSeconds)} seconds."));
+
+        bool verified;
+        try
+        {
+            verified = CryptoService.VerifyPassword(currentPassword ?? string.Empty, user.PasswordHash);
+        }
+        catch (Exception)
+        {
+            Log.Warning("UsersController: Current password validation threw an exception.");
+            verified = false;
+        }
+
+        if (!verified)
+        {
+            user.FailedAttempts = LoginGuard.GetEffectiveFailedAttempts(user.FailedAttempts, user.LastFailedLoginAttempt, now) + 1;
+            user.LastFailedLoginAttempt = now;
+            user.BlockingLoginTimeout = LoginGuard.GetLockoutReleaseTime(user.FailedAttempts, now);
+            await _db.SaveChangesAsync();
+            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Current password is incorrect."));
+        }
+
+        user.FailedAttempts = 0;
+        user.LastFailedLoginAttempt = null;
+        user.BlockingLoginTimeout = null;
+        return null;
     }
 
     private bool IsCurrentUser(Guid userId)

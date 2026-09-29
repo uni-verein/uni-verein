@@ -32,7 +32,14 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import 'dayjs/locale/de';
-import { formatIBAN, ACADEMIC_DEGREE_LABELS, validateIBAN, validateBIC } from '../../utils';
+import {
+  formatIBAN,
+  ACADEMIC_DEGREE_LABELS,
+  validateIBAN,
+  validateBIC,
+  isMaskedIBAN,
+  replaceMaskedIBAN,
+} from '../../utils';
 import { NIL as NIL_UUID } from 'uuid';
 import * as countries from 'i18n-iso-countries';
 import deLocale from 'i18n-iso-countries/langs/de.json';
@@ -200,7 +207,7 @@ export default function PendingEnrollmentForm({
 
     if (!detail.iban.trim()) {
       newErrors.iban = t('components.memberForm.validation.ibanRequired');
-    } else if (!validateIBAN(detail.iban)) {
+    } else if (!isMaskedIBAN(detail.iban) && !validateIBAN(detail.iban)) {
       newErrors.iban = t('components.memberForm.validation.ibanError');
     }
 
@@ -219,9 +226,10 @@ export default function PendingEnrollmentForm({
     if (!detail || !validate()) return;
 
     try {
+      const payload = isMaskedIBAN(detail.iban) ? { ...detail, iban: undefined } : detail;
       const patchResponse = await api(`/pending-self-enrollments/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify(detail),
+        body: JSON.stringify(payload),
       });
       if (patchResponse === 409) {
         setApiError(t('components.memberForm.alerts.duplicateIbanOrEmail'));
@@ -259,7 +267,10 @@ export default function PendingEnrollmentForm({
   };
 
   const handleIbanChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = event.target.value.replace(/\s+/g, '').toUpperCase();
+    const raw = replaceMaskedIBAN(
+      detail?.iban ?? '',
+      event.target.value.replace(/\s+/g, '').toUpperCase(),
+    );
     setDetail((prev) => (prev ? { ...prev, iban: raw } : prev));
 
     if (validateIBAN(raw)) {
@@ -642,8 +653,14 @@ export default function PendingEnrollmentForm({
                   placeholder="DE00 0000 0000 0000 0000 00"
                   value={formatIBAN(detail.iban ?? '')}
                   onChange={handleIbanChange}
+                  onFocus={(e) => isMaskedIBAN(detail.iban) && e.target.select()}
                   error={errors.iban !== undefined}
-                  helperText={errors.iban}
+                  helperText={
+                    errors.iban ??
+                    (isMaskedIBAN(detail.iban)
+                      ? t('components.memberForm.helper.ibanMasked')
+                      : undefined)
+                  }
                 />
               </Grid>
               <Grid size={6}>

@@ -83,9 +83,11 @@ function readUserFromToken(): { id: UUIDTypes | undefined; name: string; role: s
 export default function Dashboard({
   onLogout,
   pageName,
+  logo,
 }: {
   onLogout?: () => void;
   pageName: string;
+  logo: string;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
@@ -405,6 +407,7 @@ export default function Dashboard({
           collapsedView={isMobile ? false : collapsed}
           showToggle={!isMobile}
           pageName={pageName}
+          logo={logo}
           page={page}
           onPageChange={setPage}
           onToggleCollapse={() => setCollapsed(!collapsed)}

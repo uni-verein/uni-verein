@@ -19,6 +19,7 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly CryptoService _cryptoService;
+    private const string TestIban = "DE89370400440532013000";
 
     public PendingSelfEnrollmentControllerTests(UniVereinWebApplicationFactory factory) : base(factory)
     {
@@ -407,9 +408,90 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
         result.City.ShouldBe("Kiel");
     }
 
+    [Theory]
+    [InlineData(UserRole.ADMIN, TestIban)]
+    [InlineData(UserRole.FINANCIAL_MANAGER, TestIban)]
+    [InlineData(UserRole.USER, "****************013000")]
+    public async Task GetById_IbanOnlyFullyVisibleForPrivilegedRoles(UserRole role, string expectedIban)
+    {
+        // Arrange
+        (HttpClient client, _) = await CreateUserAndClientAsync(role, $"iban-viewer-{role}");
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(
+            PendingSelfEnrollmentStatus.PENDING, iban: TestIban);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/pending-self-enrollments/{pending.Id}");
+        PendingSelfEnrollmentDetailResult? result =
+            await response.Content.ReadFromJsonAsync<PendingSelfEnrollmentDetailResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.IBAN.ShouldBe(expectedIban);
+    }
+
     // ---------------------------------------------------------------
     // PATCH /pending-self-enrollments/{id}
     // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task Update_AsUser_WithMaskedIban_ThenApprove_MemberGetsStoredIban()
+    {
+        // Arrange
+        (HttpClient client, _) = await CreateUserAndClientAsync(UserRole.USER, "iban-editor");
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(
+            PendingSelfEnrollmentStatus.PENDING, iban: TestIban);
+
+        // Act
+        HttpResponseMessage updateResponse = await client.PatchAsJsonAsync($"/pending-self-enrollments/{pending.Id}",
+            new PendingSelfEnrollmentUpdateRequest { LastName = "Updated", IBAN = IbanMasking.Mask(TestIban) });
+        PendingSelfEnrollmentDetailResult? updateResult =
+            await updateResponse.Content.ReadFromJsonAsync<PendingSelfEnrollmentDetailResult>(_jsonSerializerOptions);
+        HttpResponseMessage approveResponse =
+            await client.PostAsync($"/pending-self-enrollments/{pending.Id}/approve", null);
+        MemberResult? approveResult =
+            await approveResponse.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        updateResult.ShouldNotBeNull();
+        updateResult.IBAN.ShouldBe(IbanMasking.Mask(TestIban));
+        approveResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        approveResult.ShouldNotBeNull();
+        approveResult.IBAN.ShouldBe(IbanMasking.Mask(TestIban));
+
+        await WithDbContext(async db =>
+        {
+            MemberEntity? member = await db.Members.FirstOrDefaultAsync(m => m.Id == approveResult.Id);
+            member.ShouldNotBeNull();
+            _cryptoService.Decrypt(member.IBAN_Encrypted).ShouldBe(TestIban);
+            member.IBAN_Hash.ShouldBe(_cryptoService.Hash(TestIban));
+        });
+    }
+
+    [Fact]
+    public async Task Update_AsUser_WithNewIban_StoresNewIban()
+    {
+        // Arrange
+        const string newIban = "DE02120300000000202051";
+        (HttpClient client, _) = await CreateUserAndClientAsync(UserRole.USER, "iban-replacer");
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(
+            PendingSelfEnrollmentStatus.PENDING, iban: TestIban);
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/pending-self-enrollments/{pending.Id}",
+            new PendingSelfEnrollmentUpdateRequest { IBAN = newIban });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            PendingSelfEnrollmentEntity? updated =
+                await db.PendingSelfEnrollments.FirstOrDefaultAsync(x => x.Id == pending.Id);
+            updated.ShouldNotBeNull();
+            _cryptoService.Decrypt(updated.IBAN_Encrypted).ShouldBe(newIban);
+        });
+    }
 
     [Fact]
     public async Task Update_UnknownId_NotFound()
@@ -698,7 +780,7 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
 
     private async Task<PendingSelfEnrollmentEntity> CreatePendingSelfEnrollmentEntity(
         PendingSelfEnrollmentStatus status, string? email = null, Guid? memberCategoryId = null,
-        bool assignCategory = true)
+        bool assignCategory = true, string? iban = null)
     {
         string resolvedEmail = email ?? $"{Guid.NewGuid()}@test.de";
         PendingSelfEnrollmentEntity pending = new()
@@ -722,7 +804,9 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
             BulkMail = BulkMail.ALLOWED,
             StartOfStudies = DateTimeOffset.UtcNow,
             MotivationEncrypted = _cryptoService.Encrypt("Studiere Informatik."),
-            MemberCategoryId = assignCategory ? (memberCategoryId ?? Guid.Parse(Program.MemberCategoriesAlumni)) : null
+            MemberCategoryId = assignCategory ? (memberCategoryId ?? Guid.Parse(Program.MemberCategoriesAlumni)) : null,
+            IBAN_Encrypted = iban != null ? _cryptoService.Encrypt(iban) : null,
+            IBAN_Hash = iban != null ? _cryptoService.Hash(iban) : null
         };
 
         await WithDbContext(async db =>

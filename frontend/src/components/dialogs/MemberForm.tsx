@@ -38,6 +38,8 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 import {
   formatIBAN,
+  isMaskedIBAN,
+  replaceMaskedIBAN,
   TASK_WITHIN_THE_CLUB_LABELS,
   ACADEMIC_DEGREE_LABELS,
   validateIBAN,
@@ -206,7 +208,7 @@ export default function MemberForm({
 
     if (mode === 'public' && !m.iban.trim()) {
       newErrors.iban = t('components.memberForm.validation.ibanRequired');
-    } else if (m.iban && !validateIBAN(m.iban)) {
+    } else if (m.iban && !isMaskedIBAN(m.iban) && !validateIBAN(m.iban)) {
       newErrors.iban = t('components.memberForm.validation.ibanError');
     }
 
@@ -255,9 +257,10 @@ export default function MemberForm({
           onClose();
         }
       } else {
+        const payload = isMaskedIBAN(m.iban) ? { ...m, iban: undefined } : m;
         const response = await api(`/members/${m.id}`, {
           method: 'PATCH',
-          body: JSON.stringify(m),
+          body: JSON.stringify(payload),
         });
         if (response === 409) {
           setApiError(t('components.memberForm.alerts.duplicateIbanOrEmail'));
@@ -296,7 +299,7 @@ export default function MemberForm({
   };
 
   const handleIbanChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = event.target.value.replace(/\s+/g, '').toUpperCase();
+    const raw = replaceMaskedIBAN(m.iban, event.target.value.replace(/\s+/g, '').toUpperCase());
 
     setM((prev) => ({
       ...prev,
@@ -328,6 +331,7 @@ export default function MemberForm({
   };
 
   const formattedIBAN = formatIBAN(m.iban ?? '');
+  const ibanMasked = isMaskedIBAN(m.iban);
   const allId = memberCategories.find((x) => x.category === 'ALL')?.id.toString() ?? '';
 
   const handleDialogClose = (_event: object, reason: 'backdropClick' | 'escapeKeyDown') => {
@@ -803,9 +807,13 @@ export default function MemberForm({
                   placeholder="DE00 0000 0000 0000 0000 00"
                   value={formattedIBAN}
                   onChange={handleIbanChange}
+                  onFocus={(e) => ibanMasked && e.target.select()}
                   required={mode === 'public'}
                   error={errors.iban !== undefined}
-                  helperText={errors.iban}
+                  helperText={
+                    errors.iban ??
+                    (ibanMasked ? t('components.memberForm.helper.ibanMasked') : undefined)
+                  }
                 />
               </Grid>
               <Grid size={6}>

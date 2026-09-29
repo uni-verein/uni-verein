@@ -18,6 +18,8 @@ namespace UniVerein.IntegrationTests.Tests;
 
 public class UsersControllerTests : IntegrationTestBase
 {
+    private const string CurrentPassword = "current-password-123";
+
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly CryptoService _cryptoService;
 
@@ -765,6 +767,183 @@ public class UsersControllerTests : IntegrationTestBase
         });
     }
 
+    [Theory]
+    [InlineData(UserRole.USER, null)]
+    [InlineData(UserRole.USER, "")]
+    [InlineData(UserRole.USER, "wrong-password-123")]
+    [InlineData(UserRole.FINANCIAL_MANAGER, null)]
+    [InlineData(UserRole.FINANCIAL_MANAGER, "wrong-password-123")]
+    [InlineData(UserRole.ADMIN, null)]
+    [InlineData(UserRole.ADMIN, "wrong-password-123")]
+    public async Task UpdateAccountUser_CurrentPasswordMissingOrWrong_BadRequest(UserRole role, string? currentPassword)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        UserEntity userEntity = await CreateUserEntity(id: UserId);
+        UserUpdateRequest request = CreateUpdateUserRequest(currentPassword: currentPassword);
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync("/users/account", request);
+        ErrorDetailsResult? result =
+            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.MoreInfo.ShouldBe("Current password is incorrect.");
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            user.PasswordHash.ShouldBe(userEntity.PasswordHash);
+            user.Username.ShouldBe(userEntity.Username);
+            user.FailedAttempts.ShouldBe(1);
+        });
+    }
+
+    [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    [InlineData(UserRole.ADMIN)]
+    public async Task UpdateAccountUser_CorrectCurrentPassword_ChangesPassword(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        await CreateUserEntity(id: UserId);
+        UserUpdateRequest request = CreateUpdateUserRequest(password: "new-password-123");
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync("/users/account", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            CryptoService.VerifyPassword("new-password-123", user.PasswordHash).ShouldBeTrue();
+            user.FailedAttempts.ShouldBe(0);
+        });
+    }
+
+    [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    [InlineData(UserRole.ADMIN)]
+    public async Task UpdateAccountUser_WithoutPasswordChange_NoCurrentPasswordRequired(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        UserEntity userEntity = await CreateUserEntity(id: UserId);
+        UserUpdateRequest request = new() { Username = "renamed-without-password" };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync("/users/account", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            user.Username.ShouldBe("renamed-without-password");
+            user.PasswordHash.ShouldBe(userEntity.PasswordHash);
+        });
+    }
+
+    [Fact]
+    public async Task UpdateAccountUser_TooManyWrongCurrentPasswords_Forbidden()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        await CreateUserEntity(id: UserId);
+        UserUpdateRequest wrongRequest = CreateUpdateUserRequest(currentPassword: "wrong-password-123");
+
+        for (int i = 0; i < 3; i++)
+            (await client.PatchAsJsonAsync("/users/account", wrongRequest)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        // Act
+        HttpResponseMessage response =
+            await client.PatchAsJsonAsync("/users/account", CreateUpdateUserRequest(password: "new-password-123"));
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            CryptoService.VerifyPassword(CurrentPassword, user.PasswordHash).ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public async Task UpdateUser_AsAdminWithoutCurrentPassword_ChangesPassword()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        UserEntity userEntity = await CreateUserEntity();
+        UserUpdateRequest request = CreateUpdateUserRequest(password: "admin-reset-123", currentPassword: null);
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{userEntity.Id}", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(userEntity.Id);
+            user.ShouldNotBeNull();
+            CryptoService.VerifyPassword("admin-reset-123", user.PasswordHash).ShouldBeTrue();
+        });
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("wrong-password-123")]
+    public async Task UpdateUser_AsAdminOwnAccountCurrentPasswordMissingOrWrong_BadRequest(string? currentPassword)
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        UserEntity userEntity = await CreateUserEntity(id: UserId, role: UserRole.ADMIN);
+        UserUpdateRequest request = CreateUpdateUserRequest(password: "new-password-123", currentPassword: currentPassword);
+        request.Role = null;
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{UserId}", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            user.PasswordHash.ShouldBe(userEntity.PasswordHash);
+            user.FailedAttempts.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public async Task UpdateUser_AsAdminOwnAccountCorrectCurrentPassword_ChangesPassword()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        await CreateUserEntity(id: UserId, role: UserRole.ADMIN);
+        UserUpdateRequest request = CreateUpdateUserRequest(password: "new-password-123");
+        request.Role = null;
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{UserId}", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            CryptoService.VerifyPassword("new-password-123", user.PasswordHash).ShouldBeTrue();
+        });
+    }
+
     // ---------------------------------------------------------------
     // DELETE /api/members/{id}
     // ---------------------------------------------------------------
@@ -861,7 +1040,7 @@ public class UsersControllerTests : IntegrationTestBase
         {
             Id = id ?? Guid.NewGuid(),
             Username = username ?? Guid.NewGuid().ToString(),
-            PasswordHash = _cryptoService.Hash(Guid.NewGuid().ToString()),
+            PasswordHash = CryptoService.HashPassword(CurrentPassword),
             Email = _cryptoService.Encrypt("test@gmail.com"),
             Role = role ?? UserRole.USER,
         };
@@ -895,12 +1074,13 @@ public class UsersControllerTests : IntegrationTestBase
     }
 
     private UserUpdateRequest CreateUpdateUserRequest(string? username = null, string? password = null,
-        string? mail = null)
+        string? mail = null, string? currentPassword = CurrentPassword)
     {
         return new UserUpdateRequest()
         {
             Username = username ?? Guid.NewGuid().ToString(),
             Password = password ?? Guid.NewGuid().ToString(),
+            CurrentPassword = currentPassword,
             Email = mail ?? "test2@gmail.com",
             Role = UserRole.USER
         };

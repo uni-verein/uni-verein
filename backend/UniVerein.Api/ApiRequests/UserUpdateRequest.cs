@@ -11,6 +11,9 @@ public class UserUpdateRequest
     [JsonPropertyName("password")]
     public string? Password { get; set; }
 
+    [JsonPropertyName("currentPassword")]
+    public string? CurrentPassword { get; set; }
+
     [JsonPropertyName("email")]
     public string? Email { get; set; }
 

@@ -8,6 +8,28 @@ export function formatIBAN(value: string) {
     .trim();
 }
 
+export function isMaskedIBAN(iban?: string | null) {
+  return !!iban && iban.includes('*');
+}
+
+export function replaceMaskedIBAN(previous: string, next: string) {
+  if (!isMaskedIBAN(previous) || !isMaskedIBAN(next)) return next;
+
+  let prefix = 0;
+  while (prefix < previous.length && prefix < next.length && previous[prefix] === next[prefix]) {
+    prefix++;
+  }
+  let suffix = 0;
+  while (
+    suffix < previous.length - prefix &&
+    suffix < next.length - prefix &&
+    previous[previous.length - 1 - suffix] === next[next.length - 1 - suffix]
+  ) {
+    suffix++;
+  }
+  return next.slice(prefix, next.length - suffix).replace(/\*/g, '');
+}
+
 export function formatBIC(value: string) {
   return value
     .replace(/\s+/g, '')

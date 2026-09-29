@@ -8,14 +8,20 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  TextField,
 } from '@mui/material';
 import { api } from '../../api';
+import { PasswordField } from '../PasswordField';
 import { useTranslation } from 'react-i18next';
 
 const DEFAULT_PASSWORD = 'admin123';
 
-export function ForcePasswordChangeDialog({ onChanged }: { onChanged: () => void }) {
+export function ForcePasswordChangeDialog({
+  currentPassword,
+  onChanged,
+}: {
+  currentPassword: string;
+  onChanged: () => void;
+}) {
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,7 +51,10 @@ export function ForcePasswordChangeDialog({ onChanged }: { onChanged: () => void
     setSaving(true);
     setError('');
     try {
-      await api('/users/account', { method: 'PATCH', body: JSON.stringify({ password }) });
+      await api('/users/account', {
+        method: 'PATCH',
+        body: JSON.stringify({ password, currentPassword }),
+      });
       onChanged();
     } catch {
       setError(t('pages.login.forcePasswordChange.error'));
@@ -61,19 +70,17 @@ export function ForcePasswordChangeDialog({ onChanged }: { onChanged: () => void
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <DialogContentText>{t('pages.login.forcePasswordChange.description')}</DialogContentText>
           {error && <Alert severity="error">{error}</Alert>}
-          <TextField
+          <PasswordField
             autoFocus
             label={t('pages.login.forcePasswordChange.newPassword')}
-            type="password"
             fullWidth
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             slotProps={{ htmlInput: { maxLength: 50 } }}
           />
-          <TextField
+          <PasswordField
             label={t('pages.login.forcePasswordChange.confirmPassword')}
-            type="password"
             fullWidth
             autoComplete="new-password"
             value={confirmPassword}

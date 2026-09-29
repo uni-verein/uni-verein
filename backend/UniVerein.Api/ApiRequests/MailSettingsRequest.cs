@@ -30,8 +30,13 @@ public class MailSettingsRequest
     public required string Password { get; set; }
 
     [Required]
+    [EmailAddress]
     [JsonPropertyName("fromMail")]
     public required string FromMail { get; set; }
+
+    [MaxLength(50)]
+    [JsonPropertyName("fromName")]
+    public string? FromName { get; set; }
 
     [JsonPropertyName("enableSsl")]
     public bool? EnableSsl { get; set; } = true;

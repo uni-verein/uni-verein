@@ -1,14 +1,17 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-09-26
+Generated automatically on 2026-09-27
 
 | Package | Version | License |
 |---------|---------|---------|
+| AngleSharp | 1.7.2 | MIT |
+| AngleSharp.Css | 1.0.2 | MIT |
 | BouncyCastle.Cryptography | 2.7.0 | MIT |
 | Castle.Core | 5.2.1 | Apache-2.0 |
 | CsvHelper | 33.1.0 | MS-PL OR Apache-2.0 |
 | DiffEngine | 11.3.0 | MIT |
 | EmptyFiles | 4.4.0 | MIT |
+| HtmlSanitizer | 9.2.1039 | MIT |
 | Humanizer.Core | 2.14.1 | MIT |
 | Konscious.Security.Cryptography.Argon2 | 1.3.1 | MIT |
 | Konscious.Security.Cryptography.Blake2 | 1.1.1 | MIT |
@@ -134,7 +137,7 @@ Generated automatically on 2026-09-26
 | System.CodeDom | 6.0.0 | MIT |
 | System.Collections | 4.3.0 | MS-EULA |
 | System.Collections.Concurrent | 4.3.0 | MS-EULA |
-| System.Collections.Immutable | 7.0.0 | MIT |
+| System.Collections.Immutable | 10.0.11 | MIT |
 | System.ComponentModel | 4.3.0 | MS-EULA |
 | System.ComponentModel.Annotations | 5.0.0 | MIT |
 | System.Composition | 7.0.0 | MIT |
@@ -207,7 +210,7 @@ Generated automatically on 2026-09-26
 | System.Security.Principal | 4.3.0 | MS-EULA |
 | System.Security.Principal.Windows | 4.7.0 | MIT |
 | System.Text.Encoding | 4.3.0 | MS-EULA |
-| System.Text.Encoding.CodePages | 10.0.0 | MIT |
+| System.Text.Encoding.CodePages | 8.0.0 | MIT |
 | System.Text.Encoding.Extensions | 4.3.0 | MS-EULA |
 | System.Text.Encodings.Web | 8.0.0 | MIT |
 | System.Text.Json | 8.0.5 | MIT |
@@ -218,7 +221,7 @@ Generated automatically on 2026-09-26
 | System.Threading.Tasks.Extensions | 4.5.4 | MIT |
 | System.Threading.Thread | 4.3.0 | MS-EULA |
 | System.Threading.Timer | 4.3.0 | MS-EULA |
-| System.ValueTuple | 4.6.1 | MIT |
+| System.ValueTuple | 4.6.2 | MIT |
 | System.Windows.Extensions | 4.7.0 | MIT |
 | System.Xml.ReaderWriter | 4.3.0 | MS-EULA |
 | System.Xml.XDocument | 4.3.0 | MS-EULA |

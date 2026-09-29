@@ -7,6 +7,7 @@ using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Helper;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -118,6 +119,8 @@ public class MailController : ControllerBase
         if (string.IsNullOrEmpty(request.ConnectionId))
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "ConnectionId missing"));
 
+        request.EmailData.HtmlBody = MailHtmlSanitizer.Sanitize(request.EmailData.HtmlBody);
+
         var allRecipients = await _db.Members.Include(x => x.MemberCategory)
             .Where(x => x.DeletedAt == null && x.BulkMail != BulkMail.NOT_ALLOWED).Select(x => new
             {
@@ -193,6 +196,7 @@ public class MailController : ControllerBase
             Username = mailSetting.Username,
             Password = "",
             FromMail = mailSetting.FromMail,
+            FromName = mailSetting.FromName,
             EnableSsl = mailSetting.EnableSsl
         };
 
@@ -218,6 +222,7 @@ public class MailController : ControllerBase
                 Username = request.Username.Trim(),
                 Password = _crypto.Encrypt(request.Password),
                 FromMail = request.FromMail.Trim(),
+                FromName = request.FromName?.Trim() ?? string.Empty,
                 EnableSsl = request.EnableSsl ?? true
             };
             await _db.MailSettings.AddAsync(mailSetting);
@@ -232,6 +237,7 @@ public class MailController : ControllerBase
             if (!string.IsNullOrWhiteSpace(request.Password))
                 mailSetting.Password = _crypto.Encrypt(request.Password);
             mailSetting.FromMail = request.FromMail.Trim();
+            mailSetting.FromName = request.FromName?.Trim() ?? string.Empty;
             mailSetting.EnableSsl = request.EnableSsl ?? true;
             mailSetting.DeletedAt = null;
             _db.MailSettings.Update(mailSetting);
@@ -250,6 +256,7 @@ public class MailController : ControllerBase
             Username = mailSetting.Username,
             Password = "",
             FromMail = mailSetting.FromMail,
+            FromName = mailSetting.FromName,
             EnableSsl = mailSetting.EnableSsl
         });
     }

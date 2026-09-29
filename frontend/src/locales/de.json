@@ -66,6 +66,9 @@
       }
     },
     "memberForm": {
+      "helper": {
+        "ibanMasked": "Aus Datenschutzgründen sind nur die letzten 6 Zeichen sichtbar. Zum Ändern die neue IBAN vollständig eingeben."
+      },
       "title": {
         "edit": "Mitglied bearbeiten",
         "view": "Mitglied ansehen",
@@ -658,7 +661,12 @@
         "fromMail": {
           "label": "Absender Email (From)",
           "placeholder": "vorstand@dein-verein.de",
-          "helperText": "Diese Adresse wird den Empfängern als Absender angezeigt."
+          "helperText": "Adresse, von der die E-Mails gesendet werden."
+        },
+        "fromName": {
+          "label": "Absendername",
+          "placeholder": "Vorstand Mein Verein",
+          "helperText": "Wird den Empfängern als Absender angezeigt. Leer = Adresse."
         },
         "password": {
           "label": "Passwort",
@@ -678,6 +686,8 @@
         "passwordTooLong": "Passwort darf maximal 50 Zeichen lang sein.",
         "fromMailEmpty": "Absender Email darf nicht leer sein.",
         "fromMailTooLong": "Absender Email darf maximal 50 Zeichen lang sein.",
+        "fromMailInvalid": "Absender Email muss eine gültige E-Mail-Adresse sein.",
+        "fromNameTooLong": "Absendername darf maximal 50 Zeichen lang sein.",
         "testEmailEmpty": "Test E-Mail darf nicht leer sein."
       },
       "buttons": {
@@ -803,7 +813,9 @@
         "admin": "Admin: Admin / admin12345678",
         "user": "Nutzer: User / user12345678",
         "finance": "Finanzverwalter: Finance / finance1234"
-      }
+      },
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen"
     },
     "mail": {
       "title": "Rundmail versenden",
@@ -1059,6 +1071,8 @@
           "username": "Username",
           "passwordCreate": "Passwort",
           "passwordEdit": "Passwort (leer lassen zum Behalten)",
+          "currentPassword": "Aktuelles Passwort",
+          "currentPasswordHint": "Nur zum Ändern des Passworts erforderlich",
           "email": "E-Mail",
           "role": "Rolle"
         },
@@ -1074,7 +1088,9 @@
         "passwordEmpty": "Passwort darf nicht leer sein.",
         "passwordTooShort": "Passwort muss mindestens 11 Zeichen lang sein.",
         "passwordTooLong": "Passwort darf maximal 50 Zeichen lang sein.",
-        "emailTooLong": "E-Mail darf maximal 50 Zeichen lang sein."
+        "emailTooLong": "E-Mail darf maximal 50 Zeichen lang sein.",
+        "currentPasswordEmpty": "Bitte gib dein aktuelles Passwort ein, um das Passwort zu ändern.",
+        "currentPasswordWrong": "Das aktuelle Passwort ist falsch oder es gab zu viele Fehlversuche."
       },
       "snackbar": {
         "updateSuccess": "Nutzeränderungen erfolgreich gespeichert.",

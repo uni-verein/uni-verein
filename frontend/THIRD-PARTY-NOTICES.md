@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-09-26
+Generated automatically on 2026-09-27
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -497,7 +497,7 @@ Generated automatically on 2026-09-26
 | postcss@8.5.28 | - | MIT |
 | prelude-ls@1.2.1 | - | MIT |
 | prettier-linter-helpers@1.0.1 | - | MIT |
-| prettier@3.9.8 | - | MIT |
+| prettier@3.9.9 | - | MIT |
 | pretty-bytes@5.6.0 | - | MIT |
 | pretty-bytes@6.1.1 | - | MIT |
 | prop-types@15.8.1 | - | MIT |
