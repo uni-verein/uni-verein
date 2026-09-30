@@ -547,7 +547,7 @@ Generated automatically on 2026-09-30
 | scheduler@0.23.2 | - | MIT |
 | semver@6.3.1 | - | ISC |
 | semver@7.8.5 | - | ISC |
-| serialize-javascript@7.1.1 | - | BSD-3-Clause |
+| serialize-javascript@7.1.2 | - | BSD-3-Clause |
 | set-cookie-parser@2.7.2 | - | MIT |
 | set-function-length@1.2.2 | - | MIT |
 | set-function-name@2.0.2 | - | MIT |
