@@ -20,6 +20,9 @@ public class MailSettingsEntity : BaseEntity
     [Column("from_mail")]
     public string FromMail { get; set; } = string.Empty;
 
+    [Column("from_name")]
+    public string FromName { get; set; } = string.Empty;
+
     [Column("enable_ssl")]
     public bool EnableSsl { get; set; } = true;
 

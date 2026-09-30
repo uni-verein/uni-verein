@@ -21,6 +21,8 @@ import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function EmailConfig() {
   const { t } = useTranslation();
   const { open, confirm, handleClose } = useConfirm();
@@ -40,6 +42,7 @@ export default function EmailConfig() {
     username?: string;
     password?: string;
     fromMail?: string;
+    fromName?: string;
   }>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [config, setConfig] = useState({
@@ -51,6 +54,7 @@ export default function EmailConfig() {
     username: '',
     password: '',
     fromMail: '',
+    fromName: '',
     enableSsl: true,
   });
   const [testEmail, setTestEmail] = useState('');
@@ -73,6 +77,7 @@ export default function EmailConfig() {
         username: '',
         password: '',
         fromMail: '',
+        fromName: '',
         enableSsl: true,
       });
     } finally {
@@ -94,6 +99,7 @@ export default function EmailConfig() {
       username?: string;
       password?: string;
       fromMail?: string;
+      fromName?: string;
     } = {};
 
     if (!config.smtpServer.trim()) {
@@ -132,6 +138,12 @@ export default function EmailConfig() {
       newErrors.fromMail = t('pages.emailConfig.validation.fromMailEmpty');
     } else if (config.fromMail.length > 50) {
       newErrors.fromMail = t('pages.emailConfig.validation.fromMailTooLong');
+    } else if (!EMAIL_REGEX.test(config.fromMail.trim())) {
+      newErrors.fromMail = t('pages.emailConfig.validation.fromMailInvalid');
+    }
+
+    if ((config.fromName ?? '').length > 50) {
+      newErrors.fromName = t('pages.emailConfig.validation.fromNameTooLong');
     }
 
     setErrors(newErrors);
@@ -342,11 +354,29 @@ export default function EmailConfig() {
                 label={t('pages.emailConfig.fields.fromMail.label')}
                 fullWidth
                 required
-                helperText={`(${config.fromMail.length}/50) ${t('pages.emailConfig.fields.fromMail.helperText')}`}
+                helperText={
+                  errors.fromMail ??
+                  `(${config.fromMail.length}/50) ${t('pages.emailConfig.fields.fromMail.helperText')}`
+                }
                 value={config.fromMail}
                 onChange={(e) => setConfig({ ...config, fromMail: e.target.value })}
                 placeholder={t('pages.emailConfig.fields.fromMail.placeholder')}
                 error={!!errors.fromMail}
+                slotProps={{ htmlInput: { maxLength: 50 } }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                label={t('pages.emailConfig.fields.fromName.label')}
+                fullWidth
+                helperText={
+                  errors.fromName ??
+                  `(${(config.fromName ?? '').length}/50) ${t('pages.emailConfig.fields.fromName.helperText')}`
+                }
+                value={config.fromName ?? ''}
+                onChange={(e) => setConfig({ ...config, fromName: e.target.value })}
+                placeholder={t('pages.emailConfig.fields.fromName.placeholder')}
+                error={!!errors.fromName}
                 slotProps={{ htmlInput: { maxLength: 50 } }}
               />
             </Grid>

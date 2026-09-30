@@ -14,6 +14,7 @@ using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -29,13 +30,15 @@ public class PendingSelfEnrollmentController : ControllerBase
     private readonly AppDbContext _db;
     private readonly CryptoService _crypto;
     private readonly PendingSelfEnrollmentService _pendingSelfEnrollmentService;
+    private readonly bool _isPrivileged;
 
     public PendingSelfEnrollmentController(AppDbContext db, CryptoService crypto,
-        PendingSelfEnrollmentService pendingSelfEnrollmentService)
+        PendingSelfEnrollmentService pendingSelfEnrollmentService, IHttpContextAccessor http)
     {
         _db = db;
         _crypto = crypto;
         _pendingSelfEnrollmentService = pendingSelfEnrollmentService;
+        _isPrivileged = IbanMasking.IsPrivileged(http.HttpContext?.User);
     }
 
     [HttpGet]
@@ -93,6 +96,7 @@ public class PendingSelfEnrollmentController : ControllerBase
     {
         Log.Information($"PendingSelfEnrollmentController: UpdateAsync -> Try to update pending self-enrollment {id}");
 
+        request.IBAN = IbanMasking.IgnoreMasked(request.IBAN);
         PendingSelfEnrollmentUpdateResult result = await _pendingSelfEnrollmentService.UpdateAsync(id, request);
 
         switch (result.Status)
@@ -143,7 +147,7 @@ public class PendingSelfEnrollmentController : ControllerBase
             Motivation = _crypto.Decrypt(pending.MotivationEncrypted) ?? string.Empty,
             MemberCategoryId = pending.MemberCategoryId,
             MemberCategoryName = pending.MemberCategory?.Name,
-            IBAN = _crypto.Decrypt(pending.IBAN_Encrypted) ?? string.Empty,
+            IBAN = IbanMasking.MaskUnlessPrivileged(_crypto.Decrypt(pending.IBAN_Encrypted), _isPrivileged),
             Bic = _crypto.Decrypt(pending.Bic_Encrypted) ?? string.Empty,
             ContributionPlanId = pending.ContributionPlanId,
             SubmittedAt = pending.CreatedAt,
@@ -209,7 +213,7 @@ public class PendingSelfEnrollmentController : ControllerBase
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
             MemberCategoryId = member.MemberCategoryId,
-            IBAN = _crypto.Decrypt(member.IBAN_Encrypted) ?? string.Empty,
+            IBAN = IbanMasking.MaskUnlessPrivileged(_crypto.Decrypt(member.IBAN_Encrypted), _isPrivileged),
             Bic = _crypto.Decrypt(member.Bic_Encrypted) ?? string.Empty,
             SepaConsent = member.SepaConsent,
             EntryDate = member.EntryDate,

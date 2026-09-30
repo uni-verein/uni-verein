@@ -21,6 +21,7 @@ public class MemberControllerTests : IntegrationTestBase
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly CryptoService _cryptoService;
+    private const string TestIban = "DE89370400440532013000";
 
     public MemberControllerTests(UniVereinWebApplicationFactory factory) : base(factory)
     {
@@ -108,7 +109,7 @@ public class MemberControllerTests : IntegrationTestBase
         {
             MemberResult? result = results.Items.FirstOrDefault(x => x.MemberNumber == member.MemberNumber);
             result.ShouldNotBeNull();
-            CompareMember(member, result);
+            CompareMember(member, result, role);
         }
 
         results.Items.Select(x => x.MemberNumber).ToArray().ShouldBeEquivalentTo(Enumerable.Range(0, 5).ToArray());
@@ -155,7 +156,7 @@ public class MemberControllerTests : IntegrationTestBase
         results.Total.ShouldBe(1);
         MemberResult? result = results.Items.FirstOrDefault();
         result.ShouldNotBeNull();
-        CompareMember(member, result);
+        CompareMember(member, result, role);
     }
 
     [Fact]
@@ -183,7 +184,7 @@ public class MemberControllerTests : IntegrationTestBase
         results.Total.ShouldBe(5);
         MemberResult? result = results.Items.FirstOrDefault();
         result.ShouldNotBeNull();
-        CompareMember(members.First(x => x.MemberNumber == 1), result);
+        CompareMember(members.First(x => x.MemberNumber == 1), result, UserRole.USER);
     }
 
     [Theory]
@@ -394,7 +395,7 @@ public class MemberControllerTests : IntegrationTestBase
         await WithDbContext(async db =>
         {
             MemberEntity? member = await db.Members.FirstOrDefaultAsync(m => m.FirstName == memberRequest.FirstName);
-            CompareMember(member!, result);
+            CompareMember(member!, result, role);
         });
     }
 
@@ -607,7 +608,7 @@ public class MemberControllerTests : IntegrationTestBase
         await WithDbContext(async db =>
         {
             MemberEntity? dbMember = await db.Members.FirstOrDefaultAsync(m => m.FirstName == updateRequest.FirstName);
-            CompareMember(dbMember!, result);
+            CompareMember(dbMember!, result, role);
         });
     }
 
@@ -896,7 +897,81 @@ public class MemberControllerTests : IntegrationTestBase
         });
     }
 
-    private void CompareMember(MemberEntity entity, MemberResult result)
+    [Theory]
+    [InlineData(UserRole.ADMIN, TestIban)]
+    [InlineData(UserRole.FINANCIAL_MANAGER, TestIban)]
+    [InlineData(UserRole.USER, "****************013000")]
+    public async Task GetAllMembers_IbanOnlyFullyVisibleForPrivilegedRoles(UserRole role, string expectedIban)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        await CreateMemberEntity();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/members");
+        AllMemberResults? results = await response.Content.ReadFromJsonAsync<AllMemberResults>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results.Items.Single().IBAN.ShouldBe(expectedIban);
+    }
+
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task UpdateMember_WithMaskedIban_KeepsStoredIban(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        MemberEntity member = await CreateMemberEntity();
+        MemberUpdateRequest updateRequest = UpdateMemberRequest(iban: IbanMasking.Mask(TestIban));
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/members/{member.Id}", updateRequest);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            _cryptoService.Decrypt(dbMember.IBAN_Encrypted).ShouldBe(TestIban);
+            dbMember.IBAN_Hash.ShouldBe(_cryptoService.Hash(TestIban));
+            CompareMember(dbMember, result, role);
+        });
+    }
+
+    [Fact]
+    public async Task UpdateMember_AsUser_WithNewIban_StoresIbanAndReturnsItMasked()
+    {
+        // Arrange
+        const string newIban = "DE02120300000000202051";
+        HttpClient client = CreateClient(UserRole.USER);
+        MemberEntity member = await CreateMemberEntity();
+        MemberUpdateRequest updateRequest = UpdateMemberRequest(iban: newIban);
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/members/{member.Id}", updateRequest);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.IBAN.ShouldBe("****************202051");
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            _cryptoService.Decrypt(dbMember.IBAN_Encrypted).ShouldBe(newIban);
+            dbMember.IBAN_Hash.ShouldBe(_cryptoService.Hash(newIban));
+        });
+    }
+
+    private void CompareMember(MemberEntity entity, MemberResult result, UserRole role)
     {
         TimeSpan tolerance = TimeSpan.FromMilliseconds(2);
         entity.Id.ShouldBe(result.Id);
@@ -921,8 +996,16 @@ public class MemberControllerTests : IntegrationTestBase
         entity.CourseOfStudy.ShouldBe(result.CourseOfStudy);
         entity.TaskWithinTheClub.ShouldBe(result.TaskWithinTheClub);
         entity.MemberCategoryId.ShouldBe(result.MemberCategoryId);
-        _cryptoService.Decrypt(entity.IBAN_Encrypted).ShouldBe(result.IBAN);
-        entity.IBAN_Hash.ShouldBe(_cryptoService.Hash(result.IBAN));
+        string? iban = _cryptoService.Decrypt(entity.IBAN_Encrypted);
+        if (role == UserRole.USER)
+        {
+            result.IBAN.ShouldBe(IbanMasking.Mask(iban));
+        }
+        else
+        {
+            iban.ShouldBe(result.IBAN);
+            entity.IBAN_Hash.ShouldBe(_cryptoService.Hash(result.IBAN));
+        }
         _cryptoService.Decrypt(entity.Bic_Encrypted).ShouldBe(result.Bic);
         entity.SepaConsent.ShouldBe(result.SepaConsent);
         Assert.True(Math.Abs((entity.EntryDate - result.EntryDate).TotalMilliseconds) < tolerance.TotalMilliseconds);
@@ -931,7 +1014,8 @@ public class MemberControllerTests : IntegrationTestBase
     }
 
     private async Task<MemberEntity> CreateMemberEntity(int number = 1, string? firstName = null,
-        TaskWithinTheClub? taskWithinTheClub = null, Guid? memberCategory = null, bool? deleted = null)
+        TaskWithinTheClub? taskWithinTheClub = null, Guid? memberCategory = null, bool? deleted = null,
+        string? iban = null)
     {
         Guid memberId = Guid.NewGuid();
         MemberEntity member = new()
@@ -958,8 +1042,8 @@ public class MemberControllerTests : IntegrationTestBase
             CourseOfStudy = "IT",
             TaskWithinTheClub = taskWithinTheClub ?? TaskWithinTheClub.MEMBER,
             MemberCategoryId = memberCategory ?? Guid.Parse(Program.MemberCategoriesAlumni),
-            IBAN_Encrypted = _cryptoService.Encrypt("IBAN"),
-            IBAN_Hash = _cryptoService.Hash("IBAN"),
+            IBAN_Encrypted = _cryptoService.Encrypt(iban ?? TestIban),
+            IBAN_Hash = _cryptoService.Hash(iban ?? TestIban),
             Bic_Encrypted = _cryptoService.Encrypt("DEUTDEDE123"),
             SepaConsent = DateTimeOffset.UtcNow,
             EntryDate = DateTimeOffset.UtcNow,
@@ -1000,7 +1084,7 @@ public class MemberControllerTests : IntegrationTestBase
             CourseOfStudy = "IT",
             TaskWithinTheClub = TaskWithinTheClub.MEMBER,
             MemberCategoryId = Guid.Parse(Program.MemberCategoriesAlumni),
-            IBAN = iban ?? "IBAN",
+            IBAN = iban ?? TestIban,
             Bic = "DEUTDEDEXXX",
             SepaConsent = DateTimeOffset.UtcNow,
             EntryDate = DateTimeOffset.UtcNow,
@@ -1032,7 +1116,7 @@ public class MemberControllerTests : IntegrationTestBase
             CourseOfStudy = "IT",
             TaskWithinTheClub = TaskWithinTheClub.MEMBER,
             MemberCategoryId = Guid.Parse(Program.MemberCategoriesAlumni),
-            IBAN = iban ?? "IBAN",
+            IBAN = iban ?? TestIban,
             Bic = "DEUTDEDEXXX",
             SepaConsent = DateTimeOffset.UtcNow,
             EntryDate = DateTimeOffset.UtcNow,

@@ -96,6 +96,7 @@ test.describe('E-Mail – Configure and send e-mail', () => {
       await expect(page.getByRole('textbox', { name: 'Absender Email (From)' })).toBeVisible();
       await page.getByRole('textbox', { name: 'Absender Email (From)' }).click();
       await page.getByRole('textbox', { name: 'Absender Email (From)' }).fill('noreply@test.de');
+      await page.getByRole('textbox', { name: 'Absendername' }).fill('Vorstand Test');
 
       await expect(page.getByRole('textbox', { name: 'Passwort' })).toBeVisible();
       await page.getByRole('textbox', { name: 'Passwort' }).click();

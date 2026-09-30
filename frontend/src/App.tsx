@@ -118,7 +118,7 @@ export default function App() {
       ) : !logged ? (
         <Login onLogin={handleLoginSuccess} demo={demo} />
       ) : (
-        <Dashboard onLogout={handleLogout} pageName={config.pageName} />
+        <Dashboard onLogout={handleLogout} pageName={config.pageName} logo={config.logo} />
       )}
       {!isMobile && (
         <Typography

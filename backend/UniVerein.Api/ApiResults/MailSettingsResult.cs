@@ -29,6 +29,9 @@ public class MailSettingsResult
     [JsonPropertyName("fromMail")]
     public string FromMail { get; set; } = "";
 
+    [JsonPropertyName("fromName")]
+    public string FromName { get; set; } = "";
+
     [JsonPropertyName("enableSsl")]
     public bool EnableSsl { get; set; } = true;
 }

@@ -236,6 +236,7 @@ export default function Login({
       </Container>
       {forcePasswordChange && (
         <ForcePasswordChangeDialog
+          currentPassword={pass}
           onChanged={() => {
             setForcePasswordChange(false);
             onLogin();

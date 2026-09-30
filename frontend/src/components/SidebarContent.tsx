@@ -88,10 +88,39 @@ function DrawerToggleButton({
   );
 }
 
+function ClubBadge({ logo, displayName }: { logo: string; displayName: string }) {
+  if (logo !== '') {
+    return (
+      <Avatar
+        src={logo}
+        alt={displayName}
+        variant="rounded"
+        sx={{ width: 32, height: 32, bgcolor: 'transparent' }}
+        slotProps={{ img: { style: { objectFit: 'contain' } } }}
+      />
+    );
+  }
+
+  return (
+    <Box
+      component="span"
+      sx={{
+        bgcolor: 'primary.main',
+        color: 'white',
+        px: 1,
+        borderRadius: 1,
+      }}
+    >
+      {displayName.substring(0, 1)}
+    </Box>
+  );
+}
+
 export function SidebarContent({
   collapsedView,
   showToggle,
   pageName,
+  logo,
   page,
   onPageChange,
   onToggleCollapse,
@@ -104,6 +133,7 @@ export function SidebarContent({
   collapsedView: boolean;
   showToggle: boolean;
   pageName: string;
+  logo: string;
   page: string;
   onPageChange: (pageId: string) => void;
   onToggleCollapse: () => void;
@@ -118,6 +148,7 @@ export function SidebarContent({
   onSettingsClick: () => void;
 }) {
   const { t } = useTranslation();
+  const displayName = pageName !== '' ? pageName : t('pages.dashboard.clubManagement');
 
   const viewPage = (pageId: string) => {
     switch (pageId) {
@@ -143,23 +174,12 @@ export function SidebarContent({
         }}
       >
         {collapsedView ? (
-          <Tooltip
-            title={pageName !== '' ? pageName : t('pages.dashboard.clubManagement')}
-            placement="right"
-            arrow
-          >
+          <Tooltip title={displayName} placement="right" arrow>
             <Box
               component="span"
-              sx={{
-                bgcolor: 'primary.main',
-                color: 'white',
-                px: 1,
-                borderRadius: 1,
-                fontWeight: 800,
-                fontSize: '1.1rem',
-              }}
+              sx={{ display: 'inline-flex', fontWeight: 800, fontSize: '1.1rem' }}
             >
-              {(pageName !== '' ? pageName : t('pages.dashboard.clubManagement')).substring(0, 1)}
+              <ClubBadge logo={logo} displayName={displayName} />
             </Box>
           </Tooltip>
         ) : (
@@ -174,13 +194,8 @@ export function SidebarContent({
               whiteSpace: 'nowrap',
             }}
           >
-            <Box
-              component="span"
-              sx={{ bgcolor: 'primary.main', color: 'white', px: 1, borderRadius: 1 }}
-            >
-              {(pageName !== '' ? pageName : t('pages.dashboard.clubManagement')).substring(0, 1)}
-            </Box>
-            {pageName !== '' ? pageName : t('pages.dashboard.clubManagement')}
+            <ClubBadge logo={logo} displayName={displayName} />
+            {displayName}
           </Typography>
         )}
 

@@ -66,6 +66,9 @@
       }
     },
     "memberForm": {
+      "helper": {
+        "ibanMasked": "For privacy reasons only the last 6 characters are shown. To change it, enter the new IBAN in full."
+      },
       "title": {
         "edit": "Edit Member",
         "view": "View Member",
@@ -658,7 +661,12 @@
         "fromMail": {
           "label": "Sender Email (From)",
           "placeholder": "board@your-club.com",
-          "helperText": "This address will be shown to recipients as the sender."
+          "helperText": "Address the emails are sent from."
+        },
+        "fromName": {
+          "label": "Sender name",
+          "placeholder": "Board of My Club",
+          "helperText": "Shown to recipients as the sender. Empty = address."
         },
         "password": {
           "label": "Password",
@@ -678,6 +686,8 @@
         "passwordTooLong": "Password must not exceed 50 characters.",
         "fromMailEmpty": "Sender email must not be empty.",
         "fromMailTooLong": "Sender email must not exceed 50 characters.",
+        "fromMailInvalid": "Sender email must be a valid email address.",
+        "fromNameTooLong": "Sender name must not exceed 50 characters.",
         "testEmailEmpty": "Test email must not be empty."
       },
       "buttons": {
@@ -803,7 +813,9 @@
         "admin": "Admin: Admin / admin12345678",
         "user": "User: User / user12345678",
         "finance": "Finance director: Finance / finance1234"
-      }
+      },
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     },
     "mail": {
       "title": "Send Circular Email",
@@ -1059,6 +1071,8 @@
           "username": "Username",
           "passwordCreate": "Password",
           "passwordEdit": "Password (leave empty to keep)",
+          "currentPassword": "Current password",
+          "currentPasswordHint": "Only required to change the password",
           "email": "Mail",
           "role": "Role"
         },
@@ -1074,7 +1088,9 @@
         "passwordEmpty": "Password must not be empty.",
         "passwordTooShort": "Password must be at least 11 characters long.",
         "passwordTooLong": "Password cannot not exceed 50 characters.",
-        "emailTooLong": "Mail must not exceed 50 characters."
+        "emailTooLong": "Mail must not exceed 50 characters.",
+        "currentPasswordEmpty": "Please enter your current password to change it.",
+        "currentPasswordWrong": "The current password is incorrect or there were too many failed attempts."
       },
       "snackbar": {
         "updateSuccess": "User changes saved successfully.",

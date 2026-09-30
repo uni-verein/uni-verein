@@ -18,6 +18,14 @@ import { Role, User } from '../../types';
 import { UUIDTypes } from 'uuid';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
+import { PasswordField } from '../PasswordField';
+
+type FormErrors = {
+  username?: string;
+  email?: string;
+  password?: string;
+  currentPassword?: string;
+};
 
 export function UserDialog({
   user,
@@ -38,17 +46,23 @@ export function UserDialog({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const [formData, setFormData] = useState(
     user
-      ? { username: user.username, email: user.email ?? '', password: '', role: user.role }
-      : { username: '', email: '', password: '', role: Role.USER },
+      ? {
+          username: user.username,
+          email: user.email ?? '',
+          password: '',
+          currentPassword: '',
+          role: user.role,
+        }
+      : { username: '', email: '', password: '', currentPassword: '', role: Role.USER },
   );
-  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string }>(
-    {},
-  );
+  const [errors, setErrors] = useState<FormErrors>({});
+  const isOwnAccount = !!user && (!!accountView || currentUserId === user.id);
+  const requiresCurrentPassword = isOwnAccount && formData.password.length > 0;
   const setUserCreateOrUpdate = useSnackbar();
   const { t } = useTranslation();
 
   const validate = () => {
-    const newErrors: { username?: string; email?: string; password?: string } = {};
+    const newErrors: FormErrors = {};
 
     if (!formData.username.trim()) {
       newErrors.username = t('pages.userManagement.validation.usernameEmpty');
@@ -67,6 +81,10 @@ export function UserDialog({
       newErrors.password = t('pages.userManagement.validation.passwordTooLong');
     }
 
+    if (requiresCurrentPassword && !formData.currentPassword) {
+      newErrors.currentPassword = t('pages.userManagement.validation.currentPasswordEmpty');
+    }
+
     if (formData.email.trim() && formData.email.length > 50) {
       newErrors.email = t('pages.userManagement.validation.emailTooLong');
     }
@@ -78,11 +96,13 @@ export function UserDialog({
   const handleSave = async () => {
     if (!validate()) return;
 
+    const { currentPassword, ...payload } = formData;
+
     try {
       if (user) {
         const response = await api(accountView ? `/users/account` : `/users/${user.id}`, {
           method: 'PATCH',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(requiresCurrentPassword ? { ...payload, currentPassword } : payload),
         });
         if (response === 409) {
           onError(t('pages.userManagement.apiError.updateDuplicate'));
@@ -97,7 +117,7 @@ export function UserDialog({
           });
         }
       } else {
-        const response = await api('/users', { method: 'POST', body: JSON.stringify(formData) });
+        const response = await api('/users', { method: 'POST', body: JSON.stringify(payload) });
         if (response === 409) {
           onError(t('pages.userManagement.apiError.createDuplicate'));
           setUserCreateOrUpdate({
@@ -112,7 +132,20 @@ export function UserDialog({
         }
       }
       onSaved();
-    } catch {
+    } catch (err) {
+      // With a new password on the account path, the backend rejects a wrong current password
+      // (400) or blocks after too many failed attempts (403).
+      if (requiresCurrentPassword && err instanceof Error) {
+        setErrors({
+          ...errors,
+          currentPassword: t('pages.userManagement.validation.currentPasswordWrong'),
+        });
+        setUserCreateOrUpdate({
+          status: 'error',
+          message: t('pages.userManagement.validation.currentPasswordWrong'),
+        });
+        return;
+      }
       onError(t('pages.userManagement.apiError.saveFailed'));
       setUserCreateOrUpdate({
         status: 'error',
@@ -142,13 +175,12 @@ export function UserDialog({
           helperText={errors.username ?? `${formData.username.length}/50`}
           slotProps={{ htmlInput: { maxLength: 50 } }}
         />
-        <TextField
+        <PasswordField
           label={
             user
               ? t('pages.userManagement.dialog.fields.passwordEdit')
               : t('pages.userManagement.dialog.fields.passwordCreate')
           }
-          type="password"
           fullWidth
           value={formData.password}
           autoComplete={'new-password'}
@@ -160,6 +192,25 @@ export function UserDialog({
           helperText={errors.password ?? `${formData.password.length}/50`}
           slotProps={{ htmlInput: { maxLength: 50 } }}
         />
+        {isOwnAccount && (
+          <PasswordField
+            label={t('pages.userManagement.dialog.fields.currentPassword')}
+            fullWidth
+            required={requiresCurrentPassword}
+            value={formData.currentPassword}
+            autoComplete="current-password"
+            onChange={(e) => {
+              setFormData({ ...formData, currentPassword: e.target.value });
+              if (errors.currentPassword !== undefined)
+                setErrors({ ...errors, currentPassword: undefined });
+            }}
+            error={!!errors.currentPassword}
+            helperText={
+              errors.currentPassword ?? t('pages.userManagement.dialog.fields.currentPasswordHint')
+            }
+            slotProps={{ htmlInput: { maxLength: 50 } }}
+          />
+        )}
         <TextField
           sx={{ mt: 1 }}
           label={t('pages.userManagement.dialog.fields.email')}
