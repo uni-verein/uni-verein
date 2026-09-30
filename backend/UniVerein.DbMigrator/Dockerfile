@@ -15,6 +15,11 @@ FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
 COPY --from=build /app/out .
 
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -o Acquire::Retries=3 \
+    && apt-get upgrade -y -o Acquire::Retries=3 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN chown -R app:app /app
 USER app
 
