@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-09-29
+Generated automatically on 2026-09-30
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -267,7 +267,7 @@ Generated automatically on 2026-09-29
 | baseline-browser-mapping@2.11.21 | - | Apache-2.0 |
 | bezier-easing@2.1.0 | - | MIT |
 | bmp-js@0.1.0 | - | MIT |
-| brace-expansion@5.0.9 | - | MIT |
+| brace-expansion@5.0.12 | - | MIT |
 | browserslist@4.28.9 | - | MIT |
 | buffer-from@1.1.2 | - | MIT |
 | cac@6.7.14 | - | MIT |
@@ -350,7 +350,7 @@ Generated automatically on 2026-09-29
 | fast-equals@5.4.2 | - | MIT |
 | fast-json-stable-stringify@2.1.0 | - | MIT |
 | fast-levenshtein@2.0.6 | - | MIT |
-| fast-uri@3.1.7 | - | BSD-3-Clause |
+| fast-uri@3.1.8 | - | BSD-3-Clause |
 | fdir@6.5.0 | - | MIT |
 | fetch-cookie@2.2.0 | - | Unlicense |
 | file-entry-cache@11.1.5 | - | MIT |
