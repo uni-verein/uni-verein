@@ -72,16 +72,16 @@ export default function EmailEditor({
   });
 
   useEffect(() => {
-    if (editor && initialContent !== '' && initialContent !== undefined) {
+    if (!editor || editor.isDestroyed) return;
+
+    if (initialContent !== '' && initialContent !== undefined) {
       if (editor.getHTML() !== initialContent) {
         editor.commands.setContent(initialContent);
       }
     }
 
-    if (
-      (editor?.getHTML().includes('{fullname}') || editor?.getHTML().includes('{firstname}')) &&
-      recipientCount > 150
-    ) {
+    const html = editor.getHTML();
+    if ((html.includes('{fullname}') || html.includes('{firstname}')) && recipientCount > 150) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setInformation(t('pages.mail.editorPage.info'));
       setDisableSendButton(true);
@@ -153,7 +153,7 @@ export default function EmailEditor({
       setSnackbar({ status: 'error', message: t('pages.mail.editorPage.subjectMissing') });
       return;
     }
-    const htmlBody = editor?.getHTML() ?? '';
+    const htmlBody = editor && !editor.isDestroyed ? editor.getHTML() : '';
     if (!htmlBody || htmlBody === '<p></p>') {
       setSnackbar({ status: 'error', message: t('pages.mail.editorPage.bodyMissing') });
       return;
@@ -161,7 +161,7 @@ export default function EmailEditor({
     onSend({ subject, htmlBody, attachments });
   };
 
-  if (!editor) return null;
+  if (!editor || editor.isDestroyed) return null;
 
   const toolbarBtnSx = (active: boolean) => ({
     border: active ? '1px solid' : '1px solid transparent',

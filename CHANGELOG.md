@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.8.4] UV-51
+
+### Fixed
+- UV-51: Opening "Mail" on an iPhone no longer shows a blank white screen.
+- Errors on a page now show a message with a reload button instead of a blank screen, the navigation stays usable.
+- After a deploy, an open app reloads once if a page file of the old version is missing.
+
 ## [v1.8.3] UV-48, UV-49, UV-50
 
 ### Changed

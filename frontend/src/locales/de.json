@@ -1,5 +1,11 @@
 {
   "components": {
+    "errorBoundary": {
+      "title": "Hier ist etwas schiefgelaufen",
+      "description": "Diese Seite konnte nicht angezeigt werden. Versuche es erneut oder lade die App neu. Bleibt der Fehler bestehen, wende dich an deinen Administrator.",
+      "retry": "Erneut versuchen",
+      "reload": "Neu laden"
+    },
     "taskWithinTheClubOptions": {
       "unknownTask": "Unbekannte Aufgabe",
       "member": "Mitglied",

@@ -39,6 +39,7 @@ import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
 import { SidebarContent } from '../components/SidebarContent';
 import { LanguageToggle } from '../components/LanguageToggle';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useThemeMode, ThemeMode } from '../hooks/useThemeMode';
 
 const Members = lazy(() => import('./Members'));
@@ -456,33 +457,35 @@ export default function Dashboard({
               minHeight: { xs: 'auto', sm: '70vh' },
             }}
           >
-            <Suspense
-              fallback={
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                  <CircularProgress />
-                </Box>
-              }
-            >
-              {page === 'members' && <Members role={user.role} />}
-              {page === 'mail' && <Mail />}
-              {page === 'sepa' && <Sepa />}
-              {page === 'contributions' && <Contributions role={user.role} />}
-              {page === 'receipts' && <Receipts role={user.role} userId={user.id} />}
-              {page === 'receipt-analytics' && <ReceiptAnalytics />}
-              {page === 'user' && (
-                <UserManagement accountView={true} userId={user.id} role={user.role} />
-              )}
-              {page === 'users' && <UserManagement accountView={false} userId={user.id} />}
-              {page === 'email-config' && <EmailConfig />}
-              {page === 'link-config' && <LinkConfig />}
-              {page === 'contribution-plan-config' && <ContributionPlanConfig />}
-              {page === 'audit' && <Audit />}
-              {page === 'backup' && <Backup />}
-              {page === 'creditor-config' && <CreditorConfig />}
-              {page === 'general-config' && <GeneralConfig />}
-              {page === 'member-category-config' && <MemberCategoryConfig />}
-              {page === 'receipt-category-config' && <ReceiptCategoryConfig />}
-            </Suspense>
+            <ErrorBoundary resetKey={page}>
+              <Suspense
+                fallback={
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                }
+              >
+                {page === 'members' && <Members role={user.role} />}
+                {page === 'mail' && <Mail />}
+                {page === 'sepa' && <Sepa />}
+                {page === 'contributions' && <Contributions role={user.role} />}
+                {page === 'receipts' && <Receipts role={user.role} userId={user.id} />}
+                {page === 'receipt-analytics' && <ReceiptAnalytics />}
+                {page === 'user' && (
+                  <UserManagement accountView={true} userId={user.id} role={user.role} />
+                )}
+                {page === 'users' && <UserManagement accountView={false} userId={user.id} />}
+                {page === 'email-config' && <EmailConfig />}
+                {page === 'link-config' && <LinkConfig />}
+                {page === 'contribution-plan-config' && <ContributionPlanConfig />}
+                {page === 'audit' && <Audit />}
+                {page === 'backup' && <Backup />}
+                {page === 'creditor-config' && <CreditorConfig />}
+                {page === 'general-config' && <GeneralConfig />}
+                {page === 'member-category-config' && <MemberCategoryConfig />}
+                {page === 'receipt-category-config' && <ReceiptCategoryConfig />}
+              </Suspense>
+            </ErrorBoundary>
           </Paper>
         </Container>
       </Box>

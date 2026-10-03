@@ -1,5 +1,11 @@
 {
   "components": {
+    "errorBoundary": {
+      "title": "Something went wrong",
+      "description": "This page could not be displayed. Try again or reload the app. If the error persists, contact your administrator.",
+      "retry": "Try again",
+      "reload": "Reload"
+    },
     "taskWithinTheClubOptions": {
       "unknownTask": "Unknown Task",
       "member": "Member",
