@@ -20,11 +20,13 @@ export default function UserManagement({ userId, accountView, role }: UserManage
       </Box>
 
       {accountView && (
-        <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2 }}>
+        <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
           <Tabs
             value={activeTab}
             onChange={(_, newValue) => setActiveTab(newValue)}
-            sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
           >
             <Tab value="profile" label={t('pages.userManagement.tabs.profile')} />
             <Tab value="notifications" label={t('pages.userManagement.tabs.notifications')} />

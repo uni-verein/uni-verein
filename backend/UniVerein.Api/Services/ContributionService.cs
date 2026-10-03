@@ -65,7 +65,7 @@ public class ContributionService
                 MemberId = member.Id,
                 MemberEntity = member,
                 Amount = member.ContributionPlan?.Amount ?? 0,
-                DueDate = new DateTime(today.DateTime.Year, today.DateTime.Month, 1),
+                DueDate = new DateTime(today.UtcDateTime.Year, today.UtcDateTime.Month, 1, 0, 0, 0, DateTimeKind.Utc),
                 ExportId = exportId
             });
 

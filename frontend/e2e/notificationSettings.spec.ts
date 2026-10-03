@@ -17,7 +17,7 @@ async function openNotificationSettingsTab(page: Page) {
   await expect(page.getByLabel('Profileinstellungen')).toBeVisible();
   await page.getByLabel('Profileinstellungen').click();
   await expect(page.getByRole('heading', { name: 'Nutzerverwaltung' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Benachrichtigungseinstellungen' }).click();
+  await page.getByRole('tab', { name: 'Benachrichtigungen' }).click();
 }
 
 function makeTestContextOnlyUser() {

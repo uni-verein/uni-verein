@@ -44,6 +44,8 @@ public class SepaValidatorTests
     [InlineData("DE123")]
     [InlineData("1234567890123456789012")]
     [InlineData("DE893704004405320130009999999999999")]
+    [InlineData("DE00370400440532013000")]
+    [InlineData("DE89370400440532013001")]
     public void ValidateCreditorConfig_InvalidIban_ThrowsArgumentException(string iban)
     {
         CreditorConfig config = CreateValidCreditorConfig(iban: iban);
@@ -71,8 +73,8 @@ public class SepaValidatorTests
     [InlineData("   ")]
     [InlineData("TOO")]
     [InlineData("TOOLONGBIC12")]
-    [InlineData("1234DEFF")]
     [InlineData("DEUT12FF")]
+    [InlineData("COBADEFF1")]
     public void ValidateCreditorConfig_InvalidBic_ThrowsArgumentException(string bic)
     {
         CreditorConfig config = CreateValidCreditorConfig(bic: bic!);
@@ -85,6 +87,7 @@ public class SepaValidatorTests
     [InlineData("COBADEFF")]
     [InlineData("COBADEFFXXX")]
     [InlineData("SSKMDEMMXXX")]
+    [InlineData("1234DEFF")]
     public void ValidateCreditorConfig_ValidBic_DoesNotThrow(string bic)
     {
         CreditorConfig config = CreateValidCreditorConfig(bic: bic);
@@ -97,6 +100,10 @@ public class SepaValidatorTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
+    [InlineData("DE97ZZZ09999999999")]
+    [InlineData("DE98ZZZ09999999998")]
+    [InlineData("DE98ZZ")]
+    [InlineData("98DEZZZ09999999999")]
     public void ValidateCreditorConfig_InvalidCreditorId_ThrowsArgumentException(string creditorId)
     {
         CreditorConfig config = CreateValidCreditorConfig(creditorId: creditorId);
@@ -105,10 +112,14 @@ public class SepaValidatorTests
         Assert.Contains("CreditorId", ex.Message);
     }
 
-    [Fact]
-    public void ValidateCreditorConfig_ValidCreditorId_DoesNotThrow()
+    [Theory]
+    [InlineData("DE98ZZZ09999999999")]
+    [InlineData("de98 zzz 0999 9999 999")]
+    [InlineData("DE98ABC09999999999")]
+    [InlineData("DE79ZZZ01234567890")]
+    public void ValidateCreditorConfig_ValidCreditorId_DoesNotThrow(string creditorId)
     {
-        CreditorConfig config = CreateValidCreditorConfig(creditorId: "DE98ZZZ09999999999");
+        CreditorConfig config = CreateValidCreditorConfig(creditorId: creditorId);
 
         Exception exception = Record.Exception(() => SepaValidator.ValidateCreditorConfig(config));
 

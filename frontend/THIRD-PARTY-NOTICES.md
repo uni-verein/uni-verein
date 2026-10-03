@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-09-30
+Generated automatically on 2026-10-03
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -236,16 +236,16 @@ Generated automatically on 2026-09-30
 | @types/resolve@1.20.2 | - | MIT |
 | @types/trusted-types@2.0.7 | - | MIT |
 | @types/use-sync-external-store@0.0.6 | - | MIT |
-| @typescript-eslint/eslint-plugin@8.70.1 | - | MIT |
-| @typescript-eslint/parser@8.70.1 | - | MIT |
-| @typescript-eslint/project-service@8.70.1 | - | MIT |
-| @typescript-eslint/scope-manager@8.70.1 | - | MIT |
-| @typescript-eslint/tsconfig-utils@8.70.1 | - | MIT |
-| @typescript-eslint/type-utils@8.70.1 | - | MIT |
-| @typescript-eslint/types@8.70.1 | - | MIT |
-| @typescript-eslint/typescript-estree@8.70.1 | - | MIT |
-| @typescript-eslint/utils@8.70.1 | - | MIT |
-| @typescript-eslint/visitor-keys@8.70.1 | - | MIT |
+| @typescript-eslint/eslint-plugin@8.71.0 | - | MIT |
+| @typescript-eslint/parser@8.71.0 | - | MIT |
+| @typescript-eslint/project-service@8.71.0 | - | MIT |
+| @typescript-eslint/scope-manager@8.71.0 | - | MIT |
+| @typescript-eslint/tsconfig-utils@8.71.0 | - | MIT |
+| @typescript-eslint/type-utils@8.71.0 | - | MIT |
+| @typescript-eslint/types@8.71.0 | - | MIT |
+| @typescript-eslint/typescript-estree@8.71.0 | - | MIT |
+| @typescript-eslint/utils@8.71.0 | - | MIT |
+| @typescript-eslint/visitor-keys@8.71.0 | - | MIT |
 | @vite-pwa/assets-generator@1.0.4 | - | MIT |
 | @vitejs/plugin-react@4.7.0 | - | MIT |
 | abort-controller@3.0.0 | - | MIT |
@@ -593,7 +593,7 @@ Generated automatically on 2026-09-30
 | typed-array-byte-length@1.0.3 | - | MIT |
 | typed-array-byte-offset@1.0.4 | - | MIT |
 | typed-array-length@1.0.8 | - | MIT |
-| typescript-eslint@8.70.1 | - | MIT |
+| typescript-eslint@8.71.0 | - | MIT |
 | typescript@5.9.3 | - | Apache-2.0 |
 | unbox-primitive@1.1.0 | - | MIT |
 | unconfig-core@7.5.0 | - | MIT |
