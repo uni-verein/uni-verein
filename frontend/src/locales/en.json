@@ -944,12 +944,17 @@
         "members": "Member management",
         "membersShort": "Members",
         "broadcastEmail": "Broadcast email",
+        "broadcastEmailShort": "Mail",
         "sepa": "SEPA export",
+        "sepaShort": "SEPA",
         "contributions": "Membership fees",
+        "contributionsShort": "Fees",
         "audit": "Audit",
         "backup": "Backup",
         "receipts": "Receipts",
-        "receiptAnalytics": "Receipt analytics"
+        "receiptsShort": "Receipts",
+        "receiptAnalytics": "Receipt analytics",
+        "receiptAnalyticsShort": "Analytics"
       },
       "notifications": {
         "label": "Notifications",
@@ -1044,7 +1049,8 @@
       },
       "apiError": {
         "notConfigured": "Export could not be created. Bank details not configured.",
-        "serverError": "Export could not be created. Server error."
+        "serverError": "Export could not be created. Server error.",
+        "noTransactions": "Export could not be created. No open contributions with a valid IBAN and SEPA mandate."
       }
     },
     "userManagement": {
@@ -1113,7 +1119,7 @@
       },
       "tabs": {
         "profile": "Profile",
-        "notifications": "Notification settings"
+        "notifications": "Notifications"
       },
       "notificationSettings": {
         "title": "Notification settings",

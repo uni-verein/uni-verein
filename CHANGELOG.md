@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.8.3] UV-48, UV-49, UV-50
+
+### Changed
+- The frontend Docker image is built with Node 24 (`node:24-alpine`) instead of Node 20, which is end-of-life since April 2026. This matches the Node version used in CI. The runtime image is unchanged (nginx).
+
+### Fixed
+- UV-48: The icons in the mobile bottom navigation are aligned again. Inactive tabs hid their label only visually, so "SEPA Export" wrapped to two lines and pushed the bank icon up. All tabs now show a short, single-line label (e.g. "SEPA", "Mail", "Auswertung") and the active tab no longer shifts. 
+- UV-49: The user management no longer overflows the screen on mobile: the long "Benachrichtigungseinstellungen" tab label widened the whole page, it is now shortened to "Benachrichtigungen", the tabs scroll if space runs out, and the tab indicator stays inside the rounded corners.
+- UV-50: The SEPA export (`pain.008.001.08`) follows the EPC rules for SDD Core 2025 and the address rules from 15 November 2026: addresses are fully structured, text uses the SEPA character set (e.g. `ä` → `ae`), and every transaction gets a unique ID. Members without a BIC are exported as `NOTPROVIDED` instead of being skipped, the club's BIC, IBANs and creditor identifier are checked including check digits. An export without collectible contributions returns a message instead of an empty file.
+
 ## [v1.8.2] UV-17, UV-24, UV-26, UV-30, UV-47
 
 ### Changed

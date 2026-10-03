@@ -45,15 +45,23 @@ public class SepaController : ControllerBase
 
         try
         {
-            (string xml, decimal _, int _) = await _sepa.GenerateXml(new CreditorConfig()
+            (string xml, decimal _, int count) = await _sepa.GenerateXml(new CreditorConfig()
             {
                 Name = creditorConfig.Name,
                 Iban = _cryptoService.Decrypt(creditorConfig.Iban_Encrypted) ?? string.Empty,
                 Bic = _cryptoService.Decrypt(creditorConfig.Bic_Encrypted) ?? string.Empty,
                 CreditorId = creditorConfig.CreditorId,
+                StreetName = creditorConfig.StreetNameAndNumber,
+                PostCode = creditorConfig.PostCode,
                 TownName = creditorConfig.CityName,
                 Country = creditorConfig.CountryCode
             }, id);
+
+            if (count == 0)
+                return UnprocessableEntity(new ApiResults.ErrorResults.UnprocessableEntityResult(
+                    errorCode: ApiErrorCodes.UNPROCESSABLE_ENTITY,
+                    errorMessage: "No collectible contributions",
+                    moreInfo: "The export does not contain any open contributions with a valid IBAN and SEPA mandate."));
 
             return File(System.Text.Encoding.UTF8.GetBytes(xml), "application/xml", "sepa.xml");
         }
@@ -77,6 +85,7 @@ public class SepaController : ControllerBase
         [FromQuery] ContributionInfoQuery contributionInfoQuery)
     {
         IQueryable<SepaExportInfoResult> query = _db.SepaExports
+            .Where(x => x.DeletedAt == null)
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => new SepaExportInfoResult()
             {

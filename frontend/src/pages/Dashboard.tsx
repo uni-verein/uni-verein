@@ -198,30 +198,35 @@ export default function Dashboard({
     {
       id: 'mail',
       label: t('pages.dashboard.pageNames.broadcastEmail'),
+      shortLabel: t('pages.dashboard.pageNames.broadcastEmailShort'),
       icon: <EmailIcon />,
       roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
     {
       id: 'sepa',
       label: t('pages.dashboard.pageNames.sepa'),
+      shortLabel: t('pages.dashboard.pageNames.sepaShort'),
       icon: <AccountBalanceIcon />,
       roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
     {
       id: 'contributions',
       label: t('pages.dashboard.pageNames.contributions'),
+      shortLabel: t('pages.dashboard.pageNames.contributionsShort'),
       icon: <EuroIcon />,
       roles: [Role.ADMIN, Role.USER, Role.FINANCIAL_MANAGER],
     },
     {
       id: 'receipts',
       label: t('pages.dashboard.pageNames.receipts'),
+      shortLabel: t('pages.dashboard.pageNames.receiptsShort'),
       icon: <ReceiptLongIcon />,
       roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
     {
       id: 'receipt-analytics',
       label: t('pages.dashboard.pageNames.receiptAnalytics'),
+      shortLabel: t('pages.dashboard.pageNames.receiptAnalyticsShort'),
       icon: <QueryStatsIcon />,
       roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
@@ -423,6 +428,7 @@ export default function Dashboard({
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           bgcolor: 'background.default',
           p: { xs: 1.5, sm: 3 },
           pb: {
@@ -483,6 +489,7 @@ export default function Dashboard({
 
       {isMobile && bottomNavItems.length > 0 && (
         <BottomNavigation
+          showLabels
           value={page}
           onChange={(_, newValue) => setPage(newValue)}
           sx={{
@@ -504,7 +511,18 @@ export default function Dashboard({
               label={item.shortLabel ?? item.label}
               value={item.id}
               icon={item.icon}
-              sx={{ minWidth: 0, px: 0.5 }}
+              sx={{
+                minWidth: 0,
+                px: 0.5,
+                '& .MuiBottomNavigationAction-label, & .MuiBottomNavigationAction-label.Mui-selected':
+                  {
+                    fontSize: '0.6875rem',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                  },
+              }}
             />
           ))}
         </BottomNavigation>

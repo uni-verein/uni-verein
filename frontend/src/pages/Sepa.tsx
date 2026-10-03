@@ -103,11 +103,17 @@ export default function Sepa() {
     setLoading(true);
     try {
       const res = await apiFile(`/sepa/export/${id}`, { method: 'GET' });
-      if (!res.ok && res.status !== 404 && res.status !== 400) throw new Error('Server-Error');
+      if (!res.ok && res.status !== 404 && res.status !== 400 && res.status !== 422)
+        throw new Error('Server-Error');
 
       if (res.status === 404) setApiError(t('pages.sepa.apiError.notConfigured'));
 
-      if (res.status === 207 || res.status === 400) setApiError((await res.json()).message);
+      if (res.status === 422) setApiError(t('pages.sepa.apiError.noTransactions'));
+
+      if (res.status === 207 || res.status === 400) {
+        const body = await res.json();
+        setApiError(body.moreInfo ?? body.errorMessage);
+      }
 
       if (res.status === 200) {
         const blob = await res.blob();

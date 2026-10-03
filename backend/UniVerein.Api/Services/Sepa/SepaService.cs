@@ -9,7 +9,6 @@ using UniVerein.Api.Validators;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
-using Humanizer;
 using Microsoft.EntityFrameworkCore;
 
 namespace UniVerein.Api.Services.Sepa;
@@ -30,26 +29,28 @@ public class SepaService
     public async Task<(string xml, decimal amaunt, int count)> GenerateXml(CreditorConfig creditor, Guid exportId)
     {
         SepaValidator.ValidateCreditorConfig(creditor);
-
-        List<DirectDebitTransaction> transactions = await GetTransactions(exportId);
+        bool creditorPspOutsideEea = SepaCountries.IsNonEeaPsp(creditor.Iban, creditor.Bic);
+        List<DirectDebitTransaction> transactions = await GetTransactions(exportId, creditorPspOutsideEea);
         if (transactions.Count == 0)
             return ("", 0, 0);
 
         decimal amount = transactions.Sum(x => x.Amount);
         int sepaCount = transactions.Count;
+        DateTime now = DateTime.UtcNow;
+        string messageId = $"UNI-VEREIN-{now:yyyyMMddHHmmss}";
         SepaDirectDebitDocument document = new()
         {
             GroupHeader = new GroupHeader
             {
-                MessageId = $"UNI-VEREIN-{DateTime.UtcNow:yyyyMMddHHmmss}",
-                CreationDateTime = DateTime.UtcNow,
+                MessageId = messageId,
+                CreationDateTime = now,
                 InitiatingParty = new Party { Name = creditor.Name },
             },
             PaymentInfos = new List<PaymentInfo>()
             {
                 new()
                 {
-                    PaymentInfoId = "PMTINF-RCUR-001",
+                    PaymentInfoId = $"{messageId}-RCUR",
                     LocalInstrument = LocalInstrumentCode.CORE,
                     SequenceType = SequenceType.RCUR,
                     RequestedCollectionDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
@@ -58,9 +59,10 @@ public class SepaService
                         Name = creditor.Name,
                         PostalAddress = new Address()
                         {
-                            City = $"{creditor.TownName}",
-                            CountryCode = creditor.Country,
-                            AddressLine = $"{creditor.StreetName}, {creditor.PostCode} {creditor.TownName}"
+                            StreetName = creditor.StreetName,
+                            PostCode = creditor.PostCode,
+                            City = creditor.TownName,
+                            CountryCode = creditor.Country
                         }
                     },
                     CreditorAccount = new BankAccount { IBAN = creditor.Iban, Currency = "EUR" },
@@ -74,56 +76,78 @@ public class SepaService
         return (System.Text.Encoding.UTF8.GetString(Export(document)), amount, sepaCount);
     }
 
-    private async Task<List<DirectDebitTransaction>> GetTransactions(Guid exportId)
+    private async Task<List<DirectDebitTransaction>> GetTransactions(Guid exportId, bool creditorPspOutsideEea)
     {
+        DateTime today = DateTime.UtcNow.Date;
         List<ContributionEntity> contributions = await _db.Contributions
             .Include(c => c.MemberEntity)
             .ThenInclude(m => m.ContributionPlan)
             .Where(c =>
                 c.Paid == null &&
-                c.DueDate <= DateTime.Today &&
+                c.DueDate <= today &&
                 c.MemberEntity != null &&
                 c.MemberEntity.IBAN_Encrypted != null &&
-                c.MemberEntity.Bic_Encrypted != null &&
                 c.MemberEntity.SepaConsent != null &&
                 c.ExportId == exportId)
+            .OrderBy(c => c.MemberEntity.MemberNumber)
+            .ThenBy(c => c.DueDate)
             .ToListAsync();
 
+        contributions = contributions.Where(c => c.Amount >= 0.01m).ToList();
         if (contributions.Count == 0)
             return [];
 
-        List<DirectDebitTransaction> transactions = contributions.Select(x => new DirectDebitTransaction()
+        List<DirectDebitTransaction> transactions = [];
+        foreach (ContributionEntity x in contributions)
         {
-            InstructionId = $"{x.MemberEntity.MemberNumber}-{DateTime.Today:yyyyMMdd}".Truncate(35),
-            EndToEndId = $"E2E-{x.MemberEntity.MemberNumber}-{DateTime.Today:yyyyMMdd}".Truncate(35),
-            Amount = x.Amount,
-            Currency = "EUR",
-            Mandate = new MandateInfo
-            {
-                MandateId = x.MemberEntity.MandateId.Replace("_", "-").Truncate(35),
-                DateOfSignature = DateOnly.FromDateTime(((DateTimeOffset)x.MemberEntity.SepaConsent!).DateTime),
-                AmendmentIndicator = false
-            },
-            Debtor = new Party
-            {
-                Name = $"{x.MemberEntity.FirstName} {x.MemberEntity.LastName}".Truncate(70),
-                PostalAddress = new Address
-                {
-                    City = $"{x.MemberEntity.City}",
-                    CountryCode = x.MemberEntity.CountryCode ?? string.Empty,
-                    AddressLine =
-                        $"{_crypto.Decrypt(x.MemberEntity.StreetEncrypted)}, {x.MemberEntity.PostalCode} {x.MemberEntity.City}"
-                }
-            },
-            DebtorAccount = new BankAccount { IBAN = _crypto.Decrypt(x.MemberEntity.IBAN_Encrypted)?.Replace(" ", "") ?? string.Empty },
-            DebtorAgent = new FinancialInstitution
-            { BIC = _crypto.Decrypt(x.MemberEntity.Bic_Encrypted)?.Replace(" ", "") ?? string.Empty },
-            RemittanceInfo =
-                $"Membership fee {(x.MemberEntity.ContributionPlan?.Interval == Interval.MONTHLY ? $"{x.DueDate:yyyy-MM}" : $"{x.DueDate:yyyy}")}"
-        }).ToList();
+            string iban = SepaText.Iban(_crypto.Decrypt(x.MemberEntity.IBAN_Encrypted));
+            if (!SepaValidator.IsValidIban(iban))
+                continue;
 
-        return transactions.Where(x =>
-            !string.IsNullOrWhiteSpace(x.DebtorAccount.IBAN) && !string.IsNullOrWhiteSpace(x.DebtorAgent.BIC)).ToList();
+            string bic = _crypto.Decrypt(x.MemberEntity.Bic_Encrypted) ?? string.Empty;
+            bool pspOutsideEea = creditorPspOutsideEea || SepaCountries.IsNonEeaPsp(iban, bic);
+            Address address = new()
+            {
+                StreetName = _crypto.Decrypt(x.MemberEntity.StreetEncrypted),
+                PostCode = x.MemberEntity.PostalCode,
+                City = x.MemberEntity.City,
+                CountryCode = x.MemberEntity.CountryCode ?? string.Empty
+            };
+
+            if (pspOutsideEea && !HasTownAndCountry(address))
+                continue;
+
+            transactions.Add(new DirectDebitTransaction()
+            {
+                // Unique per contribution, so several open contributions of one member never collide.
+                InstructionId = x.Id.ToString("N"),
+                EndToEndId = $"M{x.MemberEntity.MemberNumber}-{x.DueDate:yyyyMMdd}-{x.Id.ToString("N")[..8]}",
+                Amount = x.Amount,
+                Currency = "EUR",
+                Mandate = new MandateInfo
+                {
+                    MandateId = x.MemberEntity.MandateId,
+                    DateOfSignature = DateOnly.FromDateTime(((DateTimeOffset)x.MemberEntity.SepaConsent!).DateTime),
+                    AmendmentIndicator = false
+                },
+                Debtor = new Party
+                {
+                    Name = $"{x.MemberEntity.FirstName} {x.MemberEntity.LastName}",
+                    PostalAddress = address
+                },
+                DebtorAccount = new BankAccount { IBAN = iban },
+                DebtorAgent = new FinancialInstitution { BIC = bic },
+                RemittanceInfo =
+                    $"Membership fee {(x.MemberEntity.ContributionPlan?.Interval == Interval.MONTHLY ? $"{x.DueDate:yyyy-MM}" : $"{x.DueDate:yyyy}")}"
+            });
+        }
+
+        return transactions;
+    }
+
+    private static bool HasTownAndCountry(Address address)
+    {
+        return SepaText.Text(address.City, 35).Length > 0 && SepaText.CountryCode(address.CountryCode) != null;
     }
 
     private byte[] Export(SepaDirectDebitDocument document)

@@ -1,6 +1,6 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-09-30
+Generated automatically on 2026-10-03
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -15,7 +15,7 @@ Generated automatically on 2026-09-30
 | Humanizer.Core | 2.14.1 | MIT |
 | Konscious.Security.Cryptography.Argon2 | 1.3.1 | MIT |
 | Konscious.Security.Cryptography.Blake2 | 1.1.1 | MIT |
-| MailKit | 4.18.0 | MIT |
+| MailKit | 4.18.1 | MIT |
 | Markdig | 1.4.0 | BSD-2-Clause |
 | Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.12 | MIT |
 | Microsoft.AspNetCore.Connections.Abstractions | 9.0.20 | MIT |
@@ -100,7 +100,7 @@ Generated automatically on 2026-09-30
 | Microsoft.Win32.Primitives | 4.3.0 | MS-EULA |
 | Microsoft.Win32.Registry | 5.0.0 | MIT |
 | Microsoft.Win32.SystemEvents | 4.7.0 | MIT |
-| MimeKit | 4.18.0 | MIT |
+| MimeKit | 4.18.1 | MIT |
 | Mono.TextTemplating | 3.0.0 | MIT |
 | Moq | 4.21.0 | BSD-3-Clause |
 | MySqlConnector | 2.4.0 | MIT |
@@ -225,7 +225,7 @@ Generated automatically on 2026-09-30
 | System.Windows.Extensions | 4.7.0 | MIT |
 | System.Xml.ReaderWriter | 4.3.0 | MS-EULA |
 | System.Xml.XDocument | 4.3.0 | MS-EULA |
-| coverlet.collector | 10.0.1 | MIT |
+| coverlet.collector | 10.1.0 | MIT |
 | runtime.native.System | 4.3.0 | MS-EULA |
 | runtime.native.System.IO.Compression | 4.3.0 | MS-EULA |
 | runtime.native.System.Net.Http | 4.3.0 | MS-EULA |

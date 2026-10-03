@@ -944,12 +944,17 @@
         "members": "Mitgliederverwaltung",
         "membersShort": "Mitglieder",
         "broadcastEmail": "Rundmail",
+        "broadcastEmailShort": "Mail",
         "sepa": "SEPA Export",
+        "sepaShort": "SEPA",
         "contributions": "Beiträge",
+        "contributionsShort": "Beiträge",
         "audit": "Audit",
         "backup": "Backup",
         "receipts": "Belege",
-        "receiptAnalytics": "Belegauswertung"
+        "receiptsShort": "Belege",
+        "receiptAnalytics": "Belegauswertung",
+        "receiptAnalyticsShort": "Auswertung"
       },
       "notifications": {
         "label": "Benachrichtigungen",
@@ -1044,7 +1049,8 @@
       },
       "apiError": {
         "notConfigured": "Export konnte nicht erstellt werden. Bankdaten nicht konfiguriert",
-        "serverError": "Export konnte nicht erstellt werden. Server Fehler"
+        "serverError": "Export konnte nicht erstellt werden. Server Fehler",
+        "noTransactions": "Export konnte nicht erstellt werden. Keine offenen Beiträge mit gültiger IBAN und SEPA-Mandat vorhanden."
       }
     },
     "userManagement": {
@@ -1113,7 +1119,7 @@
       },
       "tabs": {
         "profile": "Profil",
-        "notifications": "Benachrichtigungseinstellungen"
+        "notifications": "Benachrichtigungen"
       },
       "notificationSettings": {
         "title": "Benachrichtigungseinstellungen",
