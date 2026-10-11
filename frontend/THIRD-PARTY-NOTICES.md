@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-10-03
+Generated automatically on 2026-10-10
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -132,10 +132,8 @@ Generated automatically on 2026-10-03
 | @humanwhocodes/module-importer@1.0.1 | - | Apache-2.0 |
 | @humanwhocodes/retry@0.4.3 | - | Apache-2.0 |
 | @img/colour@1.1.0 | - | MIT |
-| @img/sharp-libvips-linux-x64@1.3.3 | - | LGPL-3.0-or-later |
-| @img/sharp-libvips-linuxmusl-x64@1.3.3 | - | LGPL-3.0-or-later |
-| @img/sharp-linux-x64@0.35.4 | - | Apache-2.0 |
-| @img/sharp-linuxmusl-x64@0.35.4 | - | Apache-2.0 |
+| @img/sharp-libvips-linux-x64@1.3.4 | - | LGPL-3.0-or-later |
+| @img/sharp-linux-x64@0.35.5 | - | Apache-2.0 |
 | @isaacs/cliui@9.0.0 | - | BlueOak-1.0.0 |
 | @jridgewell/gen-mapping@0.3.13 | - | MIT |
 | @jridgewell/remapping@2.3.5 | - | MIT |
@@ -156,7 +154,7 @@ Generated automatically on 2026-10-03
 | @mui/utils@7.3.11 | - | MIT |
 | @mui/x-charts-vendor@8.29.0 | - | MIT AND ISC |
 | @mui/x-charts@8.29.3 | - | MIT |
-| @mui/x-date-pickers@8.29.3 | - | MIT |
+| @mui/x-date-pickers@8.29.4 | - | MIT |
 | @mui/x-internal-gestures@0.5.0 | - | MIT |
 | @mui/x-internals@8.29.3 | - | MIT |
 | @napi-rs/canvas-linux-x64-gnu@0.1.100 | - | MIT |
@@ -236,16 +234,16 @@ Generated automatically on 2026-10-03
 | @types/resolve@1.20.2 | - | MIT |
 | @types/trusted-types@2.0.7 | - | MIT |
 | @types/use-sync-external-store@0.0.6 | - | MIT |
-| @typescript-eslint/eslint-plugin@8.71.0 | - | MIT |
-| @typescript-eslint/parser@8.71.0 | - | MIT |
-| @typescript-eslint/project-service@8.71.0 | - | MIT |
-| @typescript-eslint/scope-manager@8.71.0 | - | MIT |
-| @typescript-eslint/tsconfig-utils@8.71.0 | - | MIT |
-| @typescript-eslint/type-utils@8.71.0 | - | MIT |
-| @typescript-eslint/types@8.71.0 | - | MIT |
-| @typescript-eslint/typescript-estree@8.71.0 | - | MIT |
-| @typescript-eslint/utils@8.71.0 | - | MIT |
-| @typescript-eslint/visitor-keys@8.71.0 | - | MIT |
+| @typescript-eslint/eslint-plugin@8.71.1 | - | MIT |
+| @typescript-eslint/parser@8.71.1 | - | MIT |
+| @typescript-eslint/project-service@8.71.1 | - | MIT |
+| @typescript-eslint/scope-manager@8.71.1 | - | MIT |
+| @typescript-eslint/tsconfig-utils@8.71.1 | - | MIT |
+| @typescript-eslint/type-utils@8.71.1 | - | MIT |
+| @typescript-eslint/types@8.71.1 | - | MIT |
+| @typescript-eslint/typescript-estree@8.71.1 | - | MIT |
+| @typescript-eslint/utils@8.71.1 | - | MIT |
+| @typescript-eslint/visitor-keys@8.71.1 | - | MIT |
 | @vite-pwa/assets-generator@1.0.4 | - | MIT |
 | @vitejs/plugin-react@4.7.0 | - | MIT |
 | abort-controller@3.0.0 | - | MIT |
@@ -398,7 +396,7 @@ Generated automatically on 2026-10-03
 | idb-keyval@6.3.0 | - | Apache-2.0 |
 | idb@7.1.1 | - | ISC |
 | ignore@5.3.2 | - | MIT |
-| ignore@7.0.10 | - | MIT |
+| ignore@7.0.12 | - | MIT |
 | import-fresh@3.3.1 | - | MIT |
 | imurmurhash@0.1.4 | - | MIT |
 | internal-slot@1.1.0 | - | MIT |
@@ -520,7 +518,7 @@ Generated automatically on 2026-10-03
 | quansync@1.0.0 | - | MIT |
 | querystringify@2.2.0 | - | MIT |
 | react-dom@18.3.1 | - | MIT |
-| react-i18next@17.0.15 | - | MIT |
+| react-i18next@17.0.16 | - | MIT |
 | react-is@16.13.1 | - | MIT |
 | react-is@19.2.8 | - | MIT |
 | react-refresh@0.17.0 | - | MIT |
@@ -553,7 +551,7 @@ Generated automatically on 2026-10-03
 | set-function-name@2.0.2 | - | MIT |
 | set-proto@1.0.0 | - | MIT |
 | sharp-ico@0.1.5 | - | MIT |
-| sharp@0.35.4 | - | Apache-2.0 |
+| sharp@0.35.5 | - | Apache-2.0 |
 | shebang-command@2.0.0 | - | MIT |
 | shebang-regex@3.0.0 | - | MIT |
 | side-channel-list@1.0.1 | - | MIT |
@@ -562,7 +560,7 @@ Generated automatically on 2026-10-03
 | side-channel@1.1.1 | - | MIT |
 | signal-exit@4.1.0 | - | ISC |
 | smob@1.6.2 | - | MIT |
-| source-map-js@1.2.1 | - | BSD-3-Clause |
+| source-map-js@1.2.2 | - | BSD-3-Clause |
 | source-map-support@0.5.21 | - | MIT |
 | source-map@0.5.7 | - | BSD-3-Clause |
 | source-map@0.6.1 | - | BSD-3-Clause |
@@ -593,7 +591,7 @@ Generated automatically on 2026-10-03
 | typed-array-byte-length@1.0.3 | - | MIT |
 | typed-array-byte-offset@1.0.4 | - | MIT |
 | typed-array-length@1.0.8 | - | MIT |
-| typescript-eslint@8.71.0 | - | MIT |
+| typescript-eslint@8.71.1 | - | MIT |
 | typescript@5.9.3 | - | Apache-2.0 |
 | unbox-primitive@1.1.0 | - | MIT |
 | unconfig-core@7.5.0 | - | MIT |
@@ -614,7 +612,7 @@ Generated automatically on 2026-10-03
 | use-sync-external-store@1.6.0 | - | MIT |
 | uuid@13.0.2 | - | MIT |
 | vite-plugin-pwa@1.3.0 | - | MIT |
-| vite@7.3.6 | - | MIT |
+| vite@7.3.7 | - | MIT |
 | w3c-keyname@2.2.8 | - | MIT |
 | wasm-feature-detect@1.9.0 | - | Apache-2.0 |
 | webidl-conversions@3.0.1 | - | BSD-2-Clause |
