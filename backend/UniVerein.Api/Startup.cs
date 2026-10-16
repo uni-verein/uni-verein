@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using UniVerein.Api.Services.Firmware;
+using UniVerein.Api.Services.Calendar;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Http;
 using IPNetwork = System.Net.IPNetwork;
@@ -70,11 +71,16 @@ namespace UniVerein.Api
             services.AddScoped<ReferenceDataService>();
             services.AddScoped<PendingSelfEnrollmentService>();
             services.AddScoped<SelfEnrollmentNotificationService>();
+            services.AddScoped<CalendarNotificationService>();
+            services.AddScoped<CalendarReminderService>();
+            services.AddSingleton<CalendarMailQueue>();
 
             services.AddHostedService<ContributionBackgroundService>();
             services.AddHttpClient<FirmwareService>();
             services.AddHostedService<FirmwareCheckBackgroundService>();
             services.AddHostedService<PendingSelfEnrollmentCleanupService>();
+            services.AddHostedService<CalendarMailBackgroundService>();
+            services.AddHostedService<CalendarReminderBackgroundService>();
             services.AddHttpContextAccessor();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -160,6 +166,9 @@ namespace UniVerein.Api
                 AddIpRateLimitPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
                 AddIpRateLimitPolicy(options, "self-enrollment-confirm", "RateLimiting:SelfEnrollment:ConfirmPermitLimit", 10);
                 AddIpRateLimitPolicy(options, "auth-login", "RateLimiting:AuthLogin:PermitLimit", 20);
+                // Calendar apps poll feeds regularly and many members may share one IP (e.g. a university network).
+                AddIpRateLimitPolicy(options, "calendar-feed", "RateLimiting:CalendarFeed:PermitLimit", 300);
+                AddIpRateLimitPolicy(options, "public-calendar", "RateLimiting:PublicCalendar:PermitLimit", 300);
             });
         }
 

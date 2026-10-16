@@ -1,10 +1,12 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { createTheme, ThemeProvider, CssBaseline, Typography, useMediaQuery } from '@mui/material';
 import type {} from '@mui/x-date-pickers/themeAugmentation';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PublicEnrollmentPage from './pages/PublicEnrollmentPage';
 import ConfirmEnrollmentPage from './pages/ConfirmEnrollmentPage';
+
+const PublicCalendar = lazy(() => import('./pages/PublicCalendar'));
 import { isTokenValid } from './utils';
 import { usePageConfig } from './hooks/usePageConfig';
 import { useThemeMode } from './hooks/useThemeMode';
@@ -75,17 +77,14 @@ export default function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log(token);
     if (token && isTokenValid(token)) {
-      console.log('token is valid');
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLogged(true);
     } else {
       localStorage.removeItem('token');
-      console.log('token is invalid');
       setLogged(false);
     }
-    reloadConfig().catch();
+    reloadConfig().catch(() => {});
 
     const interval = setInterval(() => {
       const currentToken = localStorage.getItem('token');
@@ -111,7 +110,11 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      {window.location.pathname === '/enroll/confirm' ? (
+      {window.location.pathname === '/calendar/public' ? (
+        <Suspense fallback={null}>
+          <PublicCalendar />
+        </Suspense>
+      ) : window.location.pathname === '/enroll/confirm' ? (
         <ConfirmEnrollmentPage />
       ) : window.location.pathname === '/enroll' ? (
         <PublicEnrollmentPage />

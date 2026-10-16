@@ -7,6 +7,9 @@ const backend = new BackendClient();
 
 const FIRMWARE_UPDATE_ROUTE = '**/api/notifications/firmware-update';
 
+// The PWA service worker would forward requests to the real backend and bypass page.route.
+test.use({ serviceWorkers: 'block' });
+
 async function mockFirmwareUpdate(
   page: Page,
   body: { newFirmwareAvailable: boolean; currentVersion?: string; latestVersion?: string } | null,
@@ -159,31 +162,118 @@ test.describe('Dashboard – Firmware-Update-Notification', () => {
     });
   });
 
-  test.describe('Non-Admin roles', () => {
-    test('User does not see the notification bell.', async ({ page }) => {
-      const tc = makeTestContext();
+  test.describe('Delete notifications', () => {
+    const tc = makeTestContext();
+    test.beforeEach(async () => {
       await tc.setup(Role.USER);
-      await mockFirmwareUpdate(page, {
-        newFirmwareAvailable: true,
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
-      });
-      await openDashboard(page, tc.get().token);
-      await expect(page.getByRole('button', { name: 'Benachrichtigungen' })).not.toBeVisible();
+    });
+    test.afterEach(async () => {
       await tc.teardown();
     });
 
-    test('FinancialManager does not see the notification bell.', async ({ page }) => {
-      const tc = makeTestContext();
-      await tc.setup(Role.FINANCIAL_MANAGER);
-      await mockFirmwareUpdate(page, {
-        newFirmwareAvailable: true,
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
+    function mockNotificationList(page: Page) {
+      let items = [
+        { id: 'n1', title: 'Gelesener Termin', read: true },
+        { id: 'n2', title: 'Ungelesener Termin', read: false },
+      ].map((n) => ({
+        id: n.id,
+        type: 'CALENDAR_INVITATION',
+        eventId: null,
+        eventTitle: n.title,
+        eventStart: null,
+        actorUsername: 'anna',
+        details: '',
+        createdAt: '2026-10-01T10:00:00Z',
+        read: n.read,
+      }));
+      const deleted: string[] = [];
+
+      const body = () => ({
+        items,
+        total: items.length,
+        unread: items.filter((n) => !n.read).length,
       });
+
+      return {
+        deleted,
+        install: async () => {
+          await page.route('**/api/notifications/firmware-update', (route) =>
+            route.fulfill({ status: 204 }),
+          );
+          await page.route('**/api/notifications/unread-count', (route) =>
+            route.fulfill({ status: 200, json: { unread: body().unread } }),
+          );
+          await page.route('**/api/notifications?*', (route) =>
+            route.fulfill({ status: 200, json: body() }),
+          );
+          await page.route('**/api/notifications/read', (route) => {
+            if (route.request().method() !== 'DELETE') return route.fallback();
+            deleted.push('read');
+            items = items.filter((n) => !n.read);
+            return route.fulfill({ status: 204 });
+          });
+          await page.route('**/api/notifications/n*', (route) => {
+            if (route.request().method() !== 'DELETE') return route.fallback();
+            const id = route.request().url().split('/').pop()!;
+            deleted.push(id);
+            items = items.filter((n) => n.id !== id);
+            return route.fulfill({ status: 204 });
+          });
+        },
+      };
+    }
+
+    test('Deleting a single notification removes it from the list.', async ({ page }) => {
+      const mock = mockNotificationList(page);
+      await mock.install();
       await openDashboard(page, tc.get().token);
-      await expect(page.getByRole('button', { name: 'Benachrichtigungen' })).not.toBeVisible();
-      await tc.teardown();
+
+      await page.getByRole('button', { name: 'Benachrichtigungen' }).click();
+      await expect(page.getByText('„Ungelesener Termin“')).toBeVisible();
+
+      await page.getByRole('button', { name: 'Löschen', exact: true }).first().click();
+
+      await expect.poll(() => mock.deleted).toEqual(['n1']);
+      await expect(page.getByText('„Gelesener Termin“')).not.toBeVisible();
+      await expect(page.getByText('„Ungelesener Termin“')).toBeVisible();
     });
+
+    test('Delete read removes only read notifications.', async ({ page }) => {
+      const mock = mockNotificationList(page);
+      await mock.install();
+      await openDashboard(page, tc.get().token);
+
+      await page.getByRole('button', { name: 'Benachrichtigungen' }).click();
+      await page.getByRole('button', { name: 'Gelesene löschen' }).click();
+
+      await expect.poll(() => mock.deleted).toEqual(['read']);
+      await expect(page.getByText('„Gelesener Termin“')).not.toBeVisible();
+      await expect(page.getByText('„Ungelesener Termin“')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Gelesene löschen' })).not.toBeVisible();
+    });
+  });
+
+  test.describe('Non-Admin roles', () => {
+    for (const role of [Role.USER, Role.FINANCIAL_MANAGER]) {
+      test(`${role} sees the notification bell but no firmware update.`, async ({ page }) => {
+        const tc = makeTestContext();
+        await tc.setup(role);
+        await mockFirmwareUpdate(page, {
+          newFirmwareAvailable: true,
+          currentVersion: '1.0.0',
+          latestVersion: '1.1.0',
+        });
+        await openDashboard(page, tc.get().token);
+
+        const bell = page.getByRole('button', { name: 'Benachrichtigungen' });
+        await expect(bell).toBeVisible();
+        await expect(bell.locator('.MuiBadge-dot')).not.toBeVisible();
+
+        await bell.click();
+        await expect(page.getByText('Keine neuen Benachrichtigungen')).toBeVisible();
+        await expect(page.getByText('Neue Firmware verfügbar')).not.toBeVisible();
+        await tc.teardown();
+      });
+    }
   });
 });

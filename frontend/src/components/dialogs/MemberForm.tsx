@@ -50,7 +50,9 @@ import * as countries from 'i18n-iso-countries';
 import deLocale from 'i18n-iso-countries/langs/de.json';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { CustomSnackbar } from '../CustomSnackbar';
+import { PoweredBy } from '../PoweredBy';
 import { useTranslation } from 'react-i18next';
+import { usePageConfig } from '../../hooks/usePageConfig';
 countries.registerLocale(deLocale);
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,6 +100,7 @@ export default function MemberForm({
   const [publicSuccess, setPublicSuccess] = useState(false);
   const setSuccessMember = useSnackbar();
   const { t } = useTranslation();
+  const { config } = usePageConfig();
 
   const validate = () => {
     const newErrors: MemberErrors = {};
@@ -373,17 +376,27 @@ export default function MemberForm({
               {t('components.memberForm.publicSuccess.confirm')}
             </Button>
           </DialogActions>
+          <PoweredBy sx={{ pb: 2 }} />
         </>
       ) : (
         <form onSubmit={save} noValidate>
           <DialogTitle>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {m.id !== NIL_UUID
-                ? t(`components.memberForm.title.${view ? 'view' : 'edit'}`)
-                : t('components.memberForm.title.new')}
+              {mode === 'public'
+                ? config.pageName
+                  ? t('components.memberForm.title.public', { clubName: config.pageName })
+                  : t('components.memberForm.title.publicNoName')
+                : m.id !== NIL_UUID
+                  ? t(`components.memberForm.title.${view ? 'view' : 'edit'}`)
+                  : t('components.memberForm.title.new')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {!view && t('components.memberForm.subtitle')}
+              {!view &&
+                t(
+                  mode === 'public'
+                    ? 'components.memberForm.subtitlePublic'
+                    : 'components.memberForm.subtitle',
+                )}
             </Typography>
           </DialogTitle>
 
@@ -927,6 +940,7 @@ export default function MemberForm({
               </Button>
             ) : null}
           </DialogActions>
+          {mode === 'public' && <PoweredBy sx={{ pb: 2 }} />}
         </form>
       )}
 

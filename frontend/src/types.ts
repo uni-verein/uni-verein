@@ -253,6 +253,9 @@ export enum Role {
 export enum UserSettingType {
   RECEIPT_NOTIFICATION = 'RECEIPT_NOTIFICATION',
   SELF_ENROLLMENT_NOTIFICATION = 'SELF_ENROLLMENT_NOTIFICATION',
+  CALENDAR_INVITE_EMAIL = 'CALENDAR_INVITE_EMAIL',
+  CALENDAR_CHANGE_EMAIL = 'CALENDAR_CHANGE_EMAIL',
+  CALENDAR_REMINDER_EMAIL = 'CALENDAR_REMINDER_EMAIL',
 }
 
 export interface UserSetting {
@@ -495,4 +498,147 @@ export interface AuditLog {
   action: string;
   entity: string;
   data: string;
+}
+
+export enum CalendarEventVisibility {
+  CLUB = 'CLUB',
+  PARTICIPANTS = 'PARTICIPANTS',
+  PRIVATE = 'PRIVATE',
+}
+
+export enum CalendarParticipantRole {
+  EDITOR = 'EDITOR',
+  ATTENDEE = 'ATTENDEE',
+}
+
+export enum CalendarRsvpStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+  TENTATIVE = 'TENTATIVE',
+  DECLINED = 'DECLINED',
+}
+
+export interface CalendarCategory {
+  id: string;
+  name: string;
+  color: string;
+  isPublic: boolean;
+}
+
+export interface CalendarUser {
+  id: string;
+  username: string;
+}
+
+export interface CalendarEventOccurrence {
+  eventId: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  locationName: string;
+  categoryId: string | null;
+  color: string | null;
+  visibility: CalendarEventVisibility;
+  canEdit: boolean;
+  isPublic: boolean;
+  isRecurring: boolean;
+  reminderMinutesBefore: number | null;
+  myRsvp: CalendarRsvpStatus | null;
+}
+
+export interface CalendarEventParticipant {
+  userId: string;
+  username: string;
+  role: CalendarParticipantRole;
+  rsvpStatus: CalendarRsvpStatus;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  locationName: string;
+  locationAddress: string;
+  locationUrl: string;
+  visibility: CalendarEventVisibility;
+  isPublic: boolean;
+  isPubliclyVisible: boolean;
+  recurrenceRule: string | null;
+  recurrenceExceptions: string[];
+  reminderMinutesBefore: number | null;
+  category: CalendarCategory | null;
+  owner: CalendarUser;
+  participants: CalendarEventParticipant[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  lastModifiedBy: CalendarUser | null;
+  canEdit: boolean;
+  canDelete: boolean;
+  isSubscribed: boolean;
+  myRsvp: CalendarRsvpStatus | null;
+}
+
+export interface CalendarEventPayload {
+  title: string;
+  description: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  locationName: string;
+  locationAddress: string;
+  locationUrl: string;
+  visibility: CalendarEventVisibility;
+  categoryId: string | null;
+  isPublic: boolean;
+  recurrenceRule: string | null;
+  reminderMinutesBefore: number | null;
+  participants: { userId: string; role: CalendarParticipantRole }[];
+  version?: number;
+}
+
+export enum NotificationType {
+  CALENDAR_INVITATION = 'CALENDAR_INVITATION',
+  CALENDAR_EVENT_CHANGED = 'CALENDAR_EVENT_CHANGED',
+  CALENDAR_EVENT_DELETED = 'CALENDAR_EVENT_DELETED',
+  CALENDAR_RSVP = 'CALENDAR_RSVP',
+  CALENDAR_REMINDER = 'CALENDAR_REMINDER',
+}
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  eventId: string | null;
+  eventTitle: string;
+  eventStart: string | null;
+  actorUsername: string;
+  details: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface CalendarSettings {
+  publicCalendarEnabled: boolean;
+  publicCalendarTitle: string;
+  requireKey: boolean;
+  publicCalendarKey: string | null;
+}
+
+export interface PublicCalendarOccurrence {
+  eventId: string;
+  title: string;
+  description: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  locationName: string;
+  locationAddress: string;
+  locationUrl: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  color: string | null;
 }

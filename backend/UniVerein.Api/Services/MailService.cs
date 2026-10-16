@@ -61,14 +61,7 @@ public class MailService
                 errorMessage: "Mail settings not found.",
                 moreInfo: "No mail settings could be found.");
 
-        List<PreparedAttachment> preparedAttachments = request.Attachments.Select(att => new PreparedAttachment
-        {
-            FileName = att.FileName,
-            ContentType = att.ContentType,
-            ContentId = att.ContentId,
-            IsInline = att.IsInline,
-            Bytes = Convert.FromBase64String(att.Base64Content)
-        }).ToList();
+        List<PreparedAttachment> preparedAttachments = PrepareAttachments(request);
 
         MimeMessage message = BuildMessage(new Recipient()
         {
@@ -151,14 +144,7 @@ public class MailService
                 errorMessage: "Mail settings not found.",
                 moreInfo: "No mail settings could be found.");
 
-        List<PreparedAttachment> preparedAttachments = request.Attachments.Select(att => new PreparedAttachment
-        {
-            FileName = att.FileName,
-            ContentType = att.ContentType,
-            ContentId = att.ContentId,
-            IsInline = att.IsInline,
-            Bytes = Convert.FromBase64String(att.Base64Content)
-        }).ToList();
+        List<PreparedAttachment> preparedAttachments = PrepareAttachments(request);
 
         const int connectionCount = 3;
 
@@ -191,6 +177,58 @@ public class MailService
 
         await Task.WhenAll(connectionTasks);
         await _hubContext.Clients.Client(connectionId).SendAsync("SendComplete", summary);
+    }
+
+    public async Task<List<EmailResult>> SendBatchAsync(List<(Recipient Recipient, EmailRequest Request)> mails)
+    {
+        MailSettingsEntity? mailSettings = await _db.MailSettings.FirstOrDefaultAsync(x => x.DeletedAt == null);
+
+        if (mailSettings is null)
+            throw new NotFoundHttpException(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
+                errorMessage: "Mail settings not found.",
+                moreInfo: "No mail settings could be found.");
+
+        Dictionary<EmailRequest, List<PreparedAttachment>> attachmentsByRequest = new(ReferenceEqualityComparer.Instance);
+        List<EmailResult> results = [];
+        using SmtpClient client = new SmtpClient();
+
+        try
+        {
+            for (int i = 0; i < mails.Count; i++)
+            {
+                (Recipient recipient, EmailRequest request) = mails[i];
+
+                if (!client.IsConnected)
+                    await ConnectSmtpClientAsync(client, mailSettings);
+
+                if (!client.IsConnected)
+                {
+                    results.AddRange(mails.Skip(i).Select(m => new EmailResult
+                    {
+                        Email = m.Recipient.Email,
+                        Success = false,
+                        ErrorMessage = "SMTP connection failed."
+                    }));
+                    break;
+                }
+
+                if (!attachmentsByRequest.TryGetValue(request, out List<PreparedAttachment>? preparedAttachments))
+                {
+                    preparedAttachments = PrepareAttachments(request);
+                    attachmentsByRequest[request] = preparedAttachments;
+                }
+
+                MimeMessage message = BuildMessage(recipient, request, mailSettings, preparedAttachments);
+                results.Add(await SendOnExistingConnectionAsync(client, message, recipient));
+            }
+        }
+        finally
+        {
+            if (client.IsConnected)
+                await client.DisconnectAsync(true);
+        }
+
+        return results;
     }
 
     private async Task ProcessChunkWithSingleConnectionAsync(List<Recipient> chunk, EmailRequest request,
@@ -312,6 +350,18 @@ public class MailService
     private static string SenderDisplayName(MailSettingsEntity settings)
     {
         return string.IsNullOrWhiteSpace(settings.FromName) ? settings.FromMail : settings.FromName;
+    }
+
+    private static List<PreparedAttachment> PrepareAttachments(EmailRequest request)
+    {
+        return request.Attachments.Select(att => new PreparedAttachment
+        {
+            FileName = att.FileName,
+            ContentType = att.ContentType,
+            ContentId = att.ContentId,
+            IsInline = att.IsInline,
+            Bytes = Convert.FromBase64String(att.Base64Content)
+        }).ToList();
     }
 
     private static MimeMessage BuildMessage(Recipient recipient, EmailRequest request, MailSettingsEntity settings,

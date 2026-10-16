@@ -29,6 +29,7 @@ import EuroIcon from '@mui/icons-material/Euro';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useTranslation } from 'react-i18next';
 import { UUIDTypes } from 'uuid';
 import { Role } from '../types';
@@ -421,6 +422,11 @@ export function SidebarContent({
                     id: 'receipt-category-config',
                     icon: <ReceiptLongIcon fontSize="small" />,
                     label: t('pages.dashboard.settings.receiptCategoryConfig'),
+                  },
+                  {
+                    id: 'calendar-category-config',
+                    icon: <CalendarMonthIcon fontSize="small" />,
+                    label: t('pages.dashboard.settings.calendarCategoryConfig'),
                   },
                   {
                     id: 'creditor-config',

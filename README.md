@@ -43,6 +43,7 @@
 - 💰 **Finance Tracking** — Keep track of membership fees, income, and expenses
 - 📄 **Document Storage** — Store and share important club documents and files
 - 📧 **Email Notifications** — Send mails for events or announcements
+- 📅 **Calendar** — Plan events together, invite members, recurring events, reminders, webcal subscriptions and a public club calendar
 - 🔐 **Role-Based Access Control** — Assign different roles (Admin, User, Finance)
 - 🌍 **Multi-language Support** — Available in multiple languages (currently DE, EN)
 
@@ -92,10 +93,10 @@ Use this unless you already terminate TLS in front of this stack.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/Caddyfile
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/docker-compose-tls.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/Caddyfile
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-tls.yml
 ```
 
 2. **Create .env and secrets**
@@ -136,9 +137,9 @@ it doesn't come up, check `docker compose -f docker-compose-tls.yml logs caddy`.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.8.4/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**
@@ -222,7 +223,7 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of co
 - [x] Receipt management
 - [x] Receipt notification
 - [x] Member self registration (Trade fair & permanent)
-- [ ] Event planning (calendar)
+- [x] Event planning (calendar)
 - [ ] File management
 - [ ] Multi-factor authentication (MFA)
 - [ ] Chat system

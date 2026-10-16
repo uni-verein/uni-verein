@@ -97,7 +97,8 @@ try
         }
     }
 
-    app.UseSerilogRequestLogging();
+    app.UseSerilogRequestLogging(options =>
+        options.GetMessageTemplateProperties = RequestLogSanitizer.GetMessageTemplateProperties);
     app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
     app.MapControllers().RequireCors("AllowFrontend");
     app.MapHub<EmailProgressHub>("/emailProgress");

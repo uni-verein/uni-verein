@@ -72,7 +72,9 @@ test.describe('Self-enrollment (UV-13 / UV-21)', () => {
     await page.goto('/enroll');
 
     await expect(page.getByText('Selbstregistrierung nicht verfügbar')).toBeVisible();
-    await expect(page.getByText('Neues Mitglied anlegen', { exact: true })).not.toBeVisible();
+    await expect(
+      page.getByText('Bei Verein Test web page beitreten', { exact: true }),
+    ).not.toBeVisible();
   });
 
   test('Direct fresh navigation to /enroll works (nginx SPA fallback)', async ({ page }) => {
@@ -81,7 +83,9 @@ test.describe('Self-enrollment (UV-13 / UV-21)', () => {
     const response = await page.goto('/enroll');
 
     expect(response?.ok()).toBeTruthy();
-    await expect(page.getByText('Neues Mitglied anlegen', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Bei Verein Test web page beitreten', { exact: true }),
+    ).toBeVisible();
   });
 
   test('Enabled self-enrollment shows the public form without admin-only fields', async ({
@@ -91,7 +95,9 @@ test.describe('Self-enrollment (UV-13 / UV-21)', () => {
 
     await page.goto('/enroll');
 
-    await expect(page.getByText('Neues Mitglied anlegen', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Bei Verein Test web page beitreten', { exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Vorname' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Nachname' })).toBeVisible();

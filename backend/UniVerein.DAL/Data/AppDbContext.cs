@@ -40,6 +40,14 @@ public class AppDbContext : DbContext
     public DbSet<ReceiptFileEntity> ReceiptFiles => Set<ReceiptFileEntity>();
     public DbSet<UserSettingEntity> UserSettings => Set<UserSettingEntity>();
     public DbSet<PendingSelfEnrollmentEntity> PendingSelfEnrollments => Set<PendingSelfEnrollmentEntity>();
+    public DbSet<CalendarEventEntity> CalendarEvents => Set<CalendarEventEntity>();
+    public DbSet<CalendarCategoryEntity> CalendarCategories => Set<CalendarCategoryEntity>();
+    public DbSet<CalendarEventParticipantEntity> CalendarEventParticipants => Set<CalendarEventParticipantEntity>();
+    public DbSet<CalendarEventSubscriptionEntity> CalendarEventSubscriptions => Set<CalendarEventSubscriptionEntity>();
+    public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
+    public DbSet<CalendarReminderLogEntity> CalendarReminderLogs => Set<CalendarReminderLogEntity>();
+    public DbSet<CalendarFeedTokenEntity> CalendarFeedTokens => Set<CalendarFeedTokenEntity>();
+    public DbSet<CalendarSettingsEntity> CalendarSettings => Set<CalendarSettingsEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -158,6 +166,112 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.ContributionPlanId)
             .OnDelete(DeleteBehavior.SetNull);
+
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .Property(x => x.Visibility)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .Property(x => x.Version)
+            .IsConcurrencyToken();
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .HasIndex(x => new { x.StartAt, x.SeriesEndAt });
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .HasOne(x => x.Owner)
+            .WithMany()
+            .HasForeignKey(x => x.OwnerUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .HasOne(x => x.Category)
+            .WithMany()
+            .HasForeignKey(x => x.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<CalendarEventEntity>()
+            .HasMany(x => x.Participants)
+            .WithOne(x => x.Event)
+            .HasForeignKey(x => x.EventId);
+
+        modelBuilder.Entity<CalendarCategoryEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+        modelBuilder.Entity<CalendarEventParticipantEntity>()
+            .Property(x => x.Role)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<CalendarEventParticipantEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+        modelBuilder.Entity<CalendarEventParticipantEntity>()
+            .HasIndex(x => new { x.EventId, x.UserId });
+
+        modelBuilder.Entity<CalendarEventParticipantEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<CalendarEventParticipantEntity>()
+            .Property(x => x.RsvpStatus)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<CalendarEventSubscriptionEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+        modelBuilder.Entity<CalendarEventSubscriptionEntity>()
+            .HasIndex(x => new { x.EventId, x.UserId });
+
+        modelBuilder.Entity<CalendarEventSubscriptionEntity>()
+            .HasOne(x => x.Event)
+            .WithMany(x => x.Subscriptions)
+            .HasForeignKey(x => x.EventId);
+
+        modelBuilder.Entity<CalendarEventSubscriptionEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<NotificationEntity>()
+            .Property(x => x.Type)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<NotificationEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+        modelBuilder.Entity<NotificationEntity>()
+            .HasIndex(x => new { x.UserId, x.ReadAt });
+
+        modelBuilder.Entity<NotificationEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<CalendarReminderLogEntity>()
+            .HasIndex(x => new { x.EventId, x.OccurrenceStart })
+            .IsUnique();
+
+
+        modelBuilder.Entity<CalendarFeedTokenEntity>()
+            .HasIndex(x => x.TokenHash)
+            .IsUnique();
+
+        modelBuilder.Entity<CalendarFeedTokenEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
 
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")

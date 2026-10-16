@@ -376,8 +376,10 @@ export default function ReceiptForm({
                   onChange={(e) => setVendor(e.target.value)}
                 />
               </Grid>
-              <Grid size={6}>
+              <Grid size={12}>
                 <TextField
+                  multiline
+                  minRows={3}
                   fullWidth
                   disabled={readOnly}
                   label={t('components.receiptForm.fields.description')}
