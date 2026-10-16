@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.9.0] UV-6, UV-53, UV-54, UV-62
+
+### Added
+- UV-6: New club calendar ("Kalender") for event planning.
+  - Every user can create events with a description, time or all-day, a location with address (with a map link), an online link and a colored category. Admins manage the categories under "Kalenderkategorien verwalten".
+  - Events are visible to the whole club, only to invited users, or privately only to their owner (not even to admins).
+  - Other users can be invited as attendees or co-editors. Co-editors can change the event together with the owner. If someone else saved in the meantime, the change is rejected with a reload hint instead of being silently overwritten.
+  - Invited users answer with yes, maybe or no.
+  - Events can repeat daily, weekly, monthly or yearly. They keep their local time across daylight saving time, and single dates can be cancelled.
+  - Reminders can be sent from "at the start" up to one week before.
+  - Users can subscribe to events and are notified about invitations, changes, deletions, replies and reminders. Notifications appear in the bell, which is now shown for every role, and by e-mail with an `.ics` invitation. Each kind of e-mail can be turned off in the profile settings. Notifications in the bell can be deleted one by one, and all already read ones can be deleted at once with "Gelesene löschen".
+  - Every user can subscribe to their personal calendar in Apple Calendar, Google Calendar or Outlook through a secret webcal link that can be revoked at any time.
+  - Admins can enable a public calendar. It shows single events or whole categories marked as public, without participants or other personal data, at `/calendar/public` and as a webcal feed. Optionally it is only reachable through a secret link.
+  - The list view of the current month hides past events behind a "Vergangene Termine anzeigen" button, in the club calendar and in the public calendar.
+  - On phones the bottom navigation shows "Kalender" instead of "Auswertung". The receipt analytics stay reachable through the menu.
+  - Adds the migrations `AddCalendar`, `AddCalendarCollaboration`, `AddCalendarRecurrenceAndReminders` and `AddCalendarFeedsAndPublicCalendar`, and the backend dependency `Ical.Net` and the frontend dependency `FullCalendar` (both MIT).
+
+### Fixed
+- UV-53: The description field in the receipt form is now full width and multi-line instead of a small single-line field, so longer descriptions fit.
+- UV-54: The public self-enrollment form now has a proper title ("Bei Verein <Vereinsname> beitreten", or "Dem Verein beitreten" without a club name) and a subtitle addressed to the applicant. Previously it showed the title and text of the admin's "new member" dialog.
+- UV-62: Admins can change their own username, e-mail and password again. Only an actual change of their own role is still rejected.
+
 ## [v1.8.4] UV-51
 
 ### Fixed

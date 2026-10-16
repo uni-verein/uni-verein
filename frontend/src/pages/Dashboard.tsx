@@ -14,19 +14,17 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
-  Badge,
-  Popover,
   BottomNavigation,
   BottomNavigationAction,
   CircularProgress,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import EmailIcon from '@mui/icons-material/Email';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import EuroIcon from '@mui/icons-material/Euro';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -41,6 +39,7 @@ import { SidebarContent } from '../components/SidebarContent';
 import { LanguageToggle } from '../components/LanguageToggle';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useThemeMode, ThemeMode } from '../hooks/useThemeMode';
+import { NotificationBell } from '../components/NotificationBell';
 
 const Members = lazy(() => import('./Members'));
 const Mail = lazy(() => import('./Mail'));
@@ -58,6 +57,8 @@ const MemberCategoryConfig = lazy(() => import('./MemberCategoryConfig'));
 const Receipts = lazy(() => import('./Receipts'));
 const ReceiptCategoryConfig = lazy(() => import('./ReceiptCategoryConfig'));
 const ReceiptAnalytics = lazy(() => import('./ReceiptAnalytics'));
+const Calendar = lazy(() => import('./Calendar'));
+const CalendarCategoryConfig = lazy(() => import('./CalendarCategoryConfig'));
 
 const drawerWidthExpanded = 280;
 const drawerWidthCollapsed = 64;
@@ -93,7 +94,16 @@ export default function Dashboard({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
-  const [page, setPage] = useState('members');
+  // Links in calendar mails point to /?page=calendar&event=<id>.
+  const [deepLink] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return { page: params.get('page'), eventId: params.get('event') };
+  });
+  const [page, setPage] = useState(deepLink.page === 'calendar' ? 'calendar' : 'members');
+  const [calendarEventRequest, setCalendarEventRequest] = useState<{
+    id: string;
+    nonce: number;
+  } | null>(deepLink.eventId ? { id: deepLink.eventId, nonce: 0 } : null);
   const [user] = useState<{
     id: UUIDTypes | undefined;
     name: string;
@@ -112,7 +122,6 @@ export default function Dashboard({
     currentVersion?: string;
     latestVersion?: string;
   } | null>(null);
-  const [notificationsAnchor, setNotificationsAnchor] = useState<HTMLElement | null>(null);
   const { t } = useTranslation();
   const { mode, setMode } = useThemeMode();
 
@@ -153,6 +162,19 @@ export default function Dashboard({
       setMobileNavOpen(false);
     }
   }, [page, isMobile]);
+
+  useEffect(() => {
+    if (deepLink.page || deepLink.eventId) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [deepLink]);
+
+  const openCalendarEvent = useCallback((eventId: string) => {
+    setPage('calendar');
+    setCalendarEventRequest({ id: eventId, nonce: Date.now() });
+  }, []);
+
+  const clearCalendarEventRequest = useCallback(() => setCalendarEventRequest(null), []);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -197,6 +219,13 @@ export default function Dashboard({
       roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
     {
+      id: 'calendar',
+      label: t('pages.dashboard.pageNames.calendar'),
+      shortLabel: t('pages.dashboard.pageNames.calendarShort'),
+      icon: <CalendarMonthIcon />,
+      roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
+    },
+    {
       id: 'mail',
       label: t('pages.dashboard.pageNames.broadcastEmail'),
       shortLabel: t('pages.dashboard.pageNames.broadcastEmailShort'),
@@ -230,6 +259,7 @@ export default function Dashboard({
       shortLabel: t('pages.dashboard.pageNames.receiptAnalyticsShort'),
       icon: <QueryStatsIcon />,
       roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
+      hideInBottomNav: true,
     },
   ];
 
@@ -255,7 +285,7 @@ export default function Dashboard({
   };
 
   const bottomNavItems = navItems.filter(
-    (item) => item.roles.includes(user.role as Role) && viewPage(item.id),
+    (item) => item.roles.includes(user.role as Role) && viewPage(item.id) && !item.hideInBottomNav,
   );
 
   return (
@@ -294,51 +324,7 @@ export default function Dashboard({
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 0.5 : 2 }}>
-            {user.role === Role.ADMIN && (
-              <>
-                <Tooltip title={t('pages.dashboard.notifications.label')} arrow>
-                  <IconButton
-                    onClick={(e) => setNotificationsAnchor(e.currentTarget)}
-                    color="inherit"
-                  >
-                    <Badge
-                      color="error"
-                      variant="dot"
-                      invisible={!firmwareUpdate?.newFirmwareAvailable}
-                    >
-                      <NotificationsIcon />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-                <Popover
-                  open={Boolean(notificationsAnchor)}
-                  anchorEl={notificationsAnchor}
-                  onClose={() => setNotificationsAnchor(null)}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                >
-                  <Box sx={{ p: 2, maxWidth: 320 }}>
-                    {firmwareUpdate?.newFirmwareAvailable ? (
-                      <>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                          {t('pages.dashboard.notifications.firmwareUpdateTitle')}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {t('pages.dashboard.notifications.firmwareUpdateText', {
-                            version: firmwareUpdate.latestVersion,
-                            currentVersion: firmwareUpdate.currentVersion,
-                          })}
-                        </Typography>
-                      </>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        {t('pages.dashboard.notifications.noNotifications')}
-                      </Typography>
-                    )}
-                  </Box>
-                </Popover>
-              </>
-            )}
+            <NotificationBell firmwareUpdate={firmwareUpdate} onOpenEvent={openCalendarEvent} />
 
             {isMobile ? (
               <Tooltip title={themeModeLabel} arrow>
@@ -471,6 +457,14 @@ export default function Dashboard({
                 {page === 'contributions' && <Contributions role={user.role} />}
                 {page === 'receipts' && <Receipts role={user.role} userId={user.id} />}
                 {page === 'receipt-analytics' && <ReceiptAnalytics />}
+                {page === 'calendar' && (
+                  <Calendar
+                    userId={user.id}
+                    openEventRequest={calendarEventRequest}
+                    onOpenEventRequestHandled={clearCalendarEventRequest}
+                  />
+                )}
+                {page === 'calendar-category-config' && <CalendarCategoryConfig />}
                 {page === 'user' && (
                   <UserManagement accountView={true} userId={user.id} role={user.role} />
                 )}

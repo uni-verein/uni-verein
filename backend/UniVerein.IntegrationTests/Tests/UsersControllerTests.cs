@@ -535,7 +535,6 @@ public class UsersControllerTests : IntegrationTestBase
     [Theory]
     [InlineData(UserRole.USER)]
     [InlineData(UserRole.FINANCIAL_MANAGER)]
-    [InlineData(UserRole.ADMIN)]
     public async Task UpdateUser_OwnRoleAsAdmin_Forbidden(UserRole requestedRole)
     {
         // Arrange
@@ -558,6 +557,37 @@ public class UsersControllerTests : IntegrationTestBase
             user.ShouldNotBeNull();
             user.Role.ShouldBe(UserRole.ADMIN);
             user.Username.ShouldBe("self-role");
+        });
+    }
+
+    [Fact]
+    public async Task UpdateUser_OwnAccountWithUnchangedRole_UpdatesOtherFields()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        await CreateUserEntity(id: UserId, role: UserRole.ADMIN);
+        UserUpdateRequest request = CreateUpdateUserRequest(username: "self-all-fields", password: "new-password-123",
+            mail: "self-new@gmail.com");
+        request.Role = UserRole.ADMIN;
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{UserId}", request);
+        UserResult? result = await response.Content.ReadFromJsonAsync<UserResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Username.ShouldBe("self-all-fields");
+        result.Email.ShouldBe("self-new@gmail.com");
+        result.Role.ShouldBe(UserRole.ADMIN);
+
+        await WithDbContext(async db =>
+        {
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            user.ShouldNotBeNull();
+            user.Username.ShouldBe("self-all-fields");
+            user.Role.ShouldBe(UserRole.ADMIN);
+            CryptoService.VerifyPassword("new-password-123", user.PasswordHash).ShouldBeTrue();
         });
     }
 

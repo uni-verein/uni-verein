@@ -78,9 +78,12 @@
       "title": {
         "edit": "Edit Member",
         "view": "View Member",
-        "new": "Create new member"
+        "new": "Create new member",
+        "public": "Join the club {{clubName}}",
+        "publicNoName": "Join the club"
       },
       "subtitle": "Please enter the master data of the club member here.",
+      "subtitlePublic": "To join the club, enter your details here.",
       "publicSuccess": {
         "title": "Please confirm your email address",
         "subtitle": "We've sent you a confirmation link by email. Your registration will only be reviewed after you confirm it.",
@@ -237,6 +240,239 @@
       "cancel": "Cancel",
       "saveFailed": "Save failed. Please try again.",
       "alreadyPaid": "This receipt has already been marked as paid."
+    },
+    "calendarEventForm": {
+      "title": {
+        "new": "New event",
+        "edit": "Edit event"
+      },
+      "fields": {
+        "title": "Title",
+        "allDay": "All day",
+        "start": "Start",
+        "end": "End",
+        "locationName": "Location",
+        "locationAddress": "Address",
+        "locationUrl": "Link (e.g. online meeting)",
+        "description": "Description",
+        "category": "Category",
+        "visibility": "Visibility",
+        "participants": "Participants",
+        "addParticipant": "Add participant",
+        "recurrence": "Recurrence",
+        "reminder": "Reminder",
+        "isPublic": "Show in public calendar"
+      },
+      "noCategory": "No category",
+      "noUsers": "No further users",
+      "removeParticipant": "Remove participant",
+      "openMap": "Open in map",
+      "roles": {
+        "EDITOR": "Co-editor",
+        "ATTENDEE": "Attendee"
+      },
+      "visibility": {
+        "CLUB": "Whole club",
+        "PARTICIPANTS": "Invited only",
+        "PRIVATE": "Private"
+      },
+      "visibilityHelp": {
+        "CLUB": "All users can see the event.",
+        "PARTICIPANTS": "Only you, the invited users and admins can see the event.",
+        "PRIVATE": "Only you can see the event."
+      },
+      "createdBy": "Created by {{name}}",
+      "lastModifiedBy": "last changed by {{name}} on {{date}}",
+      "validation": {
+        "titleRequired": "Please enter a title.",
+        "titleTooLong": "The title must not exceed 200 characters.",
+        "endBeforeStart": "The end must be after the start.",
+        "invalidUrl": "Please enter a valid link starting with http:// or https://."
+      },
+      "conflict": {
+        "message": "The event was changed by someone else in the meantime. Reload it to see the current version – your changes will be discarded.",
+        "reload": "Reload"
+      },
+      "confirm": {
+        "deleteMessage": "Do you really want to delete the event \"{{title}}\"?",
+        "deleteButton": "Delete",
+        "deleteOccurrenceMessage": "Cancel only \"{{title}}\" on {{date}}? The other events of the series are kept."
+      },
+      "snackbar": {
+        "created": "Event created.",
+        "updated": "Event saved.",
+        "deleted": "Event deleted.",
+        "subscribed": "Subscribed to event.",
+        "unsubscribed": "Subscription ended.",
+        "occurrenceDeleted": "Event removed from the series."
+      },
+      "errors": {
+        "loadFailed": "Event could not be loaded.",
+        "saveFailed": "Event could not be saved.",
+        "deleteFailed": "Event could not be deleted.",
+        "rsvpFailed": "Reply could not be saved.",
+        "subscriptionFailed": "Subscription could not be changed."
+      },
+      "buttons": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "close": "Close",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteSeries": "Delete series",
+        "deleteOccurrence": "Delete only this event"
+      },
+      "rsvp": {
+        "question": "Are you attending?",
+        "ACCEPTED": "Yes",
+        "TENTATIVE": "Maybe",
+        "DECLINED": "No",
+        "PENDING": "No reply yet",
+        "summary": "Yes: {{accepted}} · Maybe: {{tentative}} · No: {{declined}} · Pending: {{pending}}"
+      },
+      "subscription": {
+        "label": "Subscription",
+        "subscribe": "Subscribe – get notified about changes",
+        "unsubscribe": "Subscribed – click to stop notifications"
+      },
+      "reminders": {
+        "none": "No reminder",
+        "0": "At the start of the event",
+        "15": "15 minutes before",
+        "60": "1 hour before",
+        "180": "3 hours before",
+        "1440": "1 day before",
+        "2880": "2 days before",
+        "10080": "1 week before",
+        "custom": "{{minutes}} minutes before"
+      },
+      "exceptionsCount_one": "{{count}} event cancelled",
+      "exceptionsCount_other": "{{count}} events cancelled",
+      "publicHelp": "The event appears in the club's public calendar, without participants.",
+      "publicByCategory": "The selected category is already public – the event appears in the public calendar anyway.",
+      "publicChip": "Public"
+    },
+    "notificationBell": {
+      "markAllRead": "Mark all as read",
+      "delete": "Delete",
+      "deleteRead": "Delete read",
+      "invitation": "{{actor}} invited you to “{{title}}”.",
+      "changed": "{{actor}} changed “{{title}}” ({{fields}}).",
+      "deleted": "{{actor}} deleted “{{title}}”.",
+      "rsvp": {
+        "ACCEPTED": "{{actor}} accepted “{{title}}”.",
+        "TENTATIVE": "{{actor}} replied maybe to “{{title}}”.",
+        "DECLINED": "{{actor}} declined “{{title}}”."
+      },
+      "fields": {
+        "title": "title",
+        "description": "description",
+        "time": "time",
+        "location": "location",
+        "visibility": "visibility",
+        "category": "category",
+        "recurrence": "recurrence"
+      },
+      "reminder": "Reminder: “{{title}}” starts on {{date}}."
+    },
+    "recurrenceEditor": {
+      "frequency": "Repeat",
+      "interval": "Every",
+      "weekdays": "Weekdays",
+      "ends": "Ends",
+      "untilDate": "Ends on",
+      "count": "Number of events",
+      "frequencies": {
+        "NONE": "Does not repeat",
+        "DAILY": "Daily",
+        "WEEKLY": "Weekly",
+        "MONTHLY": "Monthly",
+        "YEARLY": "Yearly"
+      },
+      "units": {
+        "DAILY_one": "day",
+        "DAILY_other": "days",
+        "WEEKLY_one": "week",
+        "WEEKLY_other": "weeks",
+        "MONTHLY_one": "month",
+        "MONTHLY_other": "months",
+        "YEARLY_one": "year",
+        "YEARLY_other": "years",
+        "NONE_one": "",
+        "NONE_other": ""
+      },
+      "endOptions": {
+        "NEVER": "Never",
+        "UNTIL": "On a date",
+        "COUNT": "After a number of events"
+      },
+      "weekdaysShort": {
+        "MO": "Mon",
+        "TU": "Tue",
+        "WE": "Wed",
+        "TH": "Thu",
+        "FR": "Fri",
+        "SA": "Sat",
+        "SU": "Sun"
+      },
+      "describe": {
+        "every": {
+          "DAILY": "Every day",
+          "WEEKLY": "Every week",
+          "MONTHLY": "Every month",
+          "YEARLY": "Every year"
+        },
+        "everyN": "Every {{count}} {{unit}}",
+        "onDays": "on {{days}}",
+        "count_one": "{{count}} event",
+        "count_other": "{{count}} events",
+        "until": "until {{date}}"
+      }
+    },
+    "copyField": {
+      "copy": "Copy",
+      "copied": "Copied to clipboard.",
+      "copyFailed": "Copying failed."
+    },
+    "calendarFeedDialog": {
+      "title": "Subscribe to calendar",
+      "personal": {
+        "title": "My personal calendar",
+        "description": "Add all events you can see here – including your private ones – to Apple Calendar, Google Calendar, Outlook or Thunderbird with a subscription link. Changes arrive automatically.",
+        "active": "A subscription link is active (created on {{date}}).",
+        "lastUsed": "Last fetched on {{date}}.",
+        "secret": "This link is only shown now. Anyone who knows it can see your events – do not share it. You can revoke it at any time.",
+        "url": "Subscription link"
+      },
+      "howTo": {
+        "apple": "Apple Calendar: tap “Open in calendar app” or use File → New Calendar Subscription and paste the link.",
+        "google": "Google Calendar: “Add to Google Calendar” or Other calendars → From URL and paste the link.",
+        "outlook": "Outlook: Add calendar → Subscribe from web and paste the link."
+      },
+      "public": {
+        "title": "Public club calendar",
+        "description": "Members without a login can view and subscribe to this calendar as well.",
+        "openPage": "Open",
+        "pageUrl": "Link to the web page",
+        "feedUrl": "Calendar subscription"
+      },
+      "confirm": {
+        "regenerate": "Create a new subscription link? The current link stops working and has to be replaced in your calendar apps.",
+        "revoke": "Revoke the subscription link? Your calendar apps will no longer receive events."
+      },
+      "buttons": {
+        "create": "Create subscription link",
+        "regenerate": "Create new subscription link",
+        "revoke": "Revoke",
+        "openInApp": "Open in calendar app",
+        "google": "Add to Google Calendar",
+        "close": "Close"
+      },
+      "errors": {
+        "loadFailed": "Status could not be loaded.",
+        "createFailed": "Subscription link could not be created.",
+        "revokeFailed": "Subscription link could not be revoked."
+      }
     }
   },
   "pages": {
@@ -944,7 +1180,8 @@
         "creditorConfig": "Configure bank details",
         "generalConfig": "Website settings",
         "profileSettings": "Profile settings",
-        "receiptCategoryConfig": "Manage receipt categories"
+        "receiptCategoryConfig": "Manage receipt categories",
+        "calendarCategoryConfig": "Manage calendar categories"
       },
       "pageNames": {
         "members": "Member management",
@@ -960,7 +1197,9 @@
         "receipts": "Receipts",
         "receiptsShort": "Receipts",
         "receiptAnalytics": "Receipt analytics",
-        "receiptAnalyticsShort": "Analytics"
+        "receiptAnalyticsShort": "Analytics",
+        "calendar": "Calendar",
+        "calendarShort": "Calendar"
       },
       "notifications": {
         "label": "Notifications",
@@ -1134,7 +1373,10 @@
         "noSettingsAvailable": "No notification settings are currently available for your role.",
         "saveSuccess": "Setting saved successfully.",
         "saveFailed": "Saving failed. Please try again.",
-        "loadFailed": "Settings could not be loaded."
+        "loadFailed": "Settings could not be loaded.",
+        "calendarInviteEmail": "Notify me by e-mail about calendar invitations",
+        "calendarChangeEmail": "Notify me by e-mail about changes of subscribed calendar events",
+        "calendarReminderEmail": "Receive reminders for calendar events by e-mail"
       }
     },
     "receipts": {
@@ -1263,6 +1505,85 @@
         "nov": "Nov",
         "dec": "Dec"
       }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "newEvent": "New event",
+      "mineOnly": "Only my events",
+      "showPast": "Show past events ({{count}})",
+      "hidePast": "Hide past events ({{count}})",
+      "loadFailed": "Events could not be loaded.",
+      "moved": "Event moved.",
+      "moveFailed": "Event could not be moved.",
+      "moveConflict": "The event was changed by someone else in the meantime. Please try again.",
+      "subscribe": "Subscribe to calendar",
+      "publicEvent": "Public event"
+    },
+    "calendarCategoryConfig": {
+      "title": "Calendar categories",
+      "newButton": "New category",
+      "table": {
+        "name": "Name",
+        "actions": "Actions",
+        "public": "Public"
+      },
+      "tooltip": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "confirm": {
+        "deleteMessage": "Do you really want to delete the category \"{{name}}\"? Events of this category are kept.",
+        "deleteButton": "Delete"
+      },
+      "dialog": {
+        "titleCreate": "New calendar category",
+        "titleEdit": "Edit calendar category",
+        "nameLabel": "Name",
+        "colorLabel": "Color",
+        "preview": "Preview",
+        "cancel": "Cancel",
+        "save": "Save",
+        "isPublic": "Public category",
+        "isPublicHelp": "All club events of this category appear in the public calendar (e.g. “Public events”)."
+      },
+      "validation": {
+        "nameEmpty": "Please enter a name.",
+        "nameTooLong": "The name must not exceed 50 characters."
+      },
+      "snackbar": {
+        "saveSuccess": "Category saved.",
+        "deleteSuccess": "Category deleted."
+      },
+      "apiError": {
+        "exists": "A category with this name already exists.",
+        "saveFailed": "Category could not be saved.",
+        "deleteFailed": "Category could not be deleted."
+      },
+      "publicCalendar": {
+        "title": "Public calendar",
+        "description": "The public calendar shows club events that are marked as public or belong to a public category – without participants or other personal data. It can be opened without a login as a web page and subscribed to as a calendar (webcal).",
+        "enabled": "Enable public calendar",
+        "calendarTitle": "Title of the public calendar",
+        "requireKey": "Only reachable through a secret link",
+        "requireKeyHelp": "The calendar can then only be opened with the link and cannot be found by everyone. A new link invalidates all links shared so far.",
+        "save": "Save",
+        "regenerate": "Create new link",
+        "confirmRegenerate": "Create a new link? All links and calendar subscriptions shared so far will stop working.",
+        "openPage": "Open public calendar",
+        "pageUrl": "Link to the web page",
+        "feedUrl": "Calendar subscription (all public events)",
+        "categoryFeedUrl": "Calendar subscription for “{{name}}” only",
+        "saved": "Settings saved.",
+        "saveFailed": "Settings could not be saved.",
+        "loadFailed": "Settings could not be loaded."
+      }
+    },
+    "publicCalendar": {
+      "defaultTitle": "Club calendar",
+      "subscribe": "Subscribe in calendar app",
+      "google": "Add to Google Calendar",
+      "close": "Close",
+      "notAvailable": "This calendar is not available."
     }
   }
 }

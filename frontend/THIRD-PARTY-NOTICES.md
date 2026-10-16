@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-10-11
+Generated automatically on 2026-10-16
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -126,6 +126,12 @@ Generated automatically on 2026-10-11
 | @floating-ui/core@1.8.0 | - | MIT |
 | @floating-ui/dom@1.8.0 | - | MIT |
 | @floating-ui/utils@0.2.12 | - | MIT |
+| @fullcalendar/core@6.1.21 | - | MIT |
+| @fullcalendar/daygrid@6.1.21 | - | MIT |
+| @fullcalendar/interaction@6.1.21 | - | MIT |
+| @fullcalendar/list@6.1.21 | - | MIT |
+| @fullcalendar/react@6.1.21 | - | MIT |
+| @fullcalendar/timegrid@6.1.21 | - | MIT |
 | @humanfs/core@0.19.2 | - | Apache-2.0 |
 | @humanfs/node@0.16.8 | - | Apache-2.0 |
 | @humanfs/types@0.15.0 | - | Apache-2.0 |
@@ -162,7 +168,7 @@ Generated automatically on 2026-10-11
 | @napi-rs/canvas@0.1.100 | - | MIT |
 | @napi-rs/lzma-linux-x64-gnu@1.5.1 | - | MIT |
 | @pkgr/core@0.3.6 | - | MIT |
-| @playwright/test@1.63.0 | - | Apache-2.0 |
+| @playwright/test@1.64.0 | - | Apache-2.0 |
 | @popperjs/core@2.11.8 | - | MIT |
 | @quansync/fs@1.0.0 | - | MIT |
 | @rolldown/pluginutils@1.0.0-beta.27 | - | MIT |
@@ -234,16 +240,16 @@ Generated automatically on 2026-10-11
 | @types/resolve@1.20.2 | - | MIT |
 | @types/trusted-types@2.0.7 | - | MIT |
 | @types/use-sync-external-store@0.0.6 | - | MIT |
-| @typescript-eslint/eslint-plugin@8.71.1 | - | MIT |
-| @typescript-eslint/parser@8.71.1 | - | MIT |
-| @typescript-eslint/project-service@8.71.1 | - | MIT |
-| @typescript-eslint/scope-manager@8.71.1 | - | MIT |
-| @typescript-eslint/tsconfig-utils@8.71.1 | - | MIT |
-| @typescript-eslint/type-utils@8.71.1 | - | MIT |
-| @typescript-eslint/types@8.71.1 | - | MIT |
-| @typescript-eslint/typescript-estree@8.71.1 | - | MIT |
-| @typescript-eslint/utils@8.71.1 | - | MIT |
-| @typescript-eslint/visitor-keys@8.71.1 | - | MIT |
+| @typescript-eslint/eslint-plugin@8.71.2 | - | MIT |
+| @typescript-eslint/parser@8.71.2 | - | MIT |
+| @typescript-eslint/project-service@8.71.2 | - | MIT |
+| @typescript-eslint/scope-manager@8.71.2 | - | MIT |
+| @typescript-eslint/tsconfig-utils@8.71.2 | - | MIT |
+| @typescript-eslint/type-utils@8.71.2 | - | MIT |
+| @typescript-eslint/types@8.71.2 | - | MIT |
+| @typescript-eslint/typescript-estree@8.71.2 | - | MIT |
+| @typescript-eslint/utils@8.71.2 | - | MIT |
+| @typescript-eslint/visitor-keys@8.71.2 | - | MIT |
 | @vite-pwa/assets-generator@1.0.4 | - | MIT |
 | @vitejs/plugin-react@4.7.0 | - | MIT |
 | abort-controller@3.0.0 | - | MIT |
@@ -391,7 +397,7 @@ Generated automatically on 2026-10-11
 | html-parse-stringify@4.0.1 | - | MIT |
 | i18n-iso-countries@7.14.0 | - | MIT |
 | i18next-browser-languagedetector@8.2.1 | - | MIT |
-| i18next@26.4.2 | - | MIT |
+| i18next@26.4.4 | - | MIT |
 | ico-endec@0.1.6 | - | MPL-2.0 |
 | idb-keyval@6.3.0 | - | Apache-2.0 |
 | idb@7.1.1 | - | ISC |
@@ -489,13 +495,14 @@ Generated automatically on 2026-10-11
 | pdfjs-dist@4.10.38 | - | Apache-2.0 |
 | picocolors@1.1.1 | - | ISC |
 | picomatch@4.0.7 | - | MIT |
-| playwright-core@1.63.0 | - | Apache-2.0 |
-| playwright@1.63.0 | - | Apache-2.0 |
+| playwright-core@1.64.0 | - | Apache-2.0 |
+| playwright@1.64.0 | - | Apache-2.0 |
 | possible-typed-array-names@1.1.0 | - | MIT |
 | postcss@8.5.28 | - | MIT |
+| preact@10.12.1 | - | MIT |
 | prelude-ls@1.2.1 | - | MIT |
 | prettier-linter-helpers@1.0.1 | - | MIT |
-| prettier@3.9.9 | - | MIT |
+| prettier@3.9.10 | - | MIT |
 | pretty-bytes@5.6.0 | - | MIT |
 | pretty-bytes@6.1.1 | - | MIT |
 | prop-types@15.8.1 | - | MIT |
@@ -591,7 +598,7 @@ Generated automatically on 2026-10-11
 | typed-array-byte-length@1.0.3 | - | MIT |
 | typed-array-byte-offset@1.0.4 | - | MIT |
 | typed-array-length@1.0.8 | - | MIT |
-| typescript-eslint@8.71.1 | - | MIT |
+| typescript-eslint@8.71.2 | - | MIT |
 | typescript@5.9.3 | - | Apache-2.0 |
 | unbox-primitive@1.1.0 | - | MIT |
 | unconfig-core@7.5.0 | - | MIT |

@@ -16,6 +16,7 @@ import { api } from '../api';
 import MemberForm from '../components/dialogs/MemberForm';
 import { usePageConfig } from '../hooks/usePageConfig';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { PoweredBy } from '../components/PoweredBy';
 import {
   BulkMail,
   ContributionPlans,
@@ -175,6 +176,7 @@ export default function PublicEnrollmentPage() {
                 : t('pages.publicEnrollment.loadError')}
             </Typography>
           </Paper>
+          <PoweredBy sx={{ mt: 2 }} />
         </Container>
       </Box>
     );

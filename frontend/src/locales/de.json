@@ -78,9 +78,12 @@
       "title": {
         "edit": "Mitglied bearbeiten",
         "view": "Mitglied ansehen",
-        "new": "Neues Mitglied anlegen"
+        "new": "Neues Mitglied anlegen",
+        "public": "Bei Verein {{clubName}} beitreten",
+        "publicNoName": "Dem Verein beitreten"
       },
       "subtitle": "Geben Sie hier die Stammdaten des Vereinsmitglieds ein.",
+      "subtitlePublic": "Um dem Verein beizutreten, trage hier deine Daten ein.",
       "publicSuccess": {
         "title": "Bitte bestätige deine E-Mail-Adresse",
         "subtitle": "Wir haben dir einen Bestätigungslink per E-Mail geschickt. Deine Anmeldung wird erst nach der Bestätigung geprüft.",
@@ -237,6 +240,239 @@
       "cancel": "Abbrechen",
       "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
       "alreadyPaid": "Dieser Beleg wurde bereits als bezahlt markiert."
+    },
+    "calendarEventForm": {
+      "title": {
+        "new": "Neuer Termin",
+        "edit": "Termin bearbeiten"
+      },
+      "fields": {
+        "title": "Titel",
+        "allDay": "Ganztägig",
+        "start": "Beginn",
+        "end": "Ende",
+        "locationName": "Ort",
+        "locationAddress": "Adresse",
+        "locationUrl": "Link (z.B. Online-Meeting)",
+        "description": "Beschreibung",
+        "category": "Kategorie",
+        "visibility": "Sichtbarkeit",
+        "participants": "Teilnehmer",
+        "addParticipant": "Teilnehmer hinzufügen",
+        "recurrence": "Wiederholung",
+        "reminder": "Erinnerung",
+        "isPublic": "Im öffentlichen Kalender zeigen"
+      },
+      "noCategory": "Keine Kategorie",
+      "noUsers": "Keine weiteren Nutzer",
+      "removeParticipant": "Teilnehmer entfernen",
+      "openMap": "In Karte öffnen",
+      "roles": {
+        "EDITOR": "Mitbearbeiter",
+        "ATTENDEE": "Teilnehmer"
+      },
+      "visibility": {
+        "CLUB": "Ganzer Verein",
+        "PARTICIPANTS": "Nur Eingeladene",
+        "PRIVATE": "Privat"
+      },
+      "visibilityHelp": {
+        "CLUB": "Alle Nutzer sehen den Termin.",
+        "PARTICIPANTS": "Nur du, die Eingeladenen und Admins sehen den Termin.",
+        "PRIVATE": "Nur du siehst den Termin."
+      },
+      "createdBy": "Erstellt von {{name}}",
+      "lastModifiedBy": "zuletzt geändert von {{name}} am {{date}}",
+      "validation": {
+        "titleRequired": "Bitte einen Titel angeben.",
+        "titleTooLong": "Der Titel darf maximal 200 Zeichen lang sein.",
+        "endBeforeStart": "Das Ende muss nach dem Beginn liegen.",
+        "invalidUrl": "Bitte einen gültigen Link mit http:// oder https:// angeben."
+      },
+      "conflict": {
+        "message": "Der Termin wurde inzwischen von jemand anderem geändert. Lade ihn neu, um die aktuelle Version zu sehen – deine Änderungen gehen dabei verloren.",
+        "reload": "Neu laden"
+      },
+      "confirm": {
+        "deleteMessage": "Soll der Termin \"{{title}}\" wirklich gelöscht werden?",
+        "deleteButton": "Löschen",
+        "deleteOccurrenceMessage": "Soll nur der Termin \"{{title}}\" am {{date}} entfallen? Die übrigen Termine der Serie bleiben erhalten."
+      },
+      "snackbar": {
+        "created": "Termin angelegt.",
+        "updated": "Termin gespeichert.",
+        "deleted": "Termin gelöscht.",
+        "subscribed": "Termin abonniert.",
+        "unsubscribed": "Abonnement beendet.",
+        "occurrenceDeleted": "Termin aus der Serie entfernt."
+      },
+      "errors": {
+        "loadFailed": "Termin konnte nicht geladen werden.",
+        "saveFailed": "Termin konnte nicht gespeichert werden.",
+        "deleteFailed": "Termin konnte nicht gelöscht werden.",
+        "rsvpFailed": "Antwort konnte nicht gespeichert werden.",
+        "subscriptionFailed": "Abonnement konnte nicht geändert werden."
+      },
+      "buttons": {
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "close": "Schließen",
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "deleteSeries": "Serie löschen",
+        "deleteOccurrence": "Nur diesen Termin löschen"
+      },
+      "rsvp": {
+        "question": "Nimmst du teil?",
+        "ACCEPTED": "Zusage",
+        "TENTATIVE": "Vielleicht",
+        "DECLINED": "Absage",
+        "PENDING": "Noch keine Antwort",
+        "summary": "Zusagen: {{accepted}} · Vielleicht: {{tentative}} · Absagen: {{declined}} · Offen: {{pending}}"
+      },
+      "subscription": {
+        "label": "Abonnement",
+        "subscribe": "Abonnieren – bei Änderungen benachrichtigt werden",
+        "unsubscribe": "Abonniert – klicken, um keine Benachrichtigungen mehr zu erhalten"
+      },
+      "reminders": {
+        "none": "Keine Erinnerung",
+        "0": "Zu Beginn des Termins",
+        "15": "15 Minuten vorher",
+        "60": "1 Stunde vorher",
+        "180": "3 Stunden vorher",
+        "1440": "1 Tag vorher",
+        "2880": "2 Tage vorher",
+        "10080": "1 Woche vorher",
+        "custom": "{{minutes}} Minuten vorher"
+      },
+      "exceptionsCount_one": "{{count}} Termin entfällt",
+      "exceptionsCount_other": "{{count}} Termine entfallen",
+      "publicHelp": "Der Termin erscheint ohne Teilnehmer im öffentlichen Kalender des Vereins.",
+      "publicByCategory": "Die gewählte Kategorie ist bereits öffentlich – der Termin erscheint auf jeden Fall im öffentlichen Kalender.",
+      "publicChip": "Öffentlich"
+    },
+    "notificationBell": {
+      "markAllRead": "Alle gelesen",
+      "delete": "Löschen",
+      "deleteRead": "Gelesene löschen",
+      "invitation": "{{actor}} hat dich zu „{{title}}“ eingeladen.",
+      "changed": "{{actor}} hat „{{title}}“ geändert ({{fields}}).",
+      "deleted": "{{actor}} hat „{{title}}“ gelöscht.",
+      "rsvp": {
+        "ACCEPTED": "{{actor}} hat für „{{title}}“ zugesagt.",
+        "TENTATIVE": "{{actor}} hat für „{{title}}“ mit Vielleicht geantwortet.",
+        "DECLINED": "{{actor}} hat für „{{title}}“ abgesagt."
+      },
+      "fields": {
+        "title": "Titel",
+        "description": "Beschreibung",
+        "time": "Zeit",
+        "location": "Ort",
+        "visibility": "Sichtbarkeit",
+        "category": "Kategorie",
+        "recurrence": "Wiederholung"
+      },
+      "reminder": "Erinnerung: „{{title}}“ beginnt am {{date}}."
+    },
+    "recurrenceEditor": {
+      "frequency": "Wiederholung",
+      "interval": "Alle",
+      "weekdays": "Wochentage",
+      "ends": "Endet",
+      "untilDate": "Endet am",
+      "count": "Anzahl Termine",
+      "frequencies": {
+        "NONE": "Keine Wiederholung",
+        "DAILY": "Täglich",
+        "WEEKLY": "Wöchentlich",
+        "MONTHLY": "Monatlich",
+        "YEARLY": "Jährlich"
+      },
+      "units": {
+        "DAILY_one": "Tag",
+        "DAILY_other": "Tage",
+        "WEEKLY_one": "Woche",
+        "WEEKLY_other": "Wochen",
+        "MONTHLY_one": "Monat",
+        "MONTHLY_other": "Monate",
+        "YEARLY_one": "Jahr",
+        "YEARLY_other": "Jahre",
+        "NONE_one": "",
+        "NONE_other": ""
+      },
+      "endOptions": {
+        "NEVER": "Nie",
+        "UNTIL": "An einem Datum",
+        "COUNT": "Nach Anzahl Terminen"
+      },
+      "weekdaysShort": {
+        "MO": "Mo",
+        "TU": "Di",
+        "WE": "Mi",
+        "TH": "Do",
+        "FR": "Fr",
+        "SA": "Sa",
+        "SU": "So"
+      },
+      "describe": {
+        "every": {
+          "DAILY": "Jeden Tag",
+          "WEEKLY": "Jede Woche",
+          "MONTHLY": "Jeden Monat",
+          "YEARLY": "Jedes Jahr"
+        },
+        "everyN": "Alle {{count}} {{unit}}",
+        "onDays": "am {{days}}",
+        "count_one": "{{count}} Termin",
+        "count_other": "{{count}} Termine",
+        "until": "bis {{date}}"
+      }
+    },
+    "copyField": {
+      "copy": "Kopieren",
+      "copied": "In die Zwischenablage kopiert.",
+      "copyFailed": "Kopieren fehlgeschlagen."
+    },
+    "calendarFeedDialog": {
+      "title": "Kalender abonnieren",
+      "personal": {
+        "title": "Mein persönlicher Kalender",
+        "description": "Binde alle Termine, die du hier siehst – auch deine privaten – per Abo-Link in Apple Kalender, Google Kalender, Outlook oder Thunderbird ein. Änderungen kommen automatisch an.",
+        "active": "Ein Abo-Link ist aktiv (erstellt am {{date}}).",
+        "lastUsed": "Zuletzt abgerufen am {{date}}.",
+        "secret": "Dieser Link wird nur jetzt angezeigt. Wer ihn kennt, sieht deine Termine – gib ihn nicht weiter. Du kannst ihn jederzeit widerrufen.",
+        "url": "Abo-Link"
+      },
+      "howTo": {
+        "apple": "Apple Kalender: „Kalender-App öffnen“ antippen oder Ablage → Neues Kalenderabonnement und den Link einfügen.",
+        "google": "Google Kalender: „Zu Google Kalender hinzufügen“ oder Weitere Kalender → Per URL und den Link einfügen.",
+        "outlook": "Outlook: Kalender hinzufügen → Aus dem Internet abonnieren und den Link einfügen."
+      },
+      "public": {
+        "title": "Öffentlicher Vereinskalender",
+        "description": "Diesen Kalender können auch Mitglieder ohne Login ansehen und abonnieren.",
+        "openPage": "Öffnen",
+        "pageUrl": "Link zur Webseite",
+        "feedUrl": "Kalender-Abo"
+      },
+      "confirm": {
+        "regenerate": "Soll ein neuer Abo-Link erzeugt werden? Der bisherige Link funktioniert dann nicht mehr und muss in deinen Kalender-Apps ersetzt werden.",
+        "revoke": "Soll der Abo-Link widerrufen werden? Deine Kalender-Apps erhalten dann keine Termine mehr."
+      },
+      "buttons": {
+        "create": "Abo-Link erstellen",
+        "regenerate": "Neuen Abo-Link erzeugen",
+        "revoke": "Widerrufen",
+        "openInApp": "In Kalender-App öffnen",
+        "google": "Zu Google Kalender hinzufügen",
+        "close": "Schließen"
+      },
+      "errors": {
+        "loadFailed": "Status konnte nicht geladen werden.",
+        "createFailed": "Abo-Link konnte nicht erstellt werden.",
+        "revokeFailed": "Abo-Link konnte nicht widerrufen werden."
+      }
     }
   },
   "pages": {
@@ -944,7 +1180,8 @@
         "creditorConfig": "Bankverbindung konfigurieren",
         "generalConfig": "Webseiteneinstellungen",
         "profileSettings": "Profileinstellungen",
-        "receiptCategoryConfig": "Belegkategorien verwalten"
+        "receiptCategoryConfig": "Belegkategorien verwalten",
+        "calendarCategoryConfig": "Kalenderkategorien verwalten"
       },
       "pageNames": {
         "members": "Mitgliederverwaltung",
@@ -960,7 +1197,9 @@
         "receipts": "Belege",
         "receiptsShort": "Belege",
         "receiptAnalytics": "Belegauswertung",
-        "receiptAnalyticsShort": "Auswertung"
+        "receiptAnalyticsShort": "Auswertung",
+        "calendar": "Kalender",
+        "calendarShort": "Kalender"
       },
       "notifications": {
         "label": "Benachrichtigungen",
@@ -1134,7 +1373,10 @@
         "noSettingsAvailable": "Für Ihre Rolle sind aktuell keine Benachrichtigungseinstellungen verfügbar.",
         "saveSuccess": "Einstellung erfolgreich gespeichert.",
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-        "loadFailed": "Einstellungen konnten nicht geladen werden."
+        "loadFailed": "Einstellungen konnten nicht geladen werden.",
+        "calendarInviteEmail": "Bei Einladungen zu Kalenderterminen per E-Mail benachrichtigen",
+        "calendarChangeEmail": "Bei Änderungen abonnierter Kalendertermine per E-Mail benachrichtigen",
+        "calendarReminderEmail": "Erinnerungen an Kalendertermine per E-Mail erhalten"
       }
     },
     "receipts": {
@@ -1263,6 +1505,85 @@
         "nov": "Nov",
         "dec": "Dez"
       }
+    },
+    "calendar": {
+      "title": "Kalender",
+      "newEvent": "Neuer Termin",
+      "mineOnly": "Nur meine Termine",
+      "showPast": "Vergangene Termine anzeigen ({{count}})",
+      "hidePast": "Vergangene Termine ausblenden ({{count}})",
+      "loadFailed": "Termine konnten nicht geladen werden.",
+      "moved": "Termin verschoben.",
+      "moveFailed": "Termin konnte nicht verschoben werden.",
+      "moveConflict": "Der Termin wurde inzwischen von jemand anderem geändert. Bitte erneut versuchen.",
+      "subscribe": "Kalender abonnieren",
+      "publicEvent": "Öffentlicher Termin"
+    },
+    "calendarCategoryConfig": {
+      "title": "Kalenderkategorien",
+      "newButton": "Neue Kategorie",
+      "table": {
+        "name": "Name",
+        "actions": "Aktionen",
+        "public": "Öffentlich"
+      },
+      "tooltip": {
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      },
+      "confirm": {
+        "deleteMessage": "Soll die Kategorie \"{{name}}\" wirklich gelöscht werden? Termine dieser Kategorie bleiben erhalten.",
+        "deleteButton": "Löschen"
+      },
+      "dialog": {
+        "titleCreate": "Neue Kalenderkategorie",
+        "titleEdit": "Kalenderkategorie bearbeiten",
+        "nameLabel": "Name",
+        "colorLabel": "Farbe",
+        "preview": "Vorschau",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "isPublic": "Kategorie öffentlich",
+        "isPublicHelp": "Alle Vereinstermine dieser Kategorie erscheinen im öffentlichen Kalender (z.B. „Öffentliche Veranstaltungen“)."
+      },
+      "validation": {
+        "nameEmpty": "Bitte einen Namen angeben.",
+        "nameTooLong": "Der Name darf maximal 50 Zeichen lang sein."
+      },
+      "snackbar": {
+        "saveSuccess": "Kategorie gespeichert.",
+        "deleteSuccess": "Kategorie gelöscht."
+      },
+      "apiError": {
+        "exists": "Eine Kategorie mit diesem Namen existiert bereits.",
+        "saveFailed": "Kategorie konnte nicht gespeichert werden.",
+        "deleteFailed": "Kategorie konnte nicht gelöscht werden."
+      },
+      "publicCalendar": {
+        "title": "Öffentlicher Kalender",
+        "description": "Der öffentliche Kalender zeigt Vereinstermine, die als öffentlich markiert sind oder zu einer öffentlichen Kategorie gehören – ohne Teilnehmer oder andere persönliche Daten. Er ist ohne Login als Webseite und als Kalender-Abo (webcal) erreichbar.",
+        "enabled": "Öffentlichen Kalender aktivieren",
+        "calendarTitle": "Titel des öffentlichen Kalenders",
+        "requireKey": "Nur über geheimen Link erreichbar",
+        "requireKeyHelp": "Der Kalender ist dann nur mit dem Link erreichbar und nicht für jeden auffindbar. Ein neuer Link macht alle bisher geteilten Links ungültig.",
+        "save": "Speichern",
+        "regenerate": "Neuen Link erzeugen",
+        "confirmRegenerate": "Soll ein neuer Link erzeugt werden? Alle bisher geteilten Links und Kalender-Abos funktionieren dann nicht mehr.",
+        "openPage": "Öffentlichen Kalender öffnen",
+        "pageUrl": "Link zur Webseite",
+        "feedUrl": "Kalender-Abo (alle öffentlichen Termine)",
+        "categoryFeedUrl": "Kalender-Abo nur „{{name}}“",
+        "saved": "Einstellungen gespeichert.",
+        "saveFailed": "Einstellungen konnten nicht gespeichert werden.",
+        "loadFailed": "Einstellungen konnten nicht geladen werden."
+      }
+    },
+    "publicCalendar": {
+      "defaultTitle": "Vereinskalender",
+      "subscribe": "In Kalender-App abonnieren",
+      "google": "Zu Google Kalender hinzufügen",
+      "close": "Schließen",
+      "notAvailable": "Dieser Kalender ist nicht verfügbar."
     }
   }
 }

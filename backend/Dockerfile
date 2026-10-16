@@ -13,7 +13,6 @@ RUN dotnet publish -c Release -o /app/out
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
-COPY --from=build /app/out .
 
 ENV DEBIAN_FRONTEND=noninteractive
 # postgresql-client-17 (matching the postgres:17-alpine server) isn't in Ubuntu's own repos yet,
@@ -32,7 +31,8 @@ RUN apt-get update -o Acquire::Retries=3 \
     && apt-get install -y -o Acquire::Retries=3 --no-install-recommends postgresql-client-17 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN chown -R app:app /app
+RUN chown app:app /app
+COPY --from=build --chown=app:app /app/out .
 USER app
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \

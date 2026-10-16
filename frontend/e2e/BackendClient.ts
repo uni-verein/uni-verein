@@ -1,6 +1,9 @@
 import { request } from '@playwright/test';
 import {
   BulkMail,
+  CalendarEvent,
+  CalendarEventPayload,
+  CalendarEventVisibility,
   Gender,
   Interval,
   Link,
@@ -647,6 +650,56 @@ export class BackendClient {
 
   async setSelfEnrollmentNotificationSetting(token: string, enabled: boolean): Promise<void> {
     await this.setUserSetting(token, 'SELF_ENROLLMENT_NOTIFICATION', enabled);
+  }
+
+  // ---------------------------------------------------------------
+  // Calendar
+  // ---------------------------------------------------------------
+
+  async createCalendarEvent(
+    token: string,
+    payload: Partial<CalendarEventPayload> & { title: string; start: string; end: string },
+  ): Promise<CalendarEvent> {
+    const ctx = await this.userCtx(token);
+    const res = await ctx.post('/api/calendar/events', {
+      data: {
+        description: '',
+        allDay: false,
+        locationName: '',
+        locationAddress: '',
+        locationUrl: '',
+        visibility: CalendarEventVisibility.CLUB,
+        categoryId: null,
+        isPublic: false,
+        recurrenceRule: null,
+        reminderMinutesBefore: null,
+        participants: [],
+        ...payload,
+      },
+    });
+    if (!res.ok()) {
+      throw new Error(`Calendar event creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  async deleteCalendarEvent(token: string, eventId: string): Promise<void> {
+    const ctx = await this.userCtx(token);
+    await ctx.delete(`/api/calendar/events/${eventId}`);
+    await ctx.dispose();
+  }
+
+  async setPublicCalendar(enabled: boolean, title = 'Vereinskalender'): Promise<void> {
+    const ctx = await this.ctx();
+    const res = await ctx.put('/api/calendar/settings', {
+      data: { publicCalendarEnabled: enabled, publicCalendarTitle: title, requireKey: false },
+    });
+    if (!res.ok()) {
+      throw new Error(`Updating calendar settings failed: ${res.status()} ${await res.text()}`);
+    }
+    await ctx.dispose();
   }
 
   async payReceipt(token: string, receiptId: string, paymentMethod?: string): Promise<void> {

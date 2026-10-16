@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import { usePageConfig } from '../hooks/usePageConfig';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { PoweredBy } from '../components/PoweredBy';
 
 type ConfirmState = 'loading' | 'success' | 'error';
 
@@ -142,6 +143,7 @@ export default function ConfirmEnrollmentPage() {
             </>
           )}
         </Paper>
+        <PoweredBy sx={{ mt: 2 }} />
       </Container>
     </Box>
   );

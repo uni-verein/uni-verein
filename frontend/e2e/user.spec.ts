@@ -97,8 +97,8 @@ test.describe('User management page', () => {
     await expect(page.getByRole('textbox', { name: 'E-Mail' })).toBeVisible();
     await page.getByRole('textbox', { name: 'E-Mail' }).fill(`test@mail.com`);
 
-    await expect(page.getByText('User', { exact: true })).toBeVisible();
-    await page.getByText('User', { exact: true }).click();
+    await expect(page.getByLabel('Neuer Nutzer').getByText('User', { exact: true })).toBeVisible();
+    await page.getByLabel('Neuer Nutzer').getByText('User', { exact: true }).click();
     await expect(page.getByRole('option', { name: 'User' })).toBeVisible();
     await expect(page.getByRole('option', { name: 'Admin' })).toBeVisible();
     await expect(page.getByRole('option', { name: 'Finanzverwalter' })).toBeVisible();
@@ -113,7 +113,11 @@ test.describe('User management page', () => {
     ).toBeVisible();
     await expect(page.getByRole('cell', { name: 'playwright_user', exact: true })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'test@mail.com', exact: true })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'User', exact: true })).toBeVisible();
+    await expect(
+      page
+        .getByRole('row', { name: 'playwright_user test@mail.com User' })
+        .getByRole('cell', { name: 'User', exact: true }),
+    ).toBeVisible();
     await expect(
       page
         .getByRole('row', { name: 'playwright_user test@mail.com User' })
@@ -151,7 +155,7 @@ test.describe('User management page', () => {
     await page.getByRole('textbox', { name: 'E-Mail' }).fill(`admin@test.com`);
     await page.getByRole('textbox', { name: 'Passwort' }).fill(`playwright_admin`);
     await expect(page.getByText('Passwort muss mindestens 11')).not.toBeVisible();
-    await page.getByText('User', { exact: true }).click();
+    await page.getByLabel('Neuer Nutzer').getByText('User', { exact: true }).click();
     await page.getByRole('option', { name: 'Admin' }).click();
     await page.getByRole('button', { name: 'Speichern' }).click();
 
@@ -245,6 +249,55 @@ test.describe('User management page', () => {
       .click();
     await expect(page.getByRole('heading', { name: 'Bestätigung' })).toBeVisible();
     await page.getByRole('button', { name: 'Löschen' }).click();
+  });
+
+  test('admin edits own username, email and password but not the role', async ({ page }) => {
+    const { user, token } = tc.get();
+    const newUsername = `${user.username}_renamed`;
+    const newPassword = 'NewTest123456!';
+
+    await openDashboard(page, token);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Nutzerverwaltung', exact: true }).click();
+    await page
+      .getByRole('row', { name: `${user.username} Admin` })
+      .getByLabel('Bearbeiten')
+      .click();
+
+    await expect(page.getByLabel('Nutzer bearbeiten').getByRole('combobox')).toBeDisabled();
+
+    await page.getByRole('textbox', { name: 'Username' }).fill(newUsername);
+    await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin-self-edit@example.com');
+    await page
+      .getByRole('textbox', { name: 'Passwort (leer lassen zum Behalten)' })
+      .fill(newPassword);
+    await page.getByLabel('Aktuelles Passwort').fill(user.password);
+    await page.getByRole('button', { name: 'Speichern' }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Nutzeränderungen erfolgreich gespeichert.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('row', { name: `${newUsername} Admin` })).toBeVisible();
+
+    expect(await backend.loginUser(newUsername, newPassword)).toBeTruthy();
+  });
+
+  test('admin cannot change own role through the API', async ({ page }) => {
+    const { user, token } = tc.get();
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const changeRole = await page.request.patch(`${APP_BASE}/api/users/${user.id}`, {
+      headers,
+      data: { role: Role.USER },
+    });
+    expect(changeRole.status()).toBe(403);
+
+    const keepRole = await page.request.patch(`${APP_BASE}/api/users/${user.id}`, {
+      headers,
+      data: { role: Role.ADMIN, email: 'admin-same-role@example.com' },
+    });
+    expect(keepRole.status()).toBe(200);
+    expect((await keepRole.json()).role).toBe(Role.ADMIN);
   });
 });
 

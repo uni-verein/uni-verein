@@ -77,6 +77,14 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
         AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         db.AuditLogs.RemoveRange(db.AuditLogs.IgnoreQueryFilters());
+        db.Notifications.RemoveRange(db.Notifications.IgnoreQueryFilters());
+        db.CalendarReminderLogs.RemoveRange(db.CalendarReminderLogs.IgnoreQueryFilters());
+        db.CalendarFeedTokens.RemoveRange(db.CalendarFeedTokens.IgnoreQueryFilters());
+        db.CalendarSettings.RemoveRange(db.CalendarSettings.IgnoreQueryFilters());
+        db.CalendarEventSubscriptions.RemoveRange(db.CalendarEventSubscriptions.IgnoreQueryFilters());
+        db.CalendarEventParticipants.RemoveRange(db.CalendarEventParticipants.IgnoreQueryFilters());
+        db.CalendarEvents.RemoveRange(db.CalendarEvents.IgnoreQueryFilters());
+        db.CalendarCategories.RemoveRange(db.CalendarCategories.IgnoreQueryFilters());
         db.Contributions.RemoveRange(db.Contributions.IgnoreQueryFilters());
         db.ContributionPlans.RemoveRange(db.ContributionPlans.IgnoreQueryFilters());
         db.CreditorConfigs.RemoveRange(db.CreditorConfigs.IgnoreQueryFilters());

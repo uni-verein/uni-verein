@@ -179,7 +179,7 @@ public class UsersController : ControllerBase
             user.PasswordHash = CryptoService.HashPassword(request.Password);
         }
 
-        if (request.Role != null)
+        if (request.Role != null && request.Role != user.Role)
         {
             if (user.Role == UserRole.ADMIN && IsCurrentUser(id))
                 return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
