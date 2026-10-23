@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Serilog;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Entities;
 
@@ -12,8 +11,9 @@ public static class MemberAuditDelta
         List<MemberAuditDeltaEntry> delta = new List<MemberAuditDeltaEntry>();
 
         Check(delta, nameof(after.Gender), before.Gender.ToString(), after.Gender.ToString());
-        Log.Error($"MemberCategory: Before: {before.MemberCategory?.Name}  After: {after.MemberCategory?.Name}");
         Check(delta, nameof(after.MemberCategory), before.MemberCategory?.Name, after.MemberCategory?.Name);
+        Check(delta, nameof(after.MembershipStatus), before.MembershipStatus.ToString(),
+            after.MembershipStatus.ToString());
         Check(delta, nameof(after.TaskWithinTheClub), before.TaskWithinTheClub.ToString(),
             after.TaskWithinTheClub.ToString());
         Check(delta, nameof(after.AcademicDegree), before.AcademicDegree?.ToString(), after.AcademicDegree?.ToString());

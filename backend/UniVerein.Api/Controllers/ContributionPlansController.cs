@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,11 +26,13 @@ public class ContributionPlansController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly ReferenceDataService _referenceDataService;
+    private readonly AuditService _auditService;
 
-    public ContributionPlansController(AppDbContext db, ReferenceDataService referenceDataService)
+    public ContributionPlansController(AppDbContext db, ReferenceDataService referenceDataService, AuditService auditService)
     {
         _db = db;
         _referenceDataService = referenceDataService;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -84,6 +86,7 @@ public class ContributionPlansController : ControllerBase
 
         await _db.ContributionPlans.AddAsync(contributionPlan);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.CREATE, nameof(ContributionPlanEntity), PlanAuditData(contributionPlan));
 
         Log.Information(
             $"ContributionPlansController: CreateAsync -> ContributionPlan({request.Name}) successfully created.");
@@ -152,6 +155,7 @@ public class ContributionPlansController : ControllerBase
 
         _db.ContributionPlans.Update(contributionPlan);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(ContributionPlanEntity), PlanAuditData(contributionPlan));
 
         Log.Information(
             $"ContributionPlansController: UpdateAsync -> ContributionPlan with ID: {id} successfully updated.");
@@ -180,6 +184,10 @@ public class ContributionPlansController : ControllerBase
 
         _db.Remove(contributionPlan);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.SOFT_DELETE, nameof(ContributionPlanEntity), PlanAuditData(contributionPlan));
         return Ok();
     }
+
+    private static object PlanAuditData(ContributionPlanEntity plan) =>
+        new { ContributionPlanId = plan.Id, plan.Name, plan.Amount, plan.Interval };
 }

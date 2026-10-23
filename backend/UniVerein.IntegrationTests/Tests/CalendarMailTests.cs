@@ -66,9 +66,29 @@ public class CalendarMailTests : IntegrationTestBase
         _smtpServer = new SmtpServer.SmtpServer(options, serviceProvider);
         _cts = new CancellationTokenSource();
         Task startTask = _smtpServer.StartAsync(_cts.Token);
-        await Task.WhenAny(startTask, Task.Delay(500));
-        if (startTask.IsFaulted)
-            throw new Exception("SMTP-Server not started", startTask.Exception);
+        await WaitForSmtpPortAsync(startTask);
+    }
+
+    // A fixed delay is not enough on slow CI runners: a mail sent before the port is open is lost, there is no retry.
+    private static async Task WaitForSmtpPortAsync(Task startTask)
+    {
+        DateTimeOffset deadline = DateTimeOffset.UtcNow.AddSeconds(15);
+        while (true)
+        {
+            if (startTask.IsFaulted)
+                throw new Exception("SMTP-Server not started", startTask.Exception);
+
+            try
+            {
+                using System.Net.Sockets.TcpClient probe = new();
+                await probe.ConnectAsync("127.0.0.1", SmtpPort);
+                return;
+            }
+            catch (System.Net.Sockets.SocketException) when (DateTimeOffset.UtcNow < deadline)
+            {
+                await Task.Delay(50);
+            }
+        }
     }
 
     public override async Task DisposeAsync()

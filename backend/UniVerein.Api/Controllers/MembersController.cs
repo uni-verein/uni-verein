@@ -8,13 +8,14 @@ using UniVerein.Api.ApiResults;
 using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Models.MemberAudit;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
+using UniVerein.Api.Helper;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Mvc;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
-using F23.StringSimilarity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -48,13 +49,18 @@ public class MembersController : ControllerBase
         _isPrivileged = IbanMasking.IsPrivileged(http.HttpContext?.User);
     }
 
+    private bool IsAdmin()
+    {
+        return _http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value == nameof(UserRole.ADMIN);
+    }
+
     [HttpGet]
     public async Task<ActionResult<AllMemberResults>> GetAllAsync([FromQuery] MemberQuery memberQuery)
     {
         if (memberQuery.Offset < 0 || memberQuery.Limit < 1)
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Offset and/or Limit must be greater than or equal to 1."));
 
-        bool isAdmin = _http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value == nameof(UserRole.ADMIN);
+        bool isAdmin = IsAdmin();
         IQueryable<MemberEntity> query = _db.Members.Include(x => x.MemberCategory).AsQueryable();
         if (!isAdmin)
             query = query.Where(m => m.DeletedAt == null);
@@ -62,11 +68,14 @@ public class MembersController : ControllerBase
         if (isAdmin && memberQuery.Deleted == true)
             query = query.Where(m => m.DeletedAt != null);
 
-        if (memberQuery.MemberCategoryId != null)
+        if (memberQuery.MemberCategoryId != null && memberQuery.MemberCategoryId != Guid.Parse(Program.MemberCategoriesAll))
             query = query.Where(m => m.MemberCategoryId == memberQuery.MemberCategoryId);
 
         if (memberQuery.TaskWithinTheClub != null)
             query = query.Where(m => m.TaskWithinTheClub == memberQuery.TaskWithinTheClub);
+
+        if (memberQuery.MembershipStatus != null)
+            query = query.Where(m => m.MembershipStatus == memberQuery.MembershipStatus);
 
         IQueryable<MemberResult> memberResultQuery = query.Select(m => new MemberResult()
         {
@@ -89,6 +98,7 @@ public class MembersController : ControllerBase
             AcademicDegree = m.AcademicDegree,
             CourseOfStudy = m.CourseOfStudy,
             TaskWithinTheClub = m.TaskWithinTheClub,
+            MembershipStatus = m.MembershipStatus,
             MemberCategoryId = m.MemberCategoryId,
             IBAN = _crypto.Decrypt(m.IBAN_Encrypted) ?? string.Empty,
             Bic = _crypto.Decrypt(m.Bic_Encrypted) ?? string.Empty,
@@ -104,15 +114,15 @@ public class MembersController : ControllerBase
         if (!string.IsNullOrEmpty(memberQuery.Name))
         {
             memberResults = await memberResultQuery.ToListAsync();
-            JaroWinkler jaroWinkler = new();
             memberResults = memberResults.Select(x => new
             {
                 member = x,
-                similarity = jaroWinkler.Similarity($"{x.FirstName} {x.MiddleName} {x.LastName}".ToLower(),
-                        memberQuery.Name.ToLower())
+                score = NameSearchHelper.Score(memberQuery.Name,
+                    $"{x.FirstName} {x.MiddleName} {x.LastName}", x.FirstName, x.MiddleName, x.LastName)
             })
-                .OrderBy(x => x.similarity)
-                .Where(x => x.similarity > 0.75)
+                .Where(x => NameSearchHelper.IsMatch(x.score))
+                .OrderByDescending(x => x.score)
+                .ThenBy(x => x.member.MemberNumber)
                 .Select(x => x.member)
                 .ToList();
             total = memberResults.Count;
@@ -142,7 +152,7 @@ public class MembersController : ControllerBase
     {
         IQueryable<MemberEntity> query = _db.Members.AsQueryable().Where(m => m.DeletedAt == null);
 
-        if (memberCategoryId != null)
+        if (memberCategoryId != null && memberCategoryId != Guid.Parse(Program.MemberCategoriesAll))
             query = query.Where(m => m.MemberCategoryId == memberCategoryId);
 
         MemberCountResult result = new()
@@ -156,8 +166,7 @@ public class MembersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<MemberResult>> CreateAsync([FromBody] MemberRequest request)
     {
-        Log.Information(
-            $"MembersController: CreateAsync -> Try to create member: {request.FirstName} {request.LastName}");
+        Log.Information("MembersController: CreateAsync -> Try to create a member by {ActorId}.", HttpContext.GetActorId());
 
         MemberCreationResult result = await _memberService.CreateMemberAsync(new MemberCreationInput
         {
@@ -178,6 +187,7 @@ public class MembersController : ControllerBase
             AcademicDegree = request.AcademicDegree,
             CourseOfStudy = request.CourseOfStudy,
             TaskWithinTheClub = request.TaskWithinTheClub,
+            MembershipStatus = request.MembershipStatus,
             MemberCategoryId = request.MemberCategoryId,
             IBAN = request.IBAN,
             Bic = request.Bic,
@@ -231,6 +241,7 @@ public class MembersController : ControllerBase
             AcademicDegree = member.AcademicDegree,
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
+            MembershipStatus = member.MembershipStatus,
             MemberCategoryId = member.MemberCategoryId,
             IBAN = IbanMasking.MaskUnlessPrivileged(request.IBAN, _isPrivileged),
             Bic = request.Bic,
@@ -240,8 +251,8 @@ public class MembersController : ControllerBase
             ContributionPlanId = member.ContributionPlanId
         };
 
-        Log.Information(
-            $"MembersController: CreateAsync -> Member: {request.FirstName} {request.LastName} successfully created.");
+        Log.Information("MembersController: CreateAsync -> Member {MemberId} (number {MemberNumber}) created by {ActorId}.",
+            member.Id, member.MemberNumber, HttpContext.GetActorId());
         return Created(string.Empty, memberResult);
     }
 
@@ -252,7 +263,7 @@ public class MembersController : ControllerBase
         Log.Information($"MembersController: UpdateAsync -> Try to update member with ID: {id}");
 
         MemberEntity? member = await _db.Members.FindAsync(id);
-        if (member == null)
+        if (member == null || (member.DeletedAt != null && !IsAdmin()))
         {
             Log.Warning($"MembersController: UpdateAsync -> Member with ID: {id} not found");
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
@@ -324,6 +335,7 @@ public class MembersController : ControllerBase
             AcademicDegree = member.AcademicDegree,
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
+            MembershipStatus = member.MembershipStatus,
             MemberCategoryId = member.MemberCategoryId,
             IBAN_Encrypted = member.IBAN_Encrypted,
             Bic_Encrypted = member.Bic_Encrypted,
@@ -376,6 +388,8 @@ public class MembersController : ControllerBase
             member.CourseOfStudy = request.CourseOfStudy;
         if (request.TaskWithinTheClub != null)
             member.TaskWithinTheClub = (TaskWithinTheClub)request.TaskWithinTheClub;
+        if (request.MembershipStatus != null)
+            member.MembershipStatus = (MembershipStatus)request.MembershipStatus;
         if (request.MemberCategoryId != null)
         {
             member.MemberCategoryId = request.MemberCategoryId;
@@ -434,6 +448,7 @@ public class MembersController : ControllerBase
             AcademicDegree = member.AcademicDegree,
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
+            MembershipStatus = member.MembershipStatus,
             MemberCategoryId = member.MemberCategoryId,
             IBAN = IbanMasking.MaskUnlessPrivileged(request.IBAN ?? _crypto.Decrypt(member.IBAN_Encrypted), _isPrivileged),
             Bic = request.Bic ?? _crypto.Decrypt(member.Bic_Encrypted) ?? string.Empty,
@@ -443,7 +458,8 @@ public class MembersController : ControllerBase
             ContributionPlanId = member.ContributionPlanId
         };
 
-        Log.Information($"MembersController: UpdateAsync -> Member with ID: {member.Id} successfully updated.");
+        Log.Information("MembersController: UpdateAsync -> Member {MemberId} updated by {ActorId}, {ChangedFieldCount} fields changed.",
+            member.Id, HttpContext.GetActorId(), delta.Count);
         return Ok(memberResult);
     }
 
@@ -468,21 +484,21 @@ public class MembersController : ControllerBase
         await _auditService.LogAsync(AuditLogActions.RESTORE, nameof(MemberEntity),
             new { MemberId = id, member.MemberNumber });
 
-        Log.Information($"MembersController: RestoreAsync -> Member with ID: {id} successfully restored.");
+        Log.Information("MembersController: RestoreAsync -> Member {MemberId} restored by {ActorId}.", id, HttpContext.GetActorId());
         return Ok();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
     {
+        bool isAdmin = IsAdmin();
         MemberEntity? member = await _db.Members.FindAsync(id);
-        if (member == null)
+        if (member == null || (member.DeletedAt != null && !isAdmin))
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
                 errorMessage: "Member with ID not found.",
                 moreInfo: $"No member with the ID {id} could be found."));
 
         _db.Remove(member);
-        bool isAdmin = _http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value == nameof(UserRole.ADMIN);
         if (isAdmin)
         {
             await _db.ForceSaveChangesAsync();
@@ -496,6 +512,8 @@ public class MembersController : ControllerBase
                 new { MemberId = id, member.MemberNumber });
         }
 
+        Log.Information("MembersController: DeleteAsync -> Member {MemberId} {DeleteType} by {ActorId}.",
+            id, isAdmin ? "permanently deleted" : "soft-deleted", HttpContext.GetActorId());
         return Ok();
     }
 }

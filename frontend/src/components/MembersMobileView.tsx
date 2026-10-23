@@ -4,7 +4,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
 import { useTranslation } from 'react-i18next';
-import { ContributionPlans, Member, MemberCategory, TaskWithinTheClub } from '../types';
+import {
+  ContributionPlans,
+  Member,
+  MemberCategory,
+  MembershipStatus,
+  TaskWithinTheClub,
+} from '../types';
 import { TASK_WITHIN_THE_CLUB_LABELS } from '../utils';
 import { MobileListCard } from './MobileListCard';
 import { UUIDTypes } from 'uuid';
@@ -93,6 +99,12 @@ export function MembersMobileView({
                 label: t('pages.members.table.colTask'),
                 value: t(
                   `components.taskWithinTheClubOptions.${getTaskLabel(m.taskWithinTheClub)}`,
+                ),
+              },
+              {
+                label: t('pages.members.table.colMembershipStatus'),
+                value: t(
+                  `components.membershipStatusOptions.${m.membershipStatus ?? MembershipStatus.MEMBER}`,
                 ),
               },
               { label: t('pages.members.table.colEmail'), value: m.email },

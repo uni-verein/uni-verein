@@ -8,5 +8,6 @@ public enum AuditLogActions
     [Display(Name = "CREATE")] CREATE,
     [Display(Name = "UPDATE")] UPDATE,
     [Display(Name = "DELETE")] DELETE,
-    [Display(Name = "SOFT_DELETE")] SOFT_DELETE
+    [Display(Name = "SOFT_DELETE")] SOFT_DELETE,
+    [Display(Name = "IMPORT")] IMPORT
 }

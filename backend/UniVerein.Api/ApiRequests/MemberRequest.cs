@@ -70,6 +70,9 @@ public class MemberRequest
     [JsonPropertyName("taskWithinTheClub")]
     public TaskWithinTheClub TaskWithinTheClub { get; set; }
 
+    [JsonPropertyName("membershipStatus")]
+    public MembershipStatus MembershipStatus { get; set; } = MembershipStatus.MEMBER;
+
     [Required]
     [JsonPropertyName("memberCategoryId")]
     public Guid MemberCategoryId { get; set; }

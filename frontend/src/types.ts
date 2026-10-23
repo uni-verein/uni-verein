@@ -102,6 +102,7 @@ export interface Member {
   academicDegree: AcademicDegree | null;
   courseOfStudy: string;
   taskWithinTheClub: TaskWithinTheClub;
+  membershipStatus?: MembershipStatus;
   memberCategoryId: UUIDTypes | null;
   iban: string;
   bic: string;
@@ -150,6 +151,7 @@ export interface PendingSelfEnrollmentDetail {
   memberCategoryName: string | null;
   iban: string;
   bic: string;
+  sepaConsent: string | null;
   contributionPlanId: UUIDTypes | null;
   submittedAt: string;
   submittedIp: string;
@@ -272,6 +274,11 @@ export enum TaskWithinTheClub {
   WEBSITE_MANAGER = 'WEBSITE_MANAGER',
   ALUMNI_OFFICER = 'ALUMNI_OFFICER',
   STUDENT_COUNCIL_REPRESENTATIVE = 'STUDENT_COUNCIL_REPRESENTATIVE',
+}
+
+export enum MembershipStatus {
+  MEMBER = 'MEMBER',
+  SUPPORTING_MEMBER = 'SUPPORTING_MEMBER',
 }
 
 export enum Gender {
@@ -485,6 +492,9 @@ export interface Contribution {
   amount: number;
   dueDate: Date;
   paid: boolean;
+  memberNumber: number;
+  membershipStatus: MembershipStatus;
+  deletedAt: Date | null;
 }
 
 export interface ContributionInfo {
@@ -494,7 +504,7 @@ export interface ContributionInfo {
 
 export interface AuditLog {
   timestamp: string;
-  userName: string;
+  userName: string | null;
   action: string;
   entity: string;
   data: string;

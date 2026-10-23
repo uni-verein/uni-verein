@@ -1,7 +1,10 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UniVerein.Api.Extensions;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Cors;
@@ -21,17 +24,20 @@ public class BackupController : ControllerBase
     private const long MaxRestoreSizeBytes = 10L * 1024 * 1024 * 1024;
 
     private readonly BackupService _backup;
+    private readonly AuditService _auditService;
 
-    public BackupController(BackupService backup)
+    public BackupController(BackupService backup, AuditService auditService)
     {
         _backup = backup;
+        _auditService = auditService;
     }
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     [HttpGet]
     public async Task<IActionResult> GetBackup([FromQuery] bool full = false)
     {
-        Log.Information($"BackupController: Start backup-creation (full={full})");
+        Log.Information("BackupController: GetBackup -> Start backup creation (full={Full}) by {ActorId}.", full, HttpContext.GetActorId());
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
         try
         {
@@ -47,7 +53,7 @@ public class BackupController : ControllerBase
                 Response.Headers.ContentDisposition = contentDisposition.ToString();
 
                 await _backup.WriteFullBackupZipAsync(Response.Body);
-                Log.Information($"BackupController: Full backup backup_full_{DateTime.Now:yyyyMMdd}.zip created");
+                Log.Information("BackupController: GetBackup -> Full backup created in {ElapsedMs} ms.", stopwatch.ElapsedMilliseconds);
                 return new EmptyResult();
             }
 
@@ -57,12 +63,13 @@ public class BackupController : ControllerBase
             Response.Headers.ContentDisposition = sqlContentDisposition.ToString();
 
             await _backup.WritePgDumpAsync(Response.Body);
-            Log.Information($"BackupController: Backup backup_{DateTime.Now:yyyyMMdd}.sql created");
+            Log.Information("BackupController: GetBackup -> SQL backup created in {ElapsedMs} ms.", stopwatch.ElapsedMilliseconds);
             return new EmptyResult();
         }
         catch (Exception ex)
         {
-            Log.Error($"BackupController: Error on backup: {ex.Message}", ex);
+            Log.Error("BackupController: GetBackup -> Backup failed after {ElapsedMs} ms, {ExceptionType}.",
+                stopwatch.ElapsedMilliseconds, ex.GetType().Name);
             throw;
         }
     }
@@ -73,24 +80,36 @@ public class BackupController : ControllerBase
     [RequestFormLimits(MultipartBodyLengthLimit = MaxRestoreSizeBytes)]
     public async Task<IActionResult> RestoreAsync(IFormFile file)
     {
-        Log.Information($"BackupController: Try to restore {file.FileName}");
+        Log.Information("BackupController: RestoreAsync -> Try to restore a backup of {SizeBytes} bytes by {ActorId}.",
+            file.Length, HttpContext.GetActorId());
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        bool isZip;
+        bool restored;
         try
         {
-            bool isZip = file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
+            isZip = file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
                 file.ContentType is "application/zip" or "application/x-zip-compressed";
 
-            bool restored = isZip
+            restored = isZip
                 ? await _backup.RestoreFullBackupAsync(file)
                 : await _backup.RestoreBackupAsync(file);
 
             if (restored)
-                Log.Information("BackupController: Restoring of backup completed");
+                Log.Information("BackupController: RestoreAsync -> Restore ({Type}) completed in {ElapsedMs} ms.",
+                    isZip ? "full" : "sql", stopwatch.ElapsedMilliseconds);
+            else
+                Log.Warning("BackupController: RestoreAsync -> Restore ({Type}) was not applied.", isZip ? "full" : "sql");
         }
         catch (Exception ex)
         {
-            Log.Error($"BackupController: Error on restore backup: {ex.Message}", ex);
+            Log.Error("BackupController: RestoreAsync -> Restore failed after {ElapsedMs} ms, {ExceptionType}.",
+                stopwatch.ElapsedMilliseconds, ex.GetType().Name);
             throw;
         }
+
+        if (restored)
+            await _auditService.LogAsync(AuditLogActions.RESTORE, "Backup",
+                new { Type = isZip ? "full" : "sql", file.FileName, SizeBytes = file.Length });
 
         return Ok();
     }

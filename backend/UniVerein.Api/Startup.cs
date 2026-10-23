@@ -1,14 +1,16 @@
 using System;
-using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using System.Threading.Tasks;
 using UniVerein.Api.Extensions;
+using UniVerein.Api.Security;
 using Microsoft.EntityFrameworkCore;
 using UniVerein.Api.Services;
 using UniVerein.Api.Services.Sepa;
 using UniVerein.DAL.Data;
+using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -39,6 +41,7 @@ namespace UniVerein.Api
         {
             services.AddSignalR();
             services.AddSingleton(TimeProvider.System);
+            services.AddSingleton<LoginAttemptTracker>();
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -112,6 +115,38 @@ namespace UniVerein.Api
                             }
 
                             return Task.CompletedTask;
+                        },
+                        OnTokenValidated = async context =>
+                        {
+                            string? userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                            string? roleClaim = context.Principal?.FindFirst(ClaimTypes.Role)?.Value;
+                            bool valid = false;
+                            if (Guid.TryParse(userIdClaim, out Guid userId) &&
+                                Enum.TryParse(roleClaim, out UserRole role) && Enum.IsDefined(role))
+                            {
+                                AppDbContext db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                                valid = await db.Users.AnyAsync(u => u.Id == userId && u.Role == role);
+                            }
+
+                            if (!valid)
+                            {
+                                Log.Warning("Startup: Rejected token of unknown, deleted or changed user {UserId} on {Method} {Path}.",
+                                    userId, context.Request.Method, RequestLogSanitizer.Redact(context.Request.Path));
+                                context.Fail("The user of this token does not exist or has another role.");
+                            }
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            Log.Warning("Startup: JWT authentication failed on {Method} {Path}, {ExceptionType}.",
+                                context.Request.Method, RequestLogSanitizer.Redact(context.Request.Path), context.Exception.GetType().Name);
+                            return Task.CompletedTask;
+                        },
+                        OnForbidden = context =>
+                        {
+                            Log.Warning("Startup: User {UserId} with role {Role} is not allowed to access {Method} {Path}.",
+                                context.HttpContext.GetActorId(), context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "none",
+                                context.Request.Method, RequestLogSanitizer.Redact(context.Request.Path));
+                            return Task.CompletedTask;
                         }
                     };
                 });
@@ -161,6 +196,12 @@ namespace UniVerein.Api
             services.AddRateLimiter(options =>
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.OnRejected = (context, _) =>
+                {
+                    Log.Warning("Startup: Rate limit exceeded on {Method} {Path}.",
+                        context.HttpContext.Request.Method, RequestLogSanitizer.Redact(context.HttpContext.Request.Path));
+                    return ValueTask.CompletedTask;
+                };
 
                 AddIpRateLimitPolicy(options, "self-enrollment", "RateLimiting:SelfEnrollment:PermitLimit", 5);
                 AddIpRateLimitPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
@@ -185,12 +226,12 @@ namespace UniVerein.Api
                 }
             });
 
-            app.UseExceptionHandler();
-            app.Use(async (ctx, next) =>
+            app.UseSerilogRequestLogging(options =>
             {
-                Log.Information($"REQUEST: {ctx.Request.Method} {ctx.Request.Path}");
-                await next();
+                options.GetLevel = RequestLogLevel.GetLevel;
+                options.GetMessageTemplateProperties = RequestLogSanitizer.GetMessageTemplateProperties;
             });
+            app.UseExceptionHandler();
 
             app.UseCors("AllowFrontend");
             app.UseRateLimiter();

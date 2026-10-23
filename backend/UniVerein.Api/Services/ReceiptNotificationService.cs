@@ -56,18 +56,19 @@ public class ReceiptNotificationService
             string? email = _crypto.Decrypt(recipient.Email);
             if (string.IsNullOrWhiteSpace(email))
             {
-                Log.Warning($"ReceiptNotificationService: User {recipient.Username} has no email, skipping.");
+                Log.Warning("ReceiptNotificationService: User {UserId} has no email, skipping.", recipient.Id);
                 continue;
             }
 
             try
             {
                 await _mailService.SendEmailsAsync([new Recipient { Email = email }], request, "123456789");
-                Log.Information($"ReceiptNotificationService: Notified {recipient.Username} about receipt {receipt.Id}.");
+                Log.Information("ReceiptNotificationService: Notified user {UserId} about receipt {ReceiptId}.", recipient.Id, receipt.Id);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"ReceiptNotificationService: Error while sending mail to {recipient.Username}");
+                Log.Error("ReceiptNotificationService: Error while sending mail to user {UserId}, {ExceptionType}.",
+                    recipient.Id, ex.GetType().Name);
             }
         }
     }

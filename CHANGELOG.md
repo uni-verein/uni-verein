@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.9.1] UV-8, UV-10, UV-55, UV-57, UV-61, UV-63
+
+### Added
+- UV-58: Membership fees page: new columns for member number and membership status, and a filter by membership status.
+- UV-57: Membership fees page: admins and financial managers can delete open fees (with confirmation), e.g. returned direct debits. Deleted fees are soft-deleted and logged; admins can show and restore them.
+- Audit log: user changes, creditor configuration, contribution plans, paid/open fees, SMTP/mail settings, backup restore and CSV member import are now logged. Passwords, IBAN/BIC and imported member data are not stored.
+
+### Fixed
+- Login lockout: the lockout is now counted per user name and client address instead of per account, so an attacker can no longer lock out a known user (e.g. `Admin`) permanently. IPv6 counts per /64 network, unknown user names are locked like known ones. The state is kept in memory and cleared by a backend restart.
+- UV-10: Audit log: entries of deleted users are shown as "Deleted user" instead of being hidden.
+- UV-61: Members page: switching the member category filter back to "Alle" shows all members again.
+- UV-63: Deleted members and members whose exit date has passed are no longer billed (fee generation and SEPA export). A future exit date is still billed until that date.
+- Self-enrollment: the SEPA mandate signature date is set by the server instead of the browser (`sepaConsent` is no longer accepted by `POST /self-enrollment`). HTML in applicant names is encoded in system e-mails and mass mail placeholders, name fields are limited to 100 characters.
+- SEPA export: IBAN and creditor ID checks only accept the digits 0-9, so invalid IBANs can no longer break the `pain.008` file.
+- Deleted members: users and financial managers can no longer read or change them via `PATCH`/`DELETE /members/{id}` (only admins can). A second delete no longer overwrites the original deletion time.
+- Deleted or changed users: login tokens are now checked on every request against the current user and role (otherwise 401), instead of staying valid for up to 8 hours.
+- The "new version available" e-mail was sent to the admins every hour when one admin had no e-mail address. Such admins are skipped now.
+- UV-55: PWA icon on Android: the web manifest has the correct content type, and a monochrome icon is included for Android 16 themed icons. App icons are RGBA PNGs, the iOS icon is opaque.
+- The English texts of the membership fees page were not shown because of a wrong translation key.
+
+### Changed
+- Client address behind a reverse proxy: `nginx.conf` no longer trusts `X-Forwarded-For` from the whole `172.16.0.0/12` range, which allowed bypassing rate limits and the login lockout and forging the IP of self-enrollments. Only Caddy of `docker-compose-tls.yml` is trusted (fixed address `172.31.250.2` in the network `edge`). **Installations with their own reverse proxy (README, option B)** must create the folder `trusted-proxies` next to the compose file and put `set_real_ip_from <proxy address>;` into a `.conf` file in it; the proxy must set `X-Forwarded-For` to the visitor address (nginx: `proxy_set_header X-Forwarded-For $remote_addr;`). Without it all visitors share one rate limit and one login lockout.
+- Backend log: important actions (logins, user and member management, self-enrollment, CSV import/export, fees, SEPA exports, receipts, mail, calendar, backups, config, background jobs) are logged with IDs and the acting user's ID, plus failed token validation, forbidden access and rate limit hits. No personal data is logged any more (see `CONTRIBUTING.md`).
+- Backend log: every request is logged once with status and duration; `/health` and the duplicate `REQUEST:` line (which leaked the calendar feed token) are gone. Failed backups/restores, unhandled exceptions (with stack trace), startup info and the hourly firmware check are logged properly; a leftover debug error on member updates is removed.
+
 ## [1.9.0] UV-6, UV-53, UV-54, UV-62
 
 ### Added

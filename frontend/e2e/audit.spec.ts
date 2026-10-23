@@ -104,7 +104,7 @@ test.describe('Audit page', () => {
     await tc.setup(Role.ADMIN);
     await page.reload();
     await page.getByRole('button', { name: 'Audit', exact: true }).click();
-    await expect(page.getByRole('cell', { name: user })).toBeVisible();
+    await expect(page.getByRole('cell', { name: user, exact: true })).toBeVisible();
     await expect(
       page
         .locator('div')
@@ -112,7 +112,7 @@ test.describe('Audit page', () => {
         .first(),
     ).toBeVisible();
     await expect(page.getByRole('cell', { name: 'MemberEntity' }).first()).toBeVisible();
-    await page.getByRole('cell').first().click();
+    await page.getByRole('cell', { name: 'MemberEntity' }).first().click();
     await expect(page.locator('tbody').getByText('Daten')).toBeVisible();
     await expect(page.locator('pre').getByText('{"MemberId":')).toBeVisible();
   });

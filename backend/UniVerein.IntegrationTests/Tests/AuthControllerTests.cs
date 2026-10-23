@@ -92,6 +92,102 @@ public class AuthControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Login_FailedAttemptsFromOneClient_DoNotBlockTheRealUserFromAnotherClient()
+    {
+        // Arrange
+        HttpClient client = CreateClient();
+
+        // Act
+        for (int i = 0; i < 8; i++)
+            await LoginAsync(client, "admin", "wrong-" + i, "203.0.113.50");
+
+        HttpResponseMessage attackerResponse = await LoginAsync(client, "admin", "Test1234!", "203.0.113.50");
+        HttpResponseMessage realUserResponse = await LoginAsync(client, "admin", "Test1234!", "198.51.100.7");
+
+        // Assert
+        attackerResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        realUserResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Login_LockedClient_IsAlsoBlockedWithCorrectPassword()
+    {
+        // Arrange
+        HttpClient client = CreateClient();
+        for (int i = 0; i < 3; i++)
+            await LoginAsync(client, "admin", "wrong-" + i, "203.0.113.50");
+
+        // Act
+        HttpResponseMessage response = await LoginAsync(client, "admin", "Test1234!", "203.0.113.50");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Login_ForwardedForHeaderOfClient_DoesNotEvadeLockout()
+    {
+        // Arrange
+        HttpClient client = CreateClient();
+        for (int i = 0; i < 3; i++)
+            await LoginAsync(client, "admin", "wrong-" + i, forwardedFor: "198.51.100." + i);
+
+        // Act
+        HttpResponseMessage response = await LoginAsync(client, "admin", "wrong", forwardedFor: "198.51.100.99");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Login_UnknownUserName_IsLockedLikeAKnownUserName()
+    {
+        // Arrange
+        HttpClient client = CreateClient();
+        for (int i = 0; i < 3; i++)
+            await LoginAsync(client, "does-not-exist", "wrong-" + i, "203.0.113.50");
+
+        // Act
+        HttpResponseMessage response = await LoginAsync(client, "does-not-exist", "wrong", "203.0.113.50");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Login_SuccessfulLogin_ResetsFailedAttemptsOfThatClient()
+    {
+        // Arrange
+        HttpClient client = CreateClient();
+        await LoginAsync(client, "admin", "wrong-1", "203.0.113.50");
+        await LoginAsync(client, "admin", "wrong-2", "203.0.113.50");
+        await LoginAsync(client, "admin", "Test1234!", "203.0.113.50");
+
+        // Act
+        await LoginAsync(client, "admin", "wrong-3", "203.0.113.50");
+        await LoginAsync(client, "admin", "wrong-4", "203.0.113.50");
+        HttpResponseMessage response = await LoginAsync(client, "admin", "Test1234!", "203.0.113.50");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    private static Task<HttpResponseMessage> LoginAsync(HttpClient client, string username, string password,
+        string? clientIp = null, string? forwardedFor = null)
+    {
+        HttpRequestMessage message = new(HttpMethod.Post, "/auth/login")
+        {
+            Content = JsonContent.Create(new LoginRequest { Username = username, Password = password })
+        };
+        if (clientIp != null)
+            message.Headers.Add("X-Real-IP", clientIp);
+        if (forwardedFor != null)
+            message.Headers.Add("X-Forwarded-For", forwardedFor);
+
+        return client.SendAsync(message);
+    }
+
+    [Fact]
     public async Task Login_WithValidCredentials_ReturnsOkAndToken()
     {
         // Arrange

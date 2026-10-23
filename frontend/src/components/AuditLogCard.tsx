@@ -29,7 +29,7 @@ export function AuditLogCard({ l }: { l: AuditLog }) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Box>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {l.userName}
+              {l.userName ?? t('pages.audit.deletedUser')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {new Date(l.timestamp).toLocaleString()}

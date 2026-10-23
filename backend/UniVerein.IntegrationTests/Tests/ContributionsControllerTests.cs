@@ -1,3 +1,4 @@
+using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -9,6 +10,7 @@ using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using UniVerein.IntegrationTests.Infrastructure;
 using Shouldly;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace UniVerein.IntegrationTests.Tests;
@@ -200,6 +202,278 @@ public class ContributionsControllerTests : IntegrationTestBase
         result!.Id.ShouldBe(contribution.Id);
     }
 
+    [Fact]
+    public async Task GetAllContributions_NameSearch_MatchesSubstringInName()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        foreach (int index in Enumerable.Range(0, 3))
+            await CreateContributionEntity(index.ToString(), index.ToString());
+        (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity("rene", "tester");
+
+        ContributionsQuery contributionsQuery = new() { Name = "test" };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/contributions{contributionsQuery.GetQueryString()}");
+        AllContributionsResult? results =
+            await response.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(1);
+        results.Items.Single().Id.ShouldBe(contribution.Id);
+    }
+
+    [Fact]
+    public async Task GetAllContributions_ReturnsMemberNumberAndMembershipStatus()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        (MemberEntity _, ContributionEntity contribution) =
+            await CreateContributionEntity("a", "b", membershipStatus: MembershipStatus.SUPPORTING_MEMBER,
+                memberNumber: 42);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/contributions");
+        AllContributionsResult? results =
+            await response.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        ContributionResult? result = results!.Items.Find(x => x.Id == contribution.Id);
+        result.ShouldNotBeNull();
+        result!.MemberNumber.ShouldBe(42);
+        result.MembershipStatus.ShouldBe(MembershipStatus.SUPPORTING_MEMBER);
+    }
+
+    [Theory]
+    [InlineData(MembershipStatus.MEMBER)]
+    [InlineData(MembershipStatus.SUPPORTING_MEMBER)]
+    public async Task GetAllContributions_byMembershipStatus_Success(MembershipStatus status)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        (MemberEntity _, ContributionEntity member) =
+            await CreateContributionEntity("m", "m", membershipStatus: MembershipStatus.MEMBER);
+        (MemberEntity _, ContributionEntity supporter) =
+            await CreateContributionEntity("s", "s", membershipStatus: MembershipStatus.SUPPORTING_MEMBER);
+
+        ContributionsQuery contributionsQuery = new() { MembershipStatus = status };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/contributions{contributionsQuery.GetQueryString()}");
+        AllContributionsResult? results =
+            await response.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(1);
+        results.Items.Single().Id.ShouldBe(status == MembershipStatus.MEMBER ? member.Id : supporter.Id);
+    }
+
+    [Fact]
+    public async Task GetAllContributions_InvalidMembershipStatus_BadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/contributions?membershipStatus=INVALID");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task GetAllContributions_DeletedFilter_IgnoredForNonAdmins(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        await CreateContributionEntity("active", "active");
+        await CreateContributionEntity("gone", "gone", deleted: true);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/contributions?deleted=true");
+        AllContributionsResult? results =
+            await response.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(1);
+        results.Items.Single().Name.ShouldBe("active active");
+    }
+
+    [Fact]
+    public async Task GetAllContributions_DeletedFilter_AdminSeesOnlyDeleted()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateContributionEntity("active", "active");
+        (MemberEntity _, ContributionEntity deleted) = await CreateContributionEntity("gone", "gone", deleted: true);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/contributions?deleted=true");
+        AllContributionsResult? results =
+            await response.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(1);
+        results.Items.Single().Id.ShouldBe(deleted.Id);
+        results.Items.Single().DeletedAt.ShouldNotBeNull();
+    }
+
+    // ---------------------------------------------------------------
+    // DELETE /contributions/{id}
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task Delete_WithoutToken_Unauthorized()
+    {
+        HttpClient client = CreateClient();
+
+        HttpResponseMessage response = await client.DeleteAsync($"/contributions/{Guid.NewGuid()}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Delete_Forbidden()
+    {
+        HttpClient client = CreateClient(UserRole.USER);
+
+        HttpResponseMessage response = await client.DeleteAsync($"/contributions/{Guid.NewGuid()}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task Delete_NotFound(UserRole role)
+    {
+        HttpClient client = CreateClient(role);
+
+        HttpResponseMessage response = await client.DeleteAsync($"/contributions/{Guid.NewGuid()}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task Delete_PaidContribution_BadRequest(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity(paid: true);
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/contributions/{contribution.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await WithDbContext(async db =>
+        {
+            ContributionEntity? entity = await db.Contributions.FindAsync(contribution.Id);
+            entity.ShouldNotBeNull();
+            entity!.DeletedAt.ShouldBeNull();
+        });
+    }
+
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task Delete_OpenContribution_SoftDeletes(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity();
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/contributions/{contribution.Id}");
+        HttpResponseMessage listResponse = await client.GetAsync("/contributions");
+        AllContributionsResult? results =
+            await listResponse.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(0);
+        await WithDbContext(async db =>
+        {
+            ContributionEntity? entity = await db.Contributions.FindAsync(contribution.Id);
+            entity.ShouldNotBeNull();
+            entity!.DeletedAt.ShouldNotBeNull();
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // POST /contributions/{id}/restore
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task Restore_WithoutToken_Unauthorized()
+    {
+        HttpClient client = CreateClient();
+
+        HttpResponseMessage response =
+            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}/restore", new { });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task Restore_Forbidden(UserRole role)
+    {
+        HttpClient client = CreateClient(role);
+
+        HttpResponseMessage response =
+            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}/restore", new { });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Restore_NotFound()
+    {
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        HttpResponseMessage response =
+            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}/restore", new { });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Restore_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity(deleted: true);
+
+        // Act
+        HttpResponseMessage response =
+            await client.PostAsJsonAsync($"/contributions/{contribution.Id}/restore", new { });
+        HttpResponseMessage listResponse = await client.GetAsync("/contributions");
+        AllContributionsResult? results =
+            await listResponse.Content.ReadFromJsonAsync<AllContributionsResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Items.ShouldContain(x => x.Id == contribution.Id);
+    }
+
     // ---------------------------------------------------------------
     // PAID /api/{id}/contributions
     // ---------------------------------------------------------------
@@ -277,12 +551,38 @@ public class ContributionsControllerTests : IntegrationTestBase
         });
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task MarkAsPaid_WritesAuditLog(bool paid)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.FINANCIAL_MANAGER);
+        (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity(paid: !paid);
+
+        // Act
+        HttpResponseMessage response =
+            await client.PostAsJsonAsync($"/contributions/{contribution.Id}?paid={paid.ToString().ToLowerInvariant()}", new { });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(ContributionEntity) && l.Data.Contains(contribution.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.UPDATE));
+            auditLog.Data.ShouldContain($"\"Paid\":{paid.ToString().ToLowerInvariant()}");
+        });
+    }
+
     // ---------------------------------------------------------------
     // Helper functions
     // ---------------------------------------------------------------
 
     private async Task<(MemberEntity, ContributionEntity)> CreateContributionEntity(string? firstName = null,
-        string? lastName = null, bool? paid = null)
+        string? lastName = null, bool? paid = null, MembershipStatus membershipStatus = MembershipStatus.MEMBER,
+        int memberNumber = 0, bool deleted = false)
     {
         Guid memberId = Guid.NewGuid();
         MemberEntity memberEntity = new()
@@ -295,7 +595,9 @@ public class ContributionsControllerTests : IntegrationTestBase
             City = "Musterstadt",
             PostalCode = "12345",
             CountryCode = "DE",
-            StreetEncrypted = string.Empty
+            StreetEncrypted = string.Empty,
+            MembershipStatus = membershipStatus,
+            MemberNumber = memberNumber
         };
 
         ContributionEntity contributionEntity = new()
@@ -305,7 +607,8 @@ public class ContributionsControllerTests : IntegrationTestBase
             MemberEntity = memberEntity,
             Amount = Random.Shared.Next(12, 1000),
             DueDate = DateTime.Now,
-            Paid = paid == true ? DateTimeOffset.UtcNow : null
+            Paid = paid == true ? DateTimeOffset.UtcNow : null,
+            DeletedAt = deleted ? DateTimeOffset.UtcNow : null
         };
 
         await WithDbContext(async db =>

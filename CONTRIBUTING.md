@@ -270,6 +270,25 @@ configuration files.
   automatically)
 - `Nullable` reference types are enabled — avoid introducing new nullable warnings
 
+#### Logging and privacy (backend)
+
+The backend logs with the static `Serilog.Log`. Log files may be kept and read by people who must
+not see member data, so follow these rules for every new log statement:
+
+- **Log IDs, not people.** Use entity GUIDs, the acting user's ID (`HttpContext.GetActorId()`),
+  counts, durations and status codes.
+- **Never log personal data or secrets:** names, e-mail addresses, phone numbers, addresses,
+  birthdays, IBAN/BIC, user names (they can be real names), IP addresses, passwords, tokens,
+  keys, mail subjects or bodies, uploaded file names, or whole request/entity objects.
+- **Do not log exception messages from mail servers, `pg_dump` or `psql`.** They can echo
+  recipient addresses or row data. Log `ex.GetType().Name` instead.
+- Use message templates with named properties (`Log.Information("Member {MemberId} deleted by {ActorId}.", id, actor)`),
+  not string interpolation, and pass the exception as the first argument (`Log.Error(ex, "…")`) when it is safe.
+- Levels: `Information` for successful actions and job runs, `Warning` for expected failures
+  (wrong password, validation errors, 4xx), `Error` for unexpected failures.
+- Do not lower the `Microsoft` log level override in `appsettings.json` the framework logs full
+  request URLs, including `access_token` and `key` query parameters, at `Information`.
+
 ---
 
 ### Documentation Style

@@ -678,6 +678,15 @@ export default function PendingEnrollmentForm({
               <Grid size={12}>
                 <TextField
                   fullWidth
+                  label={t('components.memberForm.fields.sepaConsent')}
+                  variant="outlined"
+                  value={detail.sepaConsent ? dayjs(detail.sepaConsent).format('DD.MM.YYYY') : '-'}
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  fullWidth
                   label={t('components.memberForm.fields.contributionPlan')}
                   variant="outlined"
                   value={detail.contributionPlanId === null ? NIL_UUID : detail.contributionPlanId}

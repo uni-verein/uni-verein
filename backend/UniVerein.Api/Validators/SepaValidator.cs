@@ -37,13 +37,13 @@ public static class SepaValidator
             return false;
 
         string normalized = SepaText.Iban(iban);
-        return Regex.IsMatch(normalized, @"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$") && HasValidChecksum(normalized);
+        return Regex.IsMatch(normalized, "^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$") && HasValidChecksum(normalized);
     }
 
     public static bool IsValidCreditorId(string? creditorId)
     {
         string id = SepaText.CreditorId(creditorId);
-        if (!Regex.IsMatch(id, @"^[A-Z]{2}\d{2}[A-Z0-9]{3}[A-Z0-9+?/:().,'-]{1,28}$"))
+        if (!Regex.IsMatch(id, @"^[A-Z]{2}[0-9]{2}[A-Z0-9]{3}[A-Z0-9+?/:().,'-]{1,28}$"))
             return false;
 
         string national = Regex.Replace(id[7..], "[^A-Z0-9]", string.Empty);
@@ -62,12 +62,13 @@ public static class SepaValidator
     }
 
     // Letters are converted to numbers (A=10 ... Z=35) before calculating the remainder modulo 97.
+    // Callers must only pass [A-Z0-9] and char.IsDigit would also accept digits of other scripts.
     private static int Mod97(string value)
     {
         int remainder = 0;
         foreach (char c in value)
         {
-            int digit = char.IsDigit(c) ? c - '0' : c - 'A' + 10;
+            int digit = char.IsAsciiDigit(c) ? c - '0' : c - 'A' + 10;
             remainder = ((digit < 10 ? remainder * 10 : remainder * 100) + digit) % 97;
         }
 

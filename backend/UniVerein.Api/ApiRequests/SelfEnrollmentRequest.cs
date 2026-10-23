@@ -12,13 +12,16 @@ public class SelfEnrollmentRequest
     public Gender Gender { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(100)]
     [JsonPropertyName("firstName")]
     public required string FirstName { get; set; }
 
+    [MaxLength(100)]
     [JsonPropertyName("middleName")]
     public string MiddleName { get; set; } = string.Empty;
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(100)]
     [JsonPropertyName("lastName")]
     public required string LastName { get; set; }
 
@@ -81,9 +84,6 @@ public class SelfEnrollmentRequest
     [Required(AllowEmptyStrings = false)]
     [JsonPropertyName("bic")]
     public required string Bic { get; set; }
-
-    [JsonPropertyName("sepaConsent")]
-    public DateTimeOffset? SepaConsent { get; set; }
 
     [Required]
     [JsonPropertyName("entryDate")]

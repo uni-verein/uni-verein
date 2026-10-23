@@ -17,6 +17,10 @@
       "alumniOfficer": "Alumni officer",
       "studentCouncilRepresentative": "Student council representative"
     },
+    "membershipStatusOptions": {
+      "MEMBER": "Member",
+      "SUPPORTING_MEMBER": "Supporting member"
+    },
     "pendingEnrollments": {
       "info": "These registrations already confirmed their email address and are waiting for approval. An active member is only created once approved.",
       "table": {
@@ -120,6 +124,7 @@
         "motivation": "Motivation",
         "motivationPlaceholder": "What do you do professionally/as a student, and why do you want to join?",
         "taskWithinTheClub": "Task within the club",
+        "membershipStatus": "Membership status",
         "memberCategory": "Member category",
         "memberCategoryOptions": {
           "STUDENT": "Student",
@@ -479,6 +484,7 @@
     "audit": {
       "title": "Audit Log",
       "dataLabel": "Data",
+      "deletedUser": "Deleted user",
       "tableHeaders": {
         "time": "Time",
         "user": "User",
@@ -568,6 +574,9 @@
           },
           "taskWithinTheClub": {
             "invalid": "Line {{0}}: 'Task within the club' has an invalid value '{{1}}'. Allowed: {{2}}."
+          },
+          "membershipStatus": {
+            "invalid": "Line {{0}}: 'Membership status' has an invalid value '{{1}}'. Allowed: {{2}}."
           },
           "memberCategory": {
             "invalid": "Line {{0}}: 'Member category' has an invalid value '{{1}}'. Allowed: {{2}}."
@@ -713,7 +722,7 @@
         "deleteButton": "Delete"
       }
     },
-    "Membership fees": {
+    "contributions": {
       "title": "Membership fees",
       "description": "Overview of all fee demands and their payment status.",
       "openDemands": "Open Demands ({{count}} items)",
@@ -723,10 +732,15 @@
         "all": "All",
         "unpaid": "Open",
         "paid": "Paid",
-        "resetFilter": "Reset filters"
+        "resetFilter": "Reset filters",
+        "membershipStatus": "Membership status",
+        "allMembershipStatus": "All",
+        "showDeleted": "Show deleted"
       },
       "table": {
+        "memberNumber": "No.",
         "member": "Member",
+        "membershipStatus": "Membership status",
         "amount": "Amount",
         "dueDate": "Due Date",
         "status": "Status",
@@ -739,7 +753,21 @@
       },
       "button": {
         "markAsPaid": "Payment received",
-        "markAsUnPaid": "Payment open"
+        "markAsUnPaid": "Payment open",
+        "delete": "Delete",
+        "restore": "Restore"
+      },
+      "confirmDialog": {
+        "deleteQuestion": "Really delete this open fee permanently? It will be removed from the list.",
+        "delete": "Delete permanently",
+        "restoreQuestion": "Really restore this fee?",
+        "restore": "Restore"
+      },
+      "responseMessages": {
+        "deleted": "Fee was deleted.",
+        "deleteError": "Fee could not be deleted. Only open fees can be deleted.",
+        "restored": "Fee was restored.",
+        "restoreError": "Fee could not be restored."
       }
     },
     "creditorConfig": {
@@ -1233,6 +1261,8 @@
         "searchName": "Search name",
         "taskInClub": "Task in club",
         "allTasks": "All tasks",
+        "membershipStatus": "Membership status",
+        "allMembershipStatus": "All",
         "memberCategory": "Member category",
         "ALL": "All",
         "STUDENT": "Student",
@@ -1247,6 +1277,7 @@
         "colNumber": "No.",
         "colName": "Name",
         "colTask": "Task in club",
+        "colMembershipStatus": "Membership status",
         "colEmail": "E-Mail",
         "colContribution": "Membership fee",
         "colMemberCategory": "Member category",

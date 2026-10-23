@@ -1,3 +1,4 @@
+using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -71,14 +72,18 @@ public class ImportControllerTests : IntegrationTestBase
         string iban = "DE89370400440532013000",
         string bic = "INGDDEFFXXX",
         string sepaConsentDate = "5.10.2015",
-        int contributionAmount = 12)
+        int contributionAmount = 12,
+        string? membershipStatus = null)
     {
         string row = $"{memberNumber};{gender};{name};{firstName};;{birthday};+49172123456;{email};" +
                      $"{bulkMail};{street};{zip};{city};{countryCode};{studyStart};;{academicDegree};{courseOfStudy};" +
                      $"{task};{memberCategory};{entryDate};;{iban};{bic};{sepaConsentDate};" +
                      $"{contributionAmount}";
 
-        return $"{_fileHeader}\n{row}";
+        if (membershipStatus == null)
+            return $"{_fileHeader}\n{row}";
+
+        return $"{_fileHeader};Membership status\n{row};{membershipStatus}";
     }
 
     private async Task<MemberEntity> CreateMemberAsync(string? firstName = null)
@@ -473,6 +478,68 @@ public class ImportControllerTests : IntegrationTestBase
         member.TaskWithinTheClub.ShouldBe(taskWithinTheClub);
     }
 
+    [Fact]
+    public async Task UploadCsvAsync_WithoutMembershipStatusColumn_DefaultsToMember()
+    {
+        // Arrange
+        string csv = BuildValidCsvContent(memberNumber: 61);
+        csv.ShouldNotContain("Membership status");
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateCsvFormFile(csv);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/import/upload", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        MemberEntity? member = await _db.Members.FirstOrDefaultAsync(m => m.MemberNumber == 61);
+        member.ShouldNotBeNull();
+        member.MembershipStatus.ShouldBe(MembershipStatus.MEMBER);
+    }
+
+    [Theory]
+    [InlineData("MEMBER", MembershipStatus.MEMBER)]
+    [InlineData("SUPPORTING_MEMBER", MembershipStatus.SUPPORTING_MEMBER)]
+    [InlineData("supporting_member", MembershipStatus.SUPPORTING_MEMBER)]
+    [InlineData("", MembershipStatus.MEMBER)]
+    public async Task UploadCsvAsync_WithMembershipStatus_SetsCorrectStatus(string import,
+        MembershipStatus membershipStatus)
+    {
+        // Arrange
+        string csv = BuildValidCsvContent(memberNumber: 62, membershipStatus: import);
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateCsvFormFile(csv);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/import/upload", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        MemberEntity? member = await _db.Members.FirstOrDefaultAsync(m => m.MemberNumber == 62);
+        member.ShouldNotBeNull();
+        member.MembershipStatus.ShouldBe(membershipStatus);
+    }
+
+    [Fact]
+    public async Task UploadCsvAsync_WithInvalidMembershipStatus_ReturnsValidationError()
+    {
+        // Arrange
+        string csv = BuildValidCsvContent(memberNumber: 63, membershipStatus: "HONORARY");
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateCsvFormFile(csv);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/import/upload", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.ErrorResultTranslation.Count.ShouldBe(1);
+        result.ErrorResultTranslation[0].TranslationKey.ShouldBe("validator.membershipStatus.invalid");
+        (await _db.Members.AnyAsync()).ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData("STUDENT", Program.MemberCategoriesStudent)]
     [InlineData("ALUMNI", Program.MemberCategoriesAlumni)]
@@ -514,9 +581,9 @@ public class ImportControllerTests : IntegrationTestBase
         csvContent.ShouldBe("\uFEFFMember number;Gender;Name;First name;Middle name;Birthday;Phone nummer;" +
                                "Bulk mail;Mail;Street and number;ZIP code;City;Country code;Study start;Study end;Academic degree;" +
                                "Course of study;Task within the club;Member category;Entry date;Exit date;IBAN;BIC;" +
-                               "Sepa consent date;Contribution amount\r\n1;MALE;Doe;John;;01.01.2000;+49 172 12345678;" +
+                               "Sepa consent date;Contribution amount;Membership status\r\n1;MALE;Doe;John;;01.01.2000;+49 172 12345678;" +
                                "ALLOWED;john.doe@gmail.com;Example Street 1;12345;Example City;DE;01.10.2015;;b.sc.;" +
-                               "Informatics;MEMBER;STUDENT;10.10.2015;;DE89370400440532013000;INGDDEFFXXX;10.10.2015;12\r\n");
+                               "Informatics;MEMBER;STUDENT;10.10.2015;;DE89370400440532013000;INGDDEFFXXX;10.10.2015;12;MEMBER\r\n");
     }
 
     [Fact]
@@ -537,7 +604,8 @@ public class ImportControllerTests : IntegrationTestBase
         csvContent.Replace("/^\uFEFF/", "").TrimEnd().ShouldBe(
             "\uFEFFMember number;Gender;Name;First name;Middle name;Birthday;Phone nummer;Bulk mail;" +
             "Mail;Street and number;ZIP code;City;Country code;Study start;Study end;Academic degree;Course of study;" +
-            "Task within the club;Member category;Entry date;Exit date;IBAN;BIC;Sepa consent date;Contribution amount");
+            "Task within the club;Member category;Entry date;Exit date;IBAN;BIC;Sepa consent date;Contribution amount;" +
+            "Membership status");
     }
 
     [Fact]
@@ -559,9 +627,9 @@ public class ImportControllerTests : IntegrationTestBase
         csvContent.ShouldBe("\uFEFFMember number;Gender;Name;First name;Middle name;Birthday;Phone nummer;" +
                                "Bulk mail;Mail;Street and number;ZIP code;City;Country code;Study start;Study end;Academic degree;" +
                                "Course of study;Task within the club;Member category;Entry date;Exit date;IBAN;BIC;" +
-                               "Sepa consent date;Contribution amount\r\n999;MALE;Member;Existing;;01.01.2000;+49 172 12345678;" +
+                               "Sepa consent date;Contribution amount;Membership status\r\n999;MALE;Member;Existing;;01.01.2000;+49 172 12345678;" +
                                "ALLOWED;max@test.de;Musterstraße 1;12345;City;DE;15.05.2015;;;;MEMBER;STUDENT;15.10.2015;;" +
-                               "DE89370400440532013000;INGDDEFFXXX;;\r\n");
+                               "DE89370400440532013000;INGDDEFFXXX;;;MEMBER\r\n");
     }
 
     [Fact]
@@ -588,5 +656,44 @@ public class ImportControllerTests : IntegrationTestBase
         csvContent.ShouldNotBeNullOrEmpty();
         foreach (string firstName in firstNames)
             csvContent.ShouldContain(firstName);
+    }
+
+    [Fact]
+    public async Task UploadCsvAsync_WithValidCsv_WritesAuditLogWithoutMemberData()
+    {
+        // Arrange
+        string firstName = Guid.NewGuid().ToString();
+        string fileName = $"{Guid.NewGuid()}.csv";
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content =
+            CreateCsvFormFile(BuildValidCsvContent(firstName: firstName), fileName);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/import/upload", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        AuditLogEntity? auditLog = await _db.AuditLogs.FirstOrDefaultAsync(l => l.Data.Contains(fileName));
+        auditLog.ShouldNotBeNull();
+        auditLog.Action.ShouldBe(nameof(AuditLogActions.IMPORT));
+        auditLog.Entity.ShouldBe(nameof(MemberEntity));
+        auditLog.Data.ShouldContain("\"MemberCount\":1");
+        auditLog.Data.ShouldNotContain(firstName);
+    }
+
+    [Fact]
+    public async Task UploadCsvAsync_WithInvalidCsv_WritesNoAuditLog()
+    {
+        // Arrange
+        string fileName = $"{Guid.NewGuid()}.csv";
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateCsvFormFile("not;a;valid;header\n1;2;3;4", fileName);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/import/upload", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await _db.AuditLogs.AnyAsync(l => l.Data.Contains(fileName))).ShouldBeFalse();
     }
 }

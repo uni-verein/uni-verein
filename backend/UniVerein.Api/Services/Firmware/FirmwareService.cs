@@ -53,7 +53,10 @@ public class FirmwareService
 
         GithubReleaseResponse? release = await _httpClient.GetFromJsonAsync<GithubReleaseResponse>("https://api.github.com/repos/uni-verein/uni-verein/releases/latest", cancellationToken);
         if (release == null)
+        {
+            Log.Warning("FirmwareService: GitHub returned no latest release.");
             return;
+        }
 
         if (!Version.TryParse(currentVersionRaw, out Version? currentVersion))
         {
@@ -68,7 +71,14 @@ public class FirmwareService
         }
 
         if (latestVersion <= currentVersion)
+        {
+            Log.Information("FirmwareService: Installed version {CurrentVersion} is up to date (latest release {LatestVersion}).",
+                currentVersion, latestVersion);
             return;
+        }
+
+        Log.Information("FirmwareService: New version {LatestVersion} available (installed {CurrentVersion}).",
+            latestVersion, currentVersion);
 
         FirmwareVersionEntity? existingEntry = await _dbContext.FirmwareVersions.FirstOrDefaultAsync(f => f.Version == release.Name, cancellationToken);
         FirmwareVersionEntity firmwareVersion;
@@ -93,7 +103,11 @@ public class FirmwareService
 
         MailSettingsEntity? mailSettings = await _dbContext.MailSettings.FirstOrDefaultAsync(x => x.DeletedAt == null);
         if (mailSettings == null)
+        {
+            Log.Warning("FirmwareService: No mail settings configured, skipping notification about version {Version}.",
+                firmwareVersion.Version);
             return;
+        }
 
         List<Guid> alreadyNotifiedUserIds = await _dbContext.FirmwareVersionNotifications
             .Where(n => n.FirmwareVersionId == firmwareVersion.Id)
@@ -103,7 +117,11 @@ public class FirmwareService
         List<UserEntity> adminsToNotify = await _dbContext.Users.Where(u => u.Role == UserRole.ADMIN && !alreadyNotifiedUserIds.Contains(u.Id)).ToListAsync(cancellationToken);
 
         if (!adminsToNotify.Any())
+        {
+            Log.Information("FirmwareService: All admins were already notified about version {Version}.",
+                firmwareVersion.Version);
             return;
+        }
 
         EmailRequest request = BuildEmailRequest(firmwareVersion);
 
@@ -111,7 +129,11 @@ public class FirmwareService
         {
             string? email = _crypto.Decrypt(admin.Email);
             if (string.IsNullOrWhiteSpace(email))
-                return;
+            {
+                Log.Warning("FirmwareService: Admin {UserId} has no e-mail address, skipping notification about version {Version}.",
+                    admin.Id, firmwareVersion.Version);
+                continue;
+            }
 
             try
             {
@@ -124,16 +146,15 @@ public class FirmwareService
                     UserId = admin.Id,
                     User = admin
                 });
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
-                Log.Information($"FirmwareService: Admin {admin.Username} notified about version {firmwareVersion.Version}.");
+                Log.Information("FirmwareService: Admin {UserId} notified about version {Version}.", admin.Id, firmwareVersion.Version);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"FirmwareService: Error while sending mail to {admin.Username}");
+                Log.Error("FirmwareService: Error while sending mail to admin {UserId}, {ExceptionType}.", admin.Id, ex.GetType().Name);
             }
         }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static EmailRequest BuildEmailRequest(FirmwareVersionEntity firmware)

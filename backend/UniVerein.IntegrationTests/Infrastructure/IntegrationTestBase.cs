@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using UniVerein.Api.Services;
@@ -16,6 +17,8 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
     protected readonly UniVereinWebApplicationFactory Factory;
     protected readonly Guid UserId = Guid.NewGuid();
     private IServiceScope _scope = null!;
+    private UserRole? _actorRole;
+    private readonly Dictionary<UserRole, Guid> _otherActorIds = new();
     protected IServiceProvider ScopedServices => _scope.ServiceProvider;
 
     protected IntegrationTestBase(UniVereinWebApplicationFactory factory)
@@ -72,19 +75,50 @@ public abstract class IntegrationTestBase : IClassFixture<UniVereinWebApplicatio
     protected HttpClient CreateAdminClient()
     {
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        return CreateClient().AsAdmin(configuration, UserId);
+        return CreateClient().AsAdmin(configuration, EnsureActorUser(UserRole.ADMIN));
     }
 
     private HttpClient CreateUserClient()
     {
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        return CreateClient().AsUser(configuration, UserId);
+        return CreateClient().AsUser(configuration, EnsureActorUser(UserRole.USER));
     }
 
     protected HttpClient CreateFinancialUserClient()
     {
         IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
-        return CreateClient().AsFinancialUser(configuration, UserId);
+        return CreateClient().AsFinancialUser(configuration, EnsureActorUser(UserRole.FINANCIAL_MANAGER));
+    }
+
+    // The API rejects tokens whose user does not exist or has another role, so the acting user must be in the database.
+    // The first role used by a test acts as UserId, further roles of the same test get their own user.
+    protected Guid EnsureActorUser(UserRole role)
+    {
+        _actorRole ??= role;
+        Guid actorId = role == _actorRole ? UserId : _otherActorIds.GetValueOrDefault(role, Guid.NewGuid());
+        _otherActorIds.TryAdd(role, actorId);
+
+        using IServiceScope scope = Factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        UserEntity? user = db.Users.IgnoreQueryFilters().FirstOrDefault(u => u.Id == actorId);
+        if (user == null)
+        {
+            db.Users.Add(new UserEntity
+            {
+                Id = actorId,
+                Username = Guid.NewGuid().ToString(),
+                PasswordHash = Guid.NewGuid().ToString(),
+                Role = role
+            });
+        }
+        else
+        {
+            user.Role = role;
+            user.DeletedAt = null;
+        }
+
+        db.SaveChanges();
+        return actorId;
     }
 
     protected async Task WithDbContext(Func<AppDbContext, Task> action)

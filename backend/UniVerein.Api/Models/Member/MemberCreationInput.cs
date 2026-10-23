@@ -22,6 +22,7 @@ public class MemberCreationInput
     public AcademicDegree? AcademicDegree { get; set; }
     public string CourseOfStudy { get; set; } = string.Empty;
     public TaskWithinTheClub TaskWithinTheClub { get; set; }
+    public MembershipStatus MembershipStatus { get; set; } = MembershipStatus.MEMBER;
     public Guid MemberCategoryId { get; set; }
     public string IBAN { get; set; } = string.Empty;
     public string Bic { get; set; } = string.Empty;

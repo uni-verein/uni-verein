@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
@@ -85,6 +86,8 @@ public class MailService
             EmailResult result = await SendOnExistingConnectionAsync(smtpClient, message,
                 new Recipient() { Email = settings.FromMail, FirstName = SenderDisplayName(settings), LastName = string.Empty });
             await BccProgressUpdate(message, connectionId, result.Success);
+            Log.Information("MailService: SendBccMessageAsync -> Bcc mail to {Total} recipients finished, successful: {Success}.",
+                message.Bcc.Count, result.Success);
         }
         catch (Exception ex)
         {
@@ -177,6 +180,8 @@ public class MailService
 
         await Task.WhenAll(connectionTasks);
         await _hubContext.Clients.Client(connectionId).SendAsync("SendComplete", summary);
+        Log.Information("MailService: SendEmailsAsync -> Finished sending, total {Total}, successful {Successful}, failed {Failed}.",
+            summary.Total, summary.Successful, summary.Failed);
     }
 
     public async Task<List<EmailResult>> SendBatchAsync(List<(Recipient Recipient, EmailRequest Request)> mails)
@@ -245,7 +250,7 @@ public class MailService
             {
                 if (!client.IsConnected || !client.IsAuthenticated)
                 {
-                    Log.Warning("SMTP reconnecting for {Email}", recipient.Email);
+                    Log.Warning("MailService: SMTP connection lost, reconnecting.");
                     await ConnectSmtpClientAsync(client, settings);
                 }
 
@@ -290,12 +295,12 @@ public class MailService
         {
             await client.SendAsync(message);
 
-            Log.Information("Sent to {Email}", recipient.Email);
             return new EmailResult { Email = recipient.Email, Success = true };
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to send to {Email}", recipient.Email);
+            Log.Error("MailService: Failed to send a mail, {ExceptionType}, SMTP status {SmtpStatusCode}.",
+                ex.GetType().Name, (ex as SmtpCommandException)?.StatusCode.ToString() ?? "n/a");
             return new EmailResult
             {
                 Email = recipient.Email,
@@ -374,8 +379,9 @@ public class MailService
 
         BodyBuilder bodyBuilder = new()
         {
-            HtmlBody = request.HtmlBody.Replace("{fullname}", $"{recipient.FirstName} {recipient.LastName}")
-                .Replace("{firstname}", recipient.FirstName)
+            HtmlBody = request.HtmlBody
+                .Replace("{fullname}", WebUtility.HtmlEncode($"{recipient.FirstName} {recipient.LastName}"))
+                .Replace("{firstname}", WebUtility.HtmlEncode(recipient.FirstName))
         };
 
         foreach (PreparedAttachment att in preparedAttachments.Where(a => a.IsInline))

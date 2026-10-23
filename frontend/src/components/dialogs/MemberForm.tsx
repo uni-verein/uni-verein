@@ -26,6 +26,7 @@ import {
   Member,
   MemberCategory,
   MemberErrors,
+  MembershipStatus,
   SNACKBAR_INITIAL_STATE,
   SnackbarState,
 } from '../../types';
@@ -307,7 +308,6 @@ export default function MemberForm({
     setM((prev) => ({
       ...prev,
       iban: raw,
-      ...(mode === 'public' ? { sepaConsent: raw && prev.bic ? new Date() : null } : {}),
     }));
 
     if (validateIBAN(raw)) {
@@ -323,7 +323,6 @@ export default function MemberForm({
     setM((prev) => ({
       ...prev,
       bic: raw,
-      ...(mode === 'public' ? { sepaConsent: prev.iban && raw ? new Date() : null } : {}),
     }));
 
     if (validateBIC(raw)) {
@@ -704,6 +703,26 @@ export default function MemberForm({
                     {Object.entries(TASK_WITHIN_THE_CLUB_LABELS).map(([value, label]) => (
                       <MenuItem key={value} value={value}>
                         {t(`components.taskWithinTheClubOptions.${label}`)}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              )}
+              {mode === 'admin' && (
+                <Grid size={6}>
+                  <TextField
+                    fullWidth
+                    disabled={view}
+                    label={t('components.memberForm.fields.membershipStatus')}
+                    variant="outlined"
+                    value={m.membershipStatus || MembershipStatus.MEMBER}
+                    onChange={handleChange('membershipStatus')}
+                    select
+                    required
+                  >
+                    {Object.values(MembershipStatus).map((value) => (
+                      <MenuItem key={value} value={value}>
+                        {t(`components.membershipStatusOptions.${value}`)}
                       </MenuItem>
                     ))}
                   </TextField>

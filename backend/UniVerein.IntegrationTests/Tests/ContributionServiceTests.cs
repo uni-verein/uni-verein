@@ -234,6 +234,90 @@ public class ContributionServiceTests : IntegrationTestBase
         });
     }
 
+    [Fact]
+    public async Task GenerateDueContributions_SoftDeletedMember_IsNotBilled()
+    {
+        // Arrange
+        Factory.FakeTime.SetUtcNow(new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero));
+        ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
+        MemberEntity activeMember = await CreateMemberEntityAsync(Interval.MONTHLY);
+        await CreateMemberEntityAsync(Interval.MONTHLY, deletedAt: DateTimeOffset.UtcNow);
+
+        // Act
+        await contributionService.GenerateDueContributions();
+
+        // Assert
+        await WithDbContext(async db =>
+        {
+            ContributionEntity contribution = await db.Contributions.SingleAsync();
+            contribution.MemberId.ShouldBe(activeMember.Id);
+
+            SepaExportEntity export = await db.SepaExports.SingleAsync();
+            export.Count.ShouldBe(1);
+            export.Amount.ShouldBe(activeMember.ContributionPlan!.Amount);
+        });
+    }
+
+    [Fact]
+    public async Task GenerateDueContributions_ExitedMember_IsNotBilled()
+    {
+        // Arrange
+        Factory.FakeTime.SetUtcNow(new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero));
+        ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
+        MemberEntity activeMember = await CreateMemberEntityAsync(Interval.MONTHLY);
+        await CreateMemberEntityAsync(Interval.MONTHLY, exitDate: new DateTimeOffset(2026, 2, 28, 0, 0, 0, TimeSpan.Zero));
+
+        // Act
+        await contributionService.GenerateDueContributions();
+
+        // Assert
+        await WithDbContext(async db =>
+        {
+            ContributionEntity contribution = await db.Contributions.SingleAsync();
+            contribution.MemberId.ShouldBe(activeMember.Id);
+            (await db.SepaExports.SingleAsync()).Count.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public async Task GenerateDueContributions_MemberWithFutureExitDate_IsStillBilled()
+    {
+        // Arrange
+        Factory.FakeTime.SetUtcNow(new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero));
+        ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
+        MemberEntity member = await CreateMemberEntityAsync(Interval.MONTHLY,
+            exitDate: new DateTimeOffset(2026, 6, 30, 0, 0, 0, TimeSpan.Zero));
+
+        // Act
+        await contributionService.GenerateDueContributions();
+
+        // Assert
+        await WithDbContext(async db =>
+        {
+            (await db.Contributions.SingleAsync()).MemberId.ShouldBe(member.Id);
+        });
+    }
+
+    [Fact]
+    public async Task GenerateDueContributions_OnlyDeletedAndExitedMembers_CreatesNothing()
+    {
+        // Arrange
+        Factory.FakeTime.SetUtcNow(new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero));
+        ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
+        await CreateMemberEntityAsync(Interval.MONTHLY, deletedAt: DateTimeOffset.UtcNow);
+        await CreateMemberEntityAsync(Interval.MONTHLY, exitDate: new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+        // Act
+        await contributionService.GenerateDueContributions();
+
+        // Assert
+        await WithDbContext(async db =>
+        {
+            Assert.Empty(await db.Contributions.ToListAsync());
+            Assert.Empty(await db.SepaExports.ToListAsync());
+        });
+    }
+
     // ---------------------------------------------------------------
     // Helper functions
     // ---------------------------------------------------------------
@@ -291,7 +375,8 @@ public class ContributionServiceTests : IntegrationTestBase
         return sepaExportEntity;
     }
 
-    private async Task<MemberEntity> CreateMemberEntityAsync(Interval? interval = null)
+    private async Task<MemberEntity> CreateMemberEntityAsync(Interval? interval = null,
+        DateTimeOffset? deletedAt = null, DateTimeOffset? exitDate = null)
     {
         ContributionPlanEntity contributionPlanEntity = new()
         {
@@ -313,7 +398,9 @@ public class ContributionServiceTests : IntegrationTestBase
             StreetEncrypted = string.Empty,
             PostalCode = "12345",
             ContributionPlan = contributionPlanEntity,
-            ContributionPlanId = contributionPlanEntity.Id
+            ContributionPlanId = contributionPlanEntity.Id,
+            DeletedAt = deletedAt,
+            ExitDate = exitDate
         };
 
         AppDbContext db = GetService<AppDbContext>();

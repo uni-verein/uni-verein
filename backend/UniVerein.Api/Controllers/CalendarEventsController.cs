@@ -267,6 +267,8 @@ public class CalendarEventsController : ControllerBase
         }
 
         await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(CalendarEventEntity), AuditData(calendarEvent));
+        Log.Information("CalendarEventsController: AddExceptionAsync -> Occurrence {OccurrenceStart:O} of calendar event {EventId} removed by {ActorId}.",
+            occurrenceStart, id, _currentUserId);
 
         UserEntity? actor = await _db.Users.FindAsync(_currentUserId);
         if (actor != null)
@@ -293,6 +295,8 @@ public class CalendarEventsController : ControllerBase
         {
             participant.RsvpStatus = request.Status;
             await _db.SaveChangesAsync();
+            Log.Information("CalendarEventsController: RsvpAsync -> User {UserId} replied {Status} to calendar event {EventId}.",
+                _currentUserId, request.Status, id);
 
             UserEntity? actor = await _db.Users.FindAsync(_currentUserId);
             if (actor != null && request.Status != CalendarRsvpStatus.PENDING)
@@ -319,6 +323,8 @@ public class CalendarEventsController : ControllerBase
                 UserId = _currentUserId
             });
             await _db.SaveChangesAsync();
+            Log.Information("CalendarEventsController: SubscribeAsync -> User {UserId} subscribed to calendar event {EventId}.",
+                _currentUserId, id);
         }
 
         return Ok(await ToResultAsync(calendarEvent));
@@ -338,6 +344,8 @@ public class CalendarEventsController : ControllerBase
         {
             _db.RemoveRange(subscriptions);
             await _db.SaveChangesAsync();
+            Log.Information("CalendarEventsController: UnsubscribeAsync -> User {UserId} unsubscribed from calendar event {EventId}.",
+                _currentUserId, id);
         }
 
         return Ok(await ToResultAsync(calendarEvent));

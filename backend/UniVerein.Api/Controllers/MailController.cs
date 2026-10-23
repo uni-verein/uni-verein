@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
 using UniVerein.Api.Helper;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
-using F23.StringSimilarity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -30,20 +30,21 @@ public class MailController : ControllerBase
     private readonly AppDbContext _db;
     private readonly MailService _mail;
     private readonly CryptoService _crypto;
+    private readonly AuditService _auditService;
 
-    public MailController(AppDbContext db, MailService mail, CryptoService crypto)
+    public MailController(AppDbContext db, MailService mail, CryptoService crypto, AuditService auditService)
     {
         _db = db;
         _mail = mail;
         _crypto = crypto;
+        _auditService = auditService;
     }
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     [HttpPost("test")]
     public async Task<ActionResult<string>> SendTestAsync([FromBody] TestMailRequest request)
     {
-        Log.Information(
-            $"MailController: SendTestAsync -> Try to send test mail. Request: {JsonSerializer.Serialize(request)}");
+        Log.Information("MailController: SendTestAsync -> Try to send test mail, requested by {ActorId}.", HttpContext.GetActorId());
 
         await _mail.SendTestMailAsync(request.Email);
 
@@ -69,21 +70,15 @@ public class MailController : ControllerBase
         if (!string.IsNullOrWhiteSpace(recipientQuery.Name))
         {
             List<MemberEntity> members = await memberQuery.ToListAsync();
-            JaroWinkler jaroWinkler = new();
-            string needle = recipientQuery.Name.ToLower();
             recipients = members
                 .Select(x => new
                 {
                     member = x,
-                    similarity = new[]
-                    {
-                        jaroWinkler.Similarity(x.FirstName.ToLower(), needle),
-                        jaroWinkler.Similarity(x.MiddleName.ToLower(), needle),
-                        jaroWinkler.Similarity(x.LastName.ToLower(), needle)
-                    }.Max()
+                    score = NameSearchHelper.Score(recipientQuery.Name,
+                        $"{x.FirstName} {x.MiddleName} {x.LastName}", x.FirstName, x.MiddleName, x.LastName)
                 })
-                .Where(x => x.similarity > 0.75)
-                .OrderByDescending(x => x.similarity)
+                .Where(x => NameSearchHelper.IsMatch(x.score))
+                .OrderByDescending(x => x.score)
                 .Select(x => x.member)
                 .ToList();
             total = recipients.Count;
@@ -113,8 +108,8 @@ public class MailController : ControllerBase
     [HttpPost("send")]
     public async Task<IActionResult> SendAsync([FromBody] MailSendRequest request)
     {
-        Log.Information(
-            $"MailController: SendAsync -> Try to send mail. Request: {{Subject: {request.EmailData.Subject}, Body lenght: {request.EmailData.HtmlBody.Length}, Attachments count: {request.EmailData.Attachments.Count} }}");
+        Log.Information("MailController: SendAsync -> Try to send mail by {ActorId}. Body length: {BodyLength}, attachments: {AttachmentCount}.",
+            HttpContext.GetActorId(), request.EmailData.HtmlBody.Length, request.EmailData.Attachments.Count);
 
         if (string.IsNullOrEmpty(request.ConnectionId))
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "ConnectionId missing"));
@@ -156,9 +151,12 @@ public class MailController : ControllerBase
         }
 
         if (!recipients.Any())
+        {
+            Log.Warning("MailController: SendAsync -> No recipients selected, nothing sent.");
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
                 errorMessage: "Emails could not be sent.",
                 moreInfo: "Emails cannot be sent because no email was selected."));
+        }
 
         if (recipients.Count > MAX_PERSONAL_MAIL_COUNT)
         {
@@ -173,6 +171,8 @@ public class MailController : ControllerBase
             await _mail.SendEmailsAsync(recipients, request.EmailData, request.ConnectionId);
         }
 
+        Log.Information("MailController: SendAsync -> Mail dispatched by {ActorId} to {RecipientCount} recipients (bcc only: {BccOnly}).",
+            HttpContext.GetActorId(), recipients.Count, recipients.Count > MAX_PERSONAL_MAIL_COUNT);
         return Ok(new { message = "Versand gestartet", total = recipients.Count });
     }
 
@@ -207,8 +207,8 @@ public class MailController : ControllerBase
     [HttpPut]
     public async Task<ActionResult<MailSettingsResult>> UpdateAsync([FromBody] MailSettingsRequest request)
     {
-        Log.Information(
-            $"MailController: UpdateAsync -> Try to update mail settings. SmtpServer: {request.SmtpServer}");
+        Log.Information("MailController: UpdateAsync -> Try to update mail settings by {ActorId}. SmtpServer: {SmtpServer}",
+            HttpContext.GetActorId(), request.SmtpServer);
 
         MailSettingsEntity? mailSetting = await _db.MailSettings.FirstOrDefaultAsync();
         if (mailSetting == null)
@@ -244,8 +244,22 @@ public class MailController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(MailSettingsEntity), new
+        {
+            MailSettingsId = mailSetting.Id,
+            mailSetting.SmtpServer,
+            mailSetting.Port,
+            mailSetting.ImapServer,
+            mailSetting.ImapPort,
+            mailSetting.Username,
+            mailSetting.FromMail,
+            mailSetting.FromName,
+            mailSetting.EnableSsl,
+            PasswordChanged = !string.IsNullOrWhiteSpace(request.Password)
+        });
 
-        Log.Information($"MailController: UpdateAsync -> Mail settings successfully updated for ID: {mailSetting.Id}.");
+        Log.Information("MailController: UpdateAsync -> Mail settings {MailSettingsId} updated by {ActorId}.",
+            mailSetting.Id, HttpContext.GetActorId());
         return Ok(new MailSettingsResult()
         {
             Id = mailSetting.Id,
@@ -273,6 +287,9 @@ public class MailController : ControllerBase
 
         _db.Remove(mailSetting);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.SOFT_DELETE, nameof(MailSettingsEntity),
+            new { MailSettingsId = id, mailSetting.SmtpServer });
+        Log.Information("MailController: DeleteAsync -> Mail settings {MailSettingsId} deleted by {ActorId}.", id, HttpContext.GetActorId());
         return Ok();
     }
 }

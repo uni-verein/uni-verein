@@ -95,8 +95,11 @@ public class CalendarFeedController : ControllerBase
         UserEntity? user = feedToken == null ? null : await _db.Users.FindAsync(feedToken.UserId);
 
         if (feedToken == null || user == null || user.DeletedAt != null)
+        {
+            Log.Warning("CalendarFeedController: GetFeedAsync -> Invalid, revoked or orphaned calendar feed token used.");
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
                 errorMessage: "Calendar feed not found."));
+        }
 
         DateTimeOffset now = _timeProvider.GetUtcNow();
         DateTimeOffset from = now - FeedPast;

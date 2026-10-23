@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -52,25 +53,27 @@ public class SelfEnrollmentNotificationService
             string? email = _crypto.Decrypt(recipient.Email);
             if (string.IsNullOrWhiteSpace(email))
             {
-                Log.Warning($"SelfEnrollmentNotificationService: User {recipient.Username} has no email, skipping.");
+                Log.Warning("SelfEnrollmentNotificationService: User {UserId} has no email, skipping.", recipient.Id);
                 continue;
             }
 
             try
             {
                 await _mailService.SendEmailsAsync([new Recipient { Email = email }], request, "123456789");
-                Log.Information(
-                    $"SelfEnrollmentNotificationService: Notified {recipient.Username} about pending self-enrollment {pending.Id}.");
+                Log.Information("SelfEnrollmentNotificationService: Notified user {UserId} about pending self-enrollment {PendingId}.",
+                    recipient.Id, pending.Id);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"SelfEnrollmentNotificationService: Error while sending mail to {recipient.Username}");
+                Log.Error("SelfEnrollmentNotificationService: Error while sending mail to user {UserId}, {ExceptionType}.",
+                    recipient.Id, ex.GetType().Name);
             }
         }
     }
 
     private static EmailRequest BuildEmailRequest(PendingSelfEnrollmentEntity pending)
     {
+        string fullName = WebUtility.HtmlEncode($"{pending.FirstName} {pending.LastName}");
         string body = $"""
                 <!DOCTYPE html>
                 <html>
@@ -84,13 +87,13 @@ public class SelfEnrollmentNotificationService
 
                     <hr/>
                     <h3>🇩🇪 Deutsch</h3>
-                    <p><strong>{pending.FirstName} {pending.LastName}</strong> hat sich selbst registriert und die
+                    <p><strong>{fullName}</strong> hat sich selbst registriert und die
                     E-Mail-Adresse bestätigt.</p>
                     <p>Bitte prüfe die Anmeldung im Tab "Ausstehende Mitglieder" der Mitgliederverwaltung.</p>
 
                     <hr/>
                     <h3>🇬🇧 English</h3>
-                    <p><strong>{pending.FirstName} {pending.LastName}</strong> self-enrolled and confirmed their
+                    <p><strong>{fullName}</strong> self-enrolled and confirmed their
                     email address.</p>
                     <p>Please review the registration in the "Pending members" tab of the member management page.</p>
                 </body>

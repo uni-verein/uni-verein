@@ -1,3 +1,4 @@
+using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Json;
 using UniVerein.Api.ApiRequests;
@@ -283,6 +284,50 @@ public class CreditorConfigControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task UpdateCreditorConfig_WritesAuditLogWithoutIban()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateCreditorConfigEntity();
+        CreditorConfigRequest request = CreateCreditorConfigRequest();
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/creditor-config", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(CreditorConfigEntity) && l.Data.Contains(request.Name));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.UPDATE));
+            auditLog.Data.ShouldNotContain(request.Iban);
+        });
+    }
+
+    [Fact]
+    public async Task DeleteCreditorConfig_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        CreditorConfigEntity creditorConfigEntity = await CreateCreditorConfigEntity();
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/creditor-config/{creditorConfigEntity.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(CreditorConfigEntity) && l.Data.Contains(creditorConfigEntity.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.SOFT_DELETE));
+        });
     }
 
     // ---------------------------------------------------------------

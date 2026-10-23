@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
 using UniVerein.Api.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace UniVerein.Api.Controllers;
 
@@ -45,7 +47,8 @@ public class SepaController : ControllerBase
 
         try
         {
-            (string xml, decimal _, int count) = await _sepa.GenerateXml(new CreditorConfig()
+            Log.Information("SepaController: Export -> SEPA export {ExportId} requested by {ActorId}.", id, HttpContext.GetActorId());
+            (string xml, decimal totalAmount, int count) = await _sepa.GenerateXml(new CreditorConfig()
             {
                 Name = creditorConfig.Name,
                 Iban = _cryptoService.Decrypt(creditorConfig.Iban_Encrypted) ?? string.Empty,
@@ -58,15 +61,21 @@ public class SepaController : ControllerBase
             }, id);
 
             if (count == 0)
+            {
+                Log.Warning("SepaController: Export -> SEPA export {ExportId} contains no collectible contributions.", id);
                 return UnprocessableEntity(new ApiResults.ErrorResults.UnprocessableEntityResult(
                     errorCode: ApiErrorCodes.UNPROCESSABLE_ENTITY,
                     errorMessage: "No collectible contributions",
                     moreInfo: "The export does not contain any open contributions with a valid IBAN and SEPA mandate."));
+            }
 
+            Log.Information("SepaController: Export -> SEPA export {ExportId} generated for {ActorId}: {TransactionCount} transactions, total {TotalAmount}.",
+                id, HttpContext.GetActorId(), count, totalAmount);
             return File(System.Text.Encoding.UTF8.GetBytes(xml), "application/xml", "sepa.xml");
         }
         catch (InvalidOperationException ex)
         {
+            Log.Warning("SepaController: Export -> SEPA export {ExportId} finished with validation errors, {ExceptionType}.", id, ex.GetType().Name);
             return StatusCode(207, new ErrorDetailsResult()
             {
                 ErrorMessage = ex.Message,
@@ -75,6 +84,7 @@ public class SepaController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            Log.Warning("SepaController: Export -> SEPA export {ExportId} rejected, {ExceptionType}.", id, ex.GetType().Name);
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: ex.Message));
         }
     }

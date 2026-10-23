@@ -35,8 +35,10 @@ public class PendingSelfEnrollmentCleanupService : BackgroundService
 
             int removed = await service.CleanupExpiredAsync();
             if (removed > 0)
-                Log.Information(
-                    $"PendingSelfEnrollmentCleanupService: Removed {removed} expired, unconfirmed self-enrollment submission(s).");
+                Log.Information("PendingSelfEnrollmentCleanupService: Removed {Count} expired, unconfirmed self-enrollment submission(s).",
+                    removed);
+            else
+                Log.Debug("PendingSelfEnrollmentCleanupService: No expired self-enrollment submissions found.");
         }
         catch (Exception ex)
         {

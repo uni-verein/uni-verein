@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -92,7 +93,7 @@ public class PendingSelfEnrollmentService
             IBAN_Encrypted = _crypto.Encrypt(request.IBAN),
             IBAN_Hash = ibanHash,
             Bic_Encrypted = _crypto.Encrypt(request.Bic),
-            SepaConsent = request.SepaConsent,
+            SepaConsent = ibanGiven && !string.IsNullOrWhiteSpace(request.Bic) ? now : null,
             ContributionPlanId = null,
             ContributionPlan = null
         };
@@ -100,7 +101,9 @@ public class PendingSelfEnrollmentService
         await _db.PendingSelfEnrollments.AddAsync(pending);
         await _db.SaveChangesAsync();
 
-        await SendConfirmationMailAsync(request, token, confirmBaseUrl);
+        Log.Information("PendingSelfEnrollmentService: SubmitAsync -> Pending self-enrollment {PendingId} created, awaiting email confirmation.",
+            pending.Id);
+        await SendConfirmationMailAsync(pending.Id, request, token, confirmBaseUrl);
 
         return PendingSelfEnrollmentSubmitResult.Success(pending);
     }
@@ -122,6 +125,7 @@ public class PendingSelfEnrollmentService
         pending.ConfirmedAt = now;
         _db.Update(pending);
         await _db.SaveChangesAsync();
+        Log.Information("PendingSelfEnrollmentService: ConfirmAsync -> Pending self-enrollment {PendingId} confirmed by email.", pending.Id);
 
         try
         {
@@ -368,11 +372,12 @@ public class PendingSelfEnrollmentService
         return new PendingSelfEnrollmentUpdateResult(PendingSelfEnrollmentActionStatus.SUCCESS, pending);
     }
 
-    private async Task SendConfirmationMailAsync(SelfEnrollmentRequest request, string token, string confirmBaseUrl)
+    private async Task SendConfirmationMailAsync(Guid pendingId, SelfEnrollmentRequest request, string token, string confirmBaseUrl)
     {
         try
         {
             string confirmLink = $"{confirmBaseUrl}?token={Uri.EscapeDataString(token)}";
+            string firstName = WebUtility.HtmlEncode(request.FirstName);
             string body = $"""
                     <!DOCTYPE html>
                     <html>
@@ -386,7 +391,7 @@ public class PendingSelfEnrollmentService
 
                         <hr/>
                         <h3>🇩🇪 Deutsch</h3>
-                        <p>Hallo {request.FirstName},</p>
+                        <p>Hallo {firstName},</p>
                         <p>bitte bestätige deine Selbstregistrierung über den folgenden Link:</p>
                         <p><a href="{confirmLink}">{confirmLink}</a></p>
                         <p>Der Link ist 48 Stunden gültig. Falls du diese Anmeldung nicht ausgelöst hast, kannst du
@@ -394,7 +399,7 @@ public class PendingSelfEnrollmentService
 
                         <hr/>
                         <h3>🇬🇧 English</h3>
-                        <p>Hi {request.FirstName},</p>
+                        <p>Hi {firstName},</p>
                         <p>please confirm your self-enrollment using the link below:</p>
                         <p><a href="{confirmLink}">{confirmLink}</a></p>
                         <p>This link is valid for 48 hours. If you did not request this, you can safely ignore this
@@ -416,7 +421,8 @@ public class PendingSelfEnrollmentService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"PendingSelfEnrollmentService: Error while sending confirmation mail to {request.Email}");
+            Log.Error("PendingSelfEnrollmentService: Error while sending confirmation mail for pending self-enrollment {PendingId}, {ExceptionType}.",
+                pendingId, ex.GetType().Name);
         }
     }
 
@@ -432,6 +438,7 @@ public class PendingSelfEnrollmentService
                 return;
             }
 
+            string firstName = WebUtility.HtmlEncode(pending.FirstName);
             string body = $"""
                     <!DOCTYPE html>
                     <html>
@@ -445,12 +452,12 @@ public class PendingSelfEnrollmentService
 
                         <hr/>
                         <h3>🇩🇪 Deutsch</h3>
-                        <p>Hallo {pending.FirstName},</p>
+                        <p>Hallo {firstName},</p>
                         <p>deine Selbstregistrierung wurde geprüft und angenommen. Du bist ab sofort Mitglied.</p>
 
                         <hr/>
                         <h3>🇬🇧 English</h3>
-                        <p>Hi {pending.FirstName},</p>
+                        <p>Hi {firstName},</p>
                         <p>your self-enrollment has been reviewed and approved. You are now a member.</p>
                     </body>
                     </html>
@@ -469,7 +476,8 @@ public class PendingSelfEnrollmentService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"PendingSelfEnrollmentService: Error while sending acceptance mail for pending self-enrollment {pending.Id}");
+            Log.Error("PendingSelfEnrollmentService: Error while sending acceptance mail for pending self-enrollment {PendingId}, {ExceptionType}.",
+                pending.Id, ex.GetType().Name);
         }
     }
 

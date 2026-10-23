@@ -10,6 +10,7 @@ public class MemberAudit
     public string MandateId { get; set; } = string.Empty;
     public Gender Gender { get; set; }
     public BulkMail BulkMail { get; set; }
+    public MembershipStatus MembershipStatus { get; set; }
     public string MemberCategory { get; set; } = string.Empty;
     public TaskWithinTheClub TaskWithinTheClub { get; set; }
     public AcademicDegree? AcademicDegree { get; set; }

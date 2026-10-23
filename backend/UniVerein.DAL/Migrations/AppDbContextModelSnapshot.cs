@@ -17,7 +17,7 @@ namespace UniVerein.DAL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.20")
+                .HasAnnotation("ProductVersion", "9.0.21")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -831,6 +831,13 @@ namespace UniVerein.DAL.Migrations
                     b.Property<int>("MemberNumber")
                         .HasColumnType("integer")
                         .HasColumnName("member_number");
+
+                    b.Property<string>("MembershipStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("MEMBER")
+                        .HasColumnName("membership_status");
 
                     b.Property<string>("MiddleName")
                         .IsRequired()

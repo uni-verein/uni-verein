@@ -154,6 +154,7 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         result.ShouldNotBeNull();
         result.TaskWithinTheClub.ShouldBe(TaskWithinTheClub.MEMBER);
+        result.MembershipStatus.ShouldBe(MembershipStatus.MEMBER);
         result.Email.ShouldBe(email);
 
         await WithDbContext(async db =>
@@ -163,6 +164,7 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
             MemberEntity? member = await db.Members.FirstOrDefaultAsync(m => m.Id == result.Id);
             member.ShouldNotBeNull();
             member.TaskWithinTheClub.ShouldBe(TaskWithinTheClub.MEMBER);
+            member.MembershipStatus.ShouldBe(MembershipStatus.MEMBER);
         });
     }
 
@@ -406,6 +408,26 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
         result.FirstName.ShouldBe("Pending");
         result.LastName.ShouldBe("Applicant");
         result.City.ShouldBe("Kiel");
+    }
+
+    [Fact]
+    public async Task GetById_ReturnsSepaConsent()
+    {
+        // Arrange
+        (HttpClient client, _) = await CreateUserAndClientAsync(UserRole.USER, "consent-viewer");
+        DateTimeOffset consent = new(2026, 3, 15, 10, 0, 0, TimeSpan.Zero);
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(
+            PendingSelfEnrollmentStatus.PENDING, iban: TestIban, sepaConsent: consent);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/pending-self-enrollments/{pending.Id}");
+        PendingSelfEnrollmentDetailResult? result =
+            await response.Content.ReadFromJsonAsync<PendingSelfEnrollmentDetailResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.SepaConsent.ShouldBe(consent);
     }
 
     [Theory]
@@ -780,7 +802,7 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
 
     private async Task<PendingSelfEnrollmentEntity> CreatePendingSelfEnrollmentEntity(
         PendingSelfEnrollmentStatus status, string? email = null, Guid? memberCategoryId = null,
-        bool assignCategory = true, string? iban = null)
+        bool assignCategory = true, string? iban = null, DateTimeOffset? sepaConsent = null)
     {
         string resolvedEmail = email ?? $"{Guid.NewGuid()}@test.de";
         PendingSelfEnrollmentEntity pending = new()
@@ -806,7 +828,8 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
             MotivationEncrypted = _cryptoService.Encrypt("Studiere Informatik."),
             MemberCategoryId = assignCategory ? (memberCategoryId ?? Guid.Parse(Program.MemberCategoriesAlumni)) : null,
             IBAN_Encrypted = iban != null ? _cryptoService.Encrypt(iban) : null,
-            IBAN_Hash = iban != null ? _cryptoService.Hash(iban) : null
+            IBAN_Hash = iban != null ? _cryptoService.Hash(iban) : null,
+            SepaConsent = sepaConsent
         };
 
         await WithDbContext(async db =>
