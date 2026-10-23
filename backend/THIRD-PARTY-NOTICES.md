@@ -1,6 +1,6 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-10-16
+Generated automatically on 2026-10-23
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -17,7 +17,7 @@ Generated automatically on 2026-10-16
 | Konscious.Security.Cryptography.Argon2 | 1.3.1 | MIT |
 | Konscious.Security.Cryptography.Blake2 | 1.1.1 | MIT |
 | MailKit | 4.18.1 | MIT |
-| Markdig | 1.4.1 | BSD-2-Clause |
+| Markdig | 1.4.2 | BSD-2-Clause |
 | Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.13 | MIT |
 | Microsoft.AspNetCore.Connections.Abstractions | 9.0.21 | MIT |
 | Microsoft.AspNetCore.Hosting.Abstractions | 2.3.0 |  |
