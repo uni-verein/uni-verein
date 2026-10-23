@@ -85,6 +85,9 @@ public class MemberEntity : BaseEntity
     [Column("exit_date")]
     public DateTimeOffset? ExitDate { get; set; }
 
+    [Column("membership_status")]
+    public MembershipStatus MembershipStatus { get; set; } = MembershipStatus.MEMBER;
+
     [Column("member_category_id")]
     public Guid? MemberCategoryId { get; set; }
 

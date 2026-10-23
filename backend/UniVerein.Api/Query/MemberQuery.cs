@@ -8,6 +8,7 @@ public class MemberQuery : QueryBase
 {
     public string? Name { get; set; }
     public TaskWithinTheClub? TaskWithinTheClub { get; set; }
+    public MembershipStatus? MembershipStatus { get; set; }
     public Guid? MemberCategoryId { get; set; }
     public bool? Deleted { get; set; }
 
@@ -20,6 +21,9 @@ public class MemberQuery : QueryBase
 
         if (TaskWithinTheClub.HasValue)
             queryParams.Add($"taskWithinTheClub={TaskWithinTheClub.Value}");
+
+        if (MembershipStatus.HasValue)
+            queryParams.Add($"membershipStatus={MembershipStatus.Value}");
 
         if (MemberCategoryId.HasValue)
             queryParams.Add($"memberCategoryId={MemberCategoryId.Value}");

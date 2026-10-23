@@ -1,3 +1,4 @@
+using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -72,13 +73,14 @@ public class MailControllerTests : IntegrationTestBase
         if (startTask.IsFaulted)
             throw new Exception("SMTP-Server not started", startTask.Exception);
 
+        Guid adminId = EnsureActorUser(UserRole.ADMIN);
         _connection = new HubConnectionBuilder()
             .WithUrl($"http://localhost/emailProgress", httpConnectionOptions =>
             {
                 IConfiguration configuration = Factory.Services.GetRequiredService<IConfiguration>();
                 string expiredToken = JwtTestHelper.CreateToken(
                     configuration,
-                    userId: Guid.NewGuid(),
+                    userId: adminId,
                     username: "admin",
                     role: UserRole.ADMIN,
                     lifetime: TimeSpan.FromMinutes(5));
@@ -1094,6 +1096,52 @@ public class MailControllerTests : IntegrationTestBase
         Assert.Equal(0, (int)resultProgressUpdate["failed"]!);
         JsonObject lastResult = (JsonObject)resultProgressUpdate["lastResult"]!;
         Assert.True((bool)lastResult["success"]!);
+    }
+
+    [Fact]
+    public async Task UpdateMailSetting_WritesAuditLogWithoutPassword()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMailSettingsEntity();
+        MailSettingsRequest request = CreateMailSettingRequest();
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/mail", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(MailSettingsEntity) && l.Data.Contains(request.Username));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.UPDATE));
+            auditLog.Data.ShouldContain("PasswordChanged");
+            if (!string.IsNullOrEmpty(request.Password))
+                auditLog.Data.ShouldNotContain(request.Password);
+        });
+    }
+
+    [Fact]
+    public async Task DeleteMailSettings_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        MailSettingsEntity mailSettingsEntity = await CreateMailSettingsEntity();
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/mail/{mailSettingsEntity.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(MailSettingsEntity) && l.Data.Contains(mailSettingsEntity.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.SOFT_DELETE));
+        });
     }
 
     // ---------------------------------------------------------------

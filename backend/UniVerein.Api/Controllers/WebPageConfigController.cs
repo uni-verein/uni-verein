@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace UniVerein.Api.Controllers;
 
@@ -87,6 +89,8 @@ public class WebPageConfigController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        Log.Information("WebPageConfigController: UpdateAsync -> Web page config {ConfigId} updated by {ActorId}, self-enrollment enabled: {SelfEnrollmentEnabled}.",
+            webPageConfig.Id, HttpContext.GetActorId(), webPageConfig.SelfEnrollmentEnabled);
         return Ok(new WebPageConfigResult()
         {
             Id = webPageConfig.Id,
@@ -108,6 +112,7 @@ public class WebPageConfigController : ControllerBase
 
         _db.Remove(webPageConfig);
         await _db.SaveChangesAsync();
+        Log.Information("WebPageConfigController: DeleteAsync -> Web page config {ConfigId} deleted by {ActorId}.", id, HttpContext.GetActorId());
         return Ok();
     }
 

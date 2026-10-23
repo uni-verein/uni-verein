@@ -72,6 +72,9 @@ public class PendingSelfEnrollmentDetailResult
     [JsonPropertyName("bic")]
     public string Bic { get; set; } = string.Empty;
 
+    [JsonPropertyName("sepaConsent")]
+    public DateTimeOffset? SepaConsent { get; set; }
+
     [JsonPropertyName("contributionPlanId")]
     public Guid? ContributionPlanId { get; set; }
 

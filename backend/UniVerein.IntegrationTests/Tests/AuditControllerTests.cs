@@ -10,6 +10,7 @@ using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using UniVerein.IntegrationTests.Infrastructure;
 using Shouldly;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace UniVerein.IntegrationTests.Tests;
@@ -212,5 +213,56 @@ public class AuditControllerTests : IntegrationTestBase
         entity.Action.ShouldBe(result.Action);
         entity.Entity.ShouldBe(result.Entity);
         entity.Data.ShouldBe(result.Data);
+    }
+
+    [Fact]
+    public async Task GetAllAuditLogs_UserDeleted_StillListedWithoutUserName()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        AuditLogEntity auditLog = await CreateAuditLogEntity("deleted-user-entry");
+        await WithDbContext(async db =>
+        {
+            UserEntity user = await db.Users.FirstAsync(u => u.Id == auditLog.UserId);
+            db.Users.Remove(user);
+            await db.SaveChangesAsync();
+        });
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/audit");
+        AuditLogResults? results = await response.Content.ReadFromJsonAsync<AuditLogResults>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(1);
+        AuditLogResult result = results.Items.Single();
+        result.Data.ShouldBe("deleted-user-entry");
+        result.UserName.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetAllAuditLogs_UserDeleted_OtherEntriesKeepUserName()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        AuditLogEntity deletedUserLog = await CreateAuditLogEntity("deleted");
+        AuditLogEntity activeUserLog = await CreateAuditLogEntity("active");
+        await WithDbContext(async db =>
+        {
+            UserEntity user = await db.Users.FirstAsync(u => u.Id == deletedUserLog.UserId);
+            db.Users.Remove(user);
+            await db.SaveChangesAsync();
+        });
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/audit");
+        AuditLogResults? results = await response.Content.ReadFromJsonAsync<AuditLogResults>(_jsonSerializerOptions);
+
+        // Assert
+        results.ShouldNotBeNull();
+        results!.Total.ShouldBe(2);
+        results.Items.Single(x => x.Data == "deleted").UserName.ShouldBeNull();
+        results.Items.Single(x => x.Data == "active").UserName.ShouldBe(activeUserLog.User.Username);
     }
 }

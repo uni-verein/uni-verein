@@ -101,6 +101,18 @@ public class CsvRowValidator
                 ]
             });
 
+        if (!string.IsNullOrWhiteSpace(row.MembershipStatus) &&
+            !Enum.TryParse<MembershipStatus>(row.MembershipStatus, ignoreCase: true, out _))
+            errors.Add(new()
+            {
+                TranslationKey = $"validator.membershipStatus.invalid",
+                Values =
+                [
+                    rowNumber.ToString(), $"{row.MembershipStatus}",
+                    string.Join(", ", Enum.GetNames<MembershipStatus>())
+                ]
+            });
+
         if (row.StudyEnd != null && row.StudyStart == null)
             errors.Add(new() { TranslationKey = $"validator.studyStart.required", Values = [rowNumber.ToString()] });
 

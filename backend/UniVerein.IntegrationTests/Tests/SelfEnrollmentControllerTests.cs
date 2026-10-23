@@ -202,6 +202,70 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task PostSelfEnrollment_NameLongerThan100Characters_BadRequest()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient client = CreateClient();
+        SelfEnrollmentRequest request = CreateSelfEnrollmentRequest();
+        request.FirstName = new string('a', 101);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task PostSelfEnrollment_ClientSuppliedSepaConsentInRawPayload_IsIgnoredAndSetByServer()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient client = CreateClient();
+        string email = $"consent_{Guid.NewGuid()}@test.de";
+
+        string json = $$"""
+        {
+          "gender": "MALE",
+          "firstName": "Consent",
+          "lastName": "Tester",
+          "birthday": "2000-01-01T00:00:00Z",
+          "street": "street",
+          "postalCode": "24103",
+          "city": "Kiel",
+          "countryCode": "DE",
+          "email": "{{email}}",
+          "bulkMail": "ALLOWED",
+          "startOfStudies": "2020-01-01T00:00:00Z",
+          "motivation": "Studiere Informatik.",
+          "iban": "{{Guid.NewGuid():N}}",
+          "bic": "DEUTDEDEXXX",
+          "sepaConsent": "1999-01-01T00:00:00Z",
+          "entryDate": "2020-01-01T00:00:00Z"
+        }
+        """;
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/self-enrollment",
+            new StringContent(json, Encoding.UTF8, "application/json"));
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        string emailHash = _cryptoService.Hash(email);
+        DateTimeOffset now = GetService<TimeProvider>().GetUtcNow();
+        await WithDbContext(async db =>
+        {
+            PendingSelfEnrollmentEntity? pending =
+                await db.PendingSelfEnrollments.FirstOrDefaultAsync(x => x.EmailHash == emailHash);
+            pending.ShouldNotBeNull();
+            pending.SepaConsent.ShouldNotBeNull();
+            pending.SepaConsent.Value.ShouldBe(now, TimeSpan.FromMinutes(1));
+        });
+    }
+
+    [Fact]
     public async Task PostSelfEnrollment_TamperedTaskWithinTheClubInRawPayload_IsIgnoredAfterApproval()
     {
         // Arrange

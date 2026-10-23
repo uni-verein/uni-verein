@@ -35,6 +35,7 @@ public class ContributionBackgroundService : BackgroundService
 
             await contributionService.DeletePaidContributions();
             await contributionService.GenerateDueContributions();
+            Log.Debug("ContributionBackgroundService: Contribution run finished.");
         }
         catch (Exception ex)
         {

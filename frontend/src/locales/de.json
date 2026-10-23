@@ -17,6 +17,10 @@
       "alumniOfficer": "Alumni-Beauftragter",
       "studentCouncilRepresentative": "Fachschafts-Beauftragter"
     },
+    "membershipStatusOptions": {
+      "MEMBER": "Mitglied",
+      "SUPPORTING_MEMBER": "Fördermitglied"
+    },
     "pendingEnrollments": {
       "info": "Diese Anmeldungen haben ihre E-Mail-Adresse bereits bestätigt und warten auf Freigabe. Erst nach der Freigabe entsteht ein aktives Mitglied.",
       "table": {
@@ -120,6 +124,7 @@
         "motivation": "Motivation",
         "motivationPlaceholder": "Was machst du beruflich/studentisch, und warum möchtest du beitreten?",
         "taskWithinTheClub": "Aufgabe im Verein",
+        "membershipStatus": "Mitgliedsstatus",
         "memberCategory": "Mitgliederkategorie",
         "memberCategoryOptions": {
           "STUDENT": "Studierende",
@@ -479,6 +484,7 @@
     "audit": {
       "title": "Audit Log",
       "dataLabel": "Daten",
+      "deletedUser": "Gelöschter Nutzer",
       "tableHeaders": {
         "time": "Zeit",
         "user": "Nutzer",
@@ -568,6 +574,9 @@
           },
           "taskWithinTheClub": {
             "invalid": "Zeile {{0}}: 'Task within the club' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
+          },
+          "membershipStatus": {
+            "invalid": "Zeile {{0}}: 'Membership status' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
           },
           "memberCategory": {
             "invalid": "Zeile {{0}}: 'Mitgliederkategorie' hat einen ungültigen Wert '{{1}}'. Erlaubt: {{2}}."
@@ -723,10 +732,15 @@
         "all": "Alle",
         "unpaid": "Offen",
         "paid": "Bezahlt",
-        "resetFilter": "Filter zurücksetzen"
+        "resetFilter": "Filter zurücksetzen",
+        "membershipStatus": "Mitgliedsstatus",
+        "allMembershipStatus": "Alle",
+        "showDeleted": "Gelöschte anzeigen"
       },
       "table": {
+        "memberNumber": "Nr.",
         "member": "Mitglied",
+        "membershipStatus": "Mitgliedsstatus",
         "amount": "Betrag",
         "dueDate": "Fällig am",
         "status": "Status",
@@ -739,7 +753,21 @@
       },
       "button": {
         "markAsPaid": "Zahlung erhalten",
-        "markAsUnPaid": "Zahlung offen"
+        "markAsUnPaid": "Zahlung offen",
+        "delete": "Löschen",
+        "restore": "Wiederherstellen"
+      },
+      "confirmDialog": {
+        "deleteQuestion": "Diesen offenen Beitrag wirklich endgültig löschen? Er wird aus der Liste entfernt.",
+        "delete": "Endgültig löschen",
+        "restoreQuestion": "Diesen Beitrag wirklich wiederherstellen?",
+        "restore": "Wiederherstellen"
+      },
+      "responseMessages": {
+        "deleted": "Beitrag wurde gelöscht.",
+        "deleteError": "Beitrag konnte nicht gelöscht werden. Nur offene Beiträge können gelöscht werden.",
+        "restored": "Beitrag wurde wiederhergestellt.",
+        "restoreError": "Beitrag konnte nicht wiederhergestellt werden."
       }
     },
     "creditorConfig": {
@@ -1233,6 +1261,8 @@
         "searchName": "Name suchen",
         "taskInClub": "Aufgabe im Verein",
         "allTasks": "Alle Aufgaben",
+        "membershipStatus": "Mitgliedsstatus",
+        "allMembershipStatus": "Alle",
         "memberCategory": "Mitgliederkategorie",
         "ALL": "Alle",
         "STUDENT": "Studierende",
@@ -1247,6 +1277,7 @@
         "colNumber": "Nr.",
         "colName": "Name",
         "colTask": "Aufgabe im Verein",
+        "colMembershipStatus": "Mitgliedsstatus",
         "colEmail": "E-Mail",
         "colContribution": "Beitrag",
         "colMemberCategory": "Mitgliederkategorie",

@@ -83,9 +83,11 @@ public class SepaService
             .Include(c => c.MemberEntity)
             .ThenInclude(m => m.ContributionPlan)
             .Where(c =>
+                c.DeletedAt == null &&
                 c.Paid == null &&
                 c.DueDate <= today &&
                 c.MemberEntity != null &&
+                c.MemberEntity.DeletedAt == null &&
                 c.MemberEntity.IBAN_Encrypted != null &&
                 c.MemberEntity.SepaConsent != null &&
                 c.ExportId == exportId)
@@ -93,7 +95,10 @@ public class SepaService
             .ThenBy(c => c.DueDate)
             .ToListAsync();
 
-        contributions = contributions.Where(c => c.Amount >= 0.01m).ToList();
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        contributions = contributions
+            .Where(c => c.Amount >= 0.01m && (c.MemberEntity.ExitDate == null || c.MemberEntity.ExitDate > now))
+            .ToList();
         if (contributions.Count == 0)
             return [];
 

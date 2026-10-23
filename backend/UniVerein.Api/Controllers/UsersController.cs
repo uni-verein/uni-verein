@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
 using UniVerein.Api.Security;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using UniVerein.DAL.Data;
@@ -28,12 +30,14 @@ public class UsersController : ControllerBase
     private readonly AppDbContext _db;
     private readonly CryptoService _cryptoService;
     private readonly TimeProvider _timeProvider;
+    private readonly AuditService _auditService;
 
-    public UsersController(AppDbContext db, CryptoService cryptoService, TimeProvider timeProvider)
+    public UsersController(AppDbContext db, CryptoService cryptoService, TimeProvider timeProvider, AuditService auditService)
     {
         _db = db;
         _cryptoService = cryptoService;
         _timeProvider = timeProvider;
+        _auditService = auditService;
     }
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
@@ -119,6 +123,10 @@ public class UsersController : ControllerBase
 
         await _db.Users.AddAsync(user);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.CREATE, nameof(UserEntity),
+            new { UserId = user.Id, user.Username, user.Role });
+        Log.Information("UsersController: CreateAsync -> User {UserId} created with role {Role} by {ActorId}.",
+            user.Id, user.Role, HttpContext.GetActorId());
 
         UserResult result = new()
         {
@@ -141,6 +149,9 @@ public class UsersController : ControllerBase
                 errorMessage: "User not found.",
                 moreInfo: $"User with ID {id} not found."));
 
+        List<string> changedFields = new();
+        UserRole oldRole = user.Role;
+
         if (!string.IsNullOrWhiteSpace(request.Password) && IsCurrentUser(id))
         {
             ActionResult? verifyError = await VerifyCurrentPasswordAsync(user, request.CurrentPassword);
@@ -160,6 +171,7 @@ public class UsersController : ControllerBase
                     moreInfo: "User with same name already exists. Try a other name."));
 
             user.Username = request.Username;
+            changedFields.Add("username");
         }
 
         if (request.Email != null)
@@ -168,6 +180,7 @@ public class UsersController : ControllerBase
                 return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Email length must be less 51 characters."));
 
             user.Email = _cryptoService.Encrypt(request.Email);
+            changedFields.Add("email");
         }
 
         if (!string.IsNullOrWhiteSpace(request.Password))
@@ -177,6 +190,7 @@ public class UsersController : ControllerBase
                     moreInfo: "Password length must be greater than 9 or less 51 characters."));
 
             user.PasswordHash = CryptoService.HashPassword(request.Password);
+            changedFields.Add("password");
         }
 
         if (request.Role != null && request.Role != user.Role)
@@ -187,10 +201,15 @@ public class UsersController : ControllerBase
                     moreInfo: "Role changes for your own account are not allowed."));
 
             user.Role = (UserRole)request.Role!;
+            changedFields.Add("role");
         }
 
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(UserEntity),
+            new { UserId = user.Id, user.Username, ChangedFields = changedFields, OldRole = oldRole, NewRole = user.Role });
+        Log.Information("UsersController: UpdateAsync -> User {UserId} updated by {ActorId}, changed fields: {ChangedFields}, role: {OldRole} -> {NewRole}.",
+            user.Id, HttpContext.GetActorId(), string.Join(",", changedFields), oldRole, user.Role);
         return Ok(new UserResult()
         {
             Id = user.Id,
@@ -217,6 +236,9 @@ public class UsersController : ControllerBase
 
         _db.Remove(user);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.SOFT_DELETE, nameof(UserEntity),
+            new { UserId = id, user.Username, user.Role });
+        Log.Information("UsersController: DeleteAsync -> User {UserId} deleted by {ActorId}.", id, HttpContext.GetActorId());
         return Ok();
     }
 
@@ -225,18 +247,21 @@ public class UsersController : ControllerBase
         DateTimeOffset now = _timeProvider.GetUtcNow();
 
         if (user.BlockingLoginTimeout.HasValue && user.BlockingLoginTimeout > now)
+        {
+            Log.Warning("UsersController: VerifyCurrentPasswordAsync -> Password change for user {UserId} blocked by lockout.", user.Id);
             return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
                 errorMessage: "To many failed password attempts.",
                 moreInfo: $"Try again in {Math.Ceiling((user.BlockingLoginTimeout.Value - now).TotalSeconds)} seconds."));
+        }
 
         bool verified;
         try
         {
             verified = CryptoService.VerifyPassword(currentPassword ?? string.Empty, user.PasswordHash);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Log.Warning("UsersController: Current password validation threw an exception.");
+            Log.Warning("UsersController: Current password validation for user {UserId} threw {ExceptionType}.", user.Id, ex.GetType().Name);
             verified = false;
         }
 
@@ -246,6 +271,8 @@ public class UsersController : ControllerBase
             user.LastFailedLoginAttempt = now;
             user.BlockingLoginTimeout = LoginGuard.GetLockoutReleaseTime(user.FailedAttempts, now);
             await _db.SaveChangesAsync();
+            Log.Warning("UsersController: VerifyCurrentPasswordAsync -> Wrong current password for user {UserId}, failed attempts: {FailedAttempts}, locked: {Locked}.",
+                user.Id, user.FailedAttempts, user.BlockingLoginTimeout.HasValue);
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Current password is incorrect."));
         }
 

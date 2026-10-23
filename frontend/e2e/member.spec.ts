@@ -67,7 +67,8 @@ test.describe('Member – create new member', () => {
       await openDashboard(page, tc.get().token);
       await expect(page.getByRole('textbox', { name: 'Name suche' })).toBeVisible();
       await expect(page.getByText('Alle Aufgaben')).toBeVisible();
-      await expect(page.getByText('Alle', { exact: true })).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Mitgliedsstatus Alle' })).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Mitgliederkategorie Alle' })).toBeVisible();
     });
 
     test('Page header show refresh button', async ({ page }) => {
@@ -85,6 +86,7 @@ test.describe('Member – create new member', () => {
       await expect(page.getByRole('columnheader', { name: 'Nr.' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'Name' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'Aufgabe im Verein' })).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: 'Mitgliedsstatus' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'E-Mail' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'Beitrag' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'Mitgliederkategorie' })).toBeVisible();
@@ -125,6 +127,7 @@ test.describe('Member – create new member', () => {
       await expect(
         page.getByRole('combobox', { name: 'Aufgabe im Verein Mitglied' }),
       ).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Mitgliedsstatus Mitglied' })).toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Mitgliederkategorie' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'Eintrittsdatum' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'AustrittsDatum' })).toBeVisible();

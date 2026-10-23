@@ -1,3 +1,4 @@
+using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -131,7 +132,7 @@ public class UsersControllerTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         results.ShouldNotBeNull();
-        results.Total.ShouldBe(5);
+        results.Total.ShouldBe(6); // the 5 created users and the acting admin
         foreach (UserEntity user in users)
         {
             UserResult? result = results.Items.FirstOrDefault(x => x.Id == user.Id);
@@ -139,7 +140,8 @@ public class UsersControllerTests : IntegrationTestBase
             CompareUser(user, result);
         }
 
-        results.Items.Select(x => int.Parse(x.Username)).ToArray().ShouldBeEquivalentTo(Enumerable.Range(0, 5).ToArray());
+        results.Items.Where(x => x.Id != UserId).Select(x => int.Parse(x.Username)).ToArray()
+            .ShouldBeEquivalentTo(Enumerable.Range(0, 5).ToArray());
     }
 
     [Fact]
@@ -183,21 +185,17 @@ public class UsersControllerTests : IntegrationTestBase
     [InlineData(UserRole.USER)]
     [InlineData(UserRole.FINANCIAL_MANAGER)]
     [InlineData(UserRole.ADMIN)]
-    public async Task GetAccountUsers_UserNotFound(UserRole role)
+    public async Task GetAccountUsers_UserDoesNotExist_Unauthorized(UserRole role)
     {
         // Arrange
         HttpClient client = CreateClient(role);
+        await DeleteActorUserPermanently();
 
         // Act
         HttpResponseMessage response = await client.GetAsync("/users/account");
-        ErrorDetailsResult? result =
-            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe((int)HttpStatusCode.NotFound);
-        result.ErrorMessage.ShouldBe("User not found.");
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Theory]
@@ -654,21 +652,65 @@ public class UsersControllerTests : IntegrationTestBase
     [InlineData(UserRole.USER)]
     [InlineData(UserRole.FINANCIAL_MANAGER)]
     [InlineData(UserRole.ADMIN)]
-    public async Task UpdateAccountUser_NotFound(UserRole role)
+    public async Task UpdateAccountUser_UserDoesNotExist_Unauthorized(UserRole role)
     {
         // Arrange
         HttpClient client = CreateClient(role);
+        await DeleteActorUserPermanently();
 
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync("/users/account", CreateUpdateUserRequest());
-        ErrorDetailsResult? result =
-            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe((int)HttpStatusCode.NotFound);
-        result.ErrorMessage.ShouldBe("User not found.");
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Token_OfSoftDeletedUser_Unauthorized()
+    {
+        // Arrange
+        (HttpClient deletedUserClient, Guid deletedUserId) = await CreateUserAndClientAsync(UserRole.ADMIN, "to-be-deleted");
+        HttpClient admin = CreateClient(UserRole.ADMIN);
+        MemberEntity member = await CreateMemberForTokenTests();
+
+        // Act
+        HttpResponseMessage beforeDelete = await deletedUserClient.GetAsync("/users/account");
+        HttpResponseMessage deleteResponse = await admin.DeleteAsync($"/users/{deletedUserId}");
+        HttpResponseMessage afterDeleteRead = await deletedUserClient.GetAsync("/users/account");
+        HttpResponseMessage afterDeleteMutation = await deletedUserClient.DeleteAsync($"/members/{member.Id}");
+
+        // Assert
+        beforeDelete.StatusCode.ShouldBe(HttpStatusCode.OK);
+        deleteResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        afterDeleteRead.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        afterDeleteMutation.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Id == member.Id);
+            dbMember.ShouldNotBeNull();
+            dbMember.DeletedAt.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task Token_WithRoleThatDiffersFromDatabase_Unauthorized()
+    {
+        // Arrange
+        (HttpClient client, Guid userId) = await CreateUserAndClientAsync(UserRole.ADMIN, "demoted-admin");
+
+        // Act
+        HttpResponseMessage beforeDemotion = await client.GetAsync("/users/account");
+        await WithDbContext(async db =>
+        {
+            UserEntity user = await db.Users.SingleAsync(u => u.Id == userId);
+            user.Role = UserRole.USER;
+            await db.SaveChangesAsync();
+        });
+        HttpResponseMessage afterDemotion = await client.GetAsync("/users/account");
+
+        // Assert
+        beforeDemotion.StatusCode.ShouldBe(HttpStatusCode.OK);
+        afterDemotion.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Theory]
@@ -1060,9 +1102,121 @@ public class UsersControllerTests : IntegrationTestBase
         });
     }
 
+    [Fact]
+    public async Task CreateUser_WritesAuditLogWithoutPassword()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        UserRequest request = CreateUserRequest();
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/users", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(UserEntity) && l.Data.Contains(request.Username));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.CREATE));
+            auditLog.Data.ShouldNotContain(request.Password);
+        });
+    }
+
+    [Fact]
+    public async Task UpdateUser_RoleChange_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        UserEntity userEntity = await CreateUserEntity(role: UserRole.USER);
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/users/{userEntity.Id}",
+            new UserUpdateRequest { Role = UserRole.FINANCIAL_MANAGER });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(UserEntity) && l.Data.Contains(userEntity.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.UPDATE));
+            auditLog.Data.ShouldContain("role");
+            auditLog.Data.ShouldContain(nameof(UserRole.FINANCIAL_MANAGER));
+        });
+    }
+
+    [Fact]
+    public async Task DeleteUser_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        UserEntity userEntity = await CreateUserEntity();
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/users/{userEntity.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(UserEntity) && l.Data.Contains(userEntity.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.SOFT_DELETE));
+        });
+    }
+
     // ---------------------------------------------------------------
     // Helper functions
     // ---------------------------------------------------------------
+
+    private async Task DeleteActorUserPermanently()
+    {
+        await WithDbContext(async db =>
+        {
+            db.Users.RemoveRange(db.Users.IgnoreQueryFilters().Where(u => u.Id == UserId));
+            await db.ForceSaveChangesAsync();
+        });
+    }
+
+    private async Task<MemberEntity> CreateMemberForTokenTests()
+    {
+        Guid memberId = Guid.NewGuid();
+        MemberEntity member = new()
+        {
+            Id = memberId,
+            MandateId = memberId.ToString(),
+            Gender = Gender.MALE,
+            FirstName = Guid.NewGuid().ToString(),
+            LastName = Guid.NewGuid().ToString(),
+            BirthdayEncrypted = _cryptoService.Encrypt(DateTimeOffset.UtcNow),
+            StreetEncrypted = _cryptoService.Encrypt("street"),
+            PostalCode = "24103",
+            City = "Kiel",
+            CountryCode = "DE",
+            EmailEncrypted = _cryptoService.Encrypt("token-test@test.de"),
+            EmailHash = _cryptoService.Hash("token-test@test.de"),
+            PhoneEncrypted = _cryptoService.Encrypt("01512345678"),
+            BulkMail = BulkMail.ALLOWED,
+            StartOfStudies = DateTimeOffset.UtcNow,
+            AcademicDegree = AcademicDegree.BA,
+            CourseOfStudy = "IT",
+            TaskWithinTheClub = TaskWithinTheClub.MEMBER,
+            MemberCategoryId = Guid.Parse(Program.MemberCategoriesAlumni),
+            EntryDate = DateTimeOffset.UtcNow
+        };
+
+        await WithDbContext(async db =>
+        {
+            await db.Members.AddAsync(member);
+            await db.SaveChangesAsync();
+        });
+
+        return member;
+    }
 
     private async Task<UserEntity> CreateUserEntity(Guid? id = null, string? username = null, UserRole? role = null)
     {
@@ -1077,7 +1231,22 @@ public class UsersControllerTests : IntegrationTestBase
 
         await WithDbContext(async db =>
         {
-            await db.Users.AddAsync(userEntity);
+            UserEntity? existing = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userEntity.Id);
+            if (existing == null)
+            {
+                await db.Users.AddAsync(userEntity);
+            }
+            else
+            {
+                existing.Username = userEntity.Username;
+                existing.PasswordHash = userEntity.PasswordHash;
+                existing.Email = userEntity.Email;
+                existing.DeletedAt = null;
+                if (role != null)
+                    existing.Role = userEntity.Role;
+                userEntity.Role = existing.Role;
+            }
+
             await db.SaveChangesAsync();
         });
 

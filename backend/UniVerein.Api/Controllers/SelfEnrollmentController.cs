@@ -62,8 +62,7 @@ public class SelfEnrollmentController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<SelfEnrollmentSubmitResult>> CreateAsync([FromBody] SelfEnrollmentRequest request)
     {
-        Log.Information(
-            $"SelfEnrollmentController: CreateAsync -> Try to self-enroll member: {request.FirstName} {request.LastName}");
+        Log.Information("SelfEnrollmentController: CreateAsync -> Received a self-enrollment submission.");
 
         WebPageConfigEntity? config = await GetEnabledConfigAsync();
         if (config == null)
@@ -97,8 +96,7 @@ public class SelfEnrollmentController : ControllerBase
                     moreInfo: "A member or a pending self-enrollment with the same email address or IBAN already exists."));
         }
 
-        Log.Information(
-            $"SelfEnrollmentController: CreateAsync -> Submission from {request.FirstName} {request.LastName} accepted, confirmation mail sent.");
+        Log.Information("SelfEnrollmentController: CreateAsync -> Submission accepted, status {Status}.", result.Status);
         return Created(string.Empty, new SelfEnrollmentSubmitResult());
     }
 

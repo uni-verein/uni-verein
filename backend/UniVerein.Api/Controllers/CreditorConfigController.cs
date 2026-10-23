@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
@@ -10,6 +12,7 @@ using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace UniVerein.Api.Controllers;
 
@@ -20,11 +23,13 @@ public class CreditorConfigController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly CryptoService _cryptoService;
+    private readonly AuditService _auditService;
 
-    public CreditorConfigController(AppDbContext db, CryptoService cryptoService)
+    public CreditorConfigController(AppDbContext db, CryptoService cryptoService, AuditService auditService)
     {
         _db = db;
         _cryptoService = cryptoService;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -86,6 +91,18 @@ public class CreditorConfigController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(CreditorConfigEntity), new
+        {
+            CreditorConfigId = creditorConfig.Id,
+            creditorConfig.Name,
+            creditorConfig.CreditorId,
+            creditorConfig.StreetNameAndNumber,
+            creditorConfig.PostCode,
+            creditorConfig.CityName,
+            creditorConfig.CountryCode
+        });
+        Log.Information("CreditorConfigController: UpdateAsync -> Creditor config {CreditorConfigId} saved by {ActorId}.",
+            creditorConfig.Id, HttpContext.GetActorId());
 
         CreditorConfigResult result = new()
         {
@@ -114,6 +131,10 @@ public class CreditorConfigController : ControllerBase
 
         _db.Remove(creditorConfig);
         await _db.SaveChangesAsync();
+        await _auditService.LogAsync(AuditLogActions.SOFT_DELETE, nameof(CreditorConfigEntity),
+            new { CreditorConfigId = id, creditorConfig.Name, creditorConfig.CreditorId });
+        Log.Information("CreditorConfigController: DeleteAsync -> Creditor config {CreditorConfigId} deleted by {ActorId}.",
+            id, HttpContext.GetActorId());
         return Ok();
     }
 }

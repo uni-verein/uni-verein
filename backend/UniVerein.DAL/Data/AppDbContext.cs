@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UniVerein.DAL.Entities;
+using UniVerein.DAL.Entities.Enums;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -77,6 +78,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<MemberEntity>()
             .Property(x => x.Gender)
             .HasConversion<string>();
+
+        modelBuilder.Entity<MemberEntity>()
+            .Property(x => x.MembershipStatus)
+            .HasConversion<string>()
+            .HasDefaultValue(MembershipStatus.MEMBER);
 
         modelBuilder.Entity<MemberEntity>()
             .Property(x => x.BulkMail)

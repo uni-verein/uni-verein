@@ -247,13 +247,6 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         HttpClient client = CreateClient(UserRole.ADMIN);
         ReceiptCategoryEntity category = await CreateReceiptCategoryAsync("Eat");
 
-        await _db.Users.AddAsync(new UserEntity
-        {
-            Id = UserId,
-            Username = "category-tester",
-            PasswordHash = CryptoService.HashPassword("Test1234!"),
-            Role = UserRole.ADMIN
-        });
         await _db.Receipts.AddAsync(new ReceiptEntity
         {
             Id = Guid.NewGuid(),
@@ -284,14 +277,6 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         HttpClient client = CreateClient(UserRole.ADMIN);
         ReceiptCategoryEntity category = await CreateReceiptCategoryAsync("Eat");
 
-        _db.Users.Add(new UserEntity
-        {
-            Id = UserId,
-            Username = "category-tester-2",
-            PasswordHash = CryptoService.HashPassword("Test1234!"),
-            Role = UserRole.ADMIN
-        });
-        await _db.SaveChangesAsync();
         ReceiptEntity receipt = new()
         {
             Id = Guid.NewGuid(),

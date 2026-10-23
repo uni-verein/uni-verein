@@ -93,10 +93,10 @@ Use this unless you already terminate TLS in front of this stack.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/Caddyfile
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-tls.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/Caddyfile
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/docker-compose-tls.yml
 ```
 
 2. **Create .env and secrets**
@@ -137,9 +137,9 @@ it doesn't come up, check `docker compose -f docker-compose-tls.yml logs caddy`.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.0/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.9.1/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**
@@ -157,7 +157,52 @@ DB_USER=databaseUserName
 DB_PASSWORD=databaseUserPassword
 ```
 
-3. **Start application**
+3. **Tell the stack about your reverse proxy**
+
+The login lockout, the rate limits and the IP shown for self-enrollments work
+per visitor address. This stack only sees the address of your proxy, so it must
+learn the visitor address from the `X-Forwarded-For` header, and it believes that
+header **only from proxies you list**. Without this step every visitor looks like
+the proxy: all users share one login lockout (three wrong passwords of anyone lock
+the account for everybody) and one rate limit.
+
+On the machine that runs this stack, create the folder `trusted-proxies` next to
+the compose file and put the address of your proxy (the address this stack sees
+the requests coming from; IPv6 and networks like `192.168.1.0/24` work too) into
+a `.conf` file in it:
+
+```bash
+mkdir -p trusted-proxies
+echo "set_real_ip_from <address of your proxy (192.168.1.20)>;" > trusted-proxies/proxy.conf
+```
+
+Your proxy has to **overwrite** the header with the address of the visitor and
+must not pass on what the visitor sent. With nginx as the proxy:
+
+```nginx
+location / {
+    proxy_pass http://<address of this stack>:80;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $remote_addr;
+}
+```
+
+Other proxies (Traefik, Nginx Proxy Manager, Apache, ...) set the header on their
+own, check that it contains the visitor address. Only the proxy may be able to
+reach this stack: block port 80 for all other machines with a firewall, otherwise
+they can send the header themselves and choose any address.
+
+To check it, open the application from outside and look at the log of the proxy
+container (`docker compose -f docker-compose-prod-image.yml logs proxy`): it
+must show your own address and not the one of your proxy. Restart the proxy
+container after changing the folder (`docker compose -f docker-compose-prod-image.yml restart proxy`).
+
+> The folder is not touched by updates. Older versions trusted every address in
+> `172.16.0.0/12` (the default Docker range) as a proxy. If your proxy was
+> covered by that, create the file once when you update, otherwise the visitor
+> address is lost. The TLS-included setup (option A) needs nothing.
+
+4. **Start application**
 
 ```bash
 docker compose -f docker-compose-prod-image.yml up -d

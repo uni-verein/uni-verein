@@ -194,6 +194,47 @@ public class SepaValidatorTests
         Assert.Contains("BADBIC", ex.Message);
     }
 
+    [Fact]
+    public void IsValidIban_NonAsciiDigits_IsNeverValid()
+    {
+        string[] digits = Enumerable.Range(0, 10).Select(i => ((char)('\u0660' + i)).ToString())
+            .Concat(Enumerable.Range(0, 10).Select(i => ((char)('\uFF10' + i)).ToString()))
+            .ToArray();
+
+        List<string> accepted = [];
+        foreach (string first in digits)
+        {
+            foreach (string second in digits)
+            {
+                string iban = "DE" + first + second + "370400440532013000";
+                if (SepaValidator.IsValidIban(iban))
+                    accepted.Add(iban);
+            }
+        }
+
+        Assert.Empty(accepted);
+    }
+
+    [Theory]
+    [InlineData("DE\u0668\u0669370400440532013000")]
+    [InlineData("DE89370400440532013\u0660\u0660\u0660")]
+    [InlineData("DE\uFF18\uFF19370400440532013000")]
+    public void IsValidIban_NonAsciiDigit_IsInvalid(string iban)
+    {
+        Assert.False(SepaValidator.IsValidIban(iban));
+    }
+
+    [Fact]
+    public void IsValidCreditorId_NonAsciiDigitsInCheckDigits_DoesNotThrowAndIsInvalid()
+    {
+        bool result = false;
+
+        Exception? exception = Record.Exception(() => result = SepaValidator.IsValidCreditorId("DE\u0669\u0668ZZZ09999999999"));
+
+        Assert.Null(exception);
+        Assert.False(result);
+    }
+
     private static CreditorConfig CreateValidCreditorConfig(string? name = null, string? iban = null,
         string? bic = null, string? creditorId = null, string? townName = null, string? country = null)
     {

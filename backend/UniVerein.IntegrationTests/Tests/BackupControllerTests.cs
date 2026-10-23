@@ -1,3 +1,5 @@
+using UniVerein.DAL.Entities;
+using UniVerein.Api.Models.Enums;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -247,6 +249,28 @@ public class BackupControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+    }
+
+    [Fact]
+    public async Task RestoreAsync_WritesAuditLog()
+    {
+        // Arrange
+        string fileName = $"{Guid.NewGuid()}.sql";
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content = CreateSqlFormFile(fileName, "-- Valid SQL Backup");
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/backup/restore", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l => l.Data.Contains(fileName));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.RESTORE));
+            auditLog.Entity.ShouldBe("Backup");
+        });
     }
 
     private static MultipartFormDataContent CreateSqlFormFile(string fileName, string sqlContent)

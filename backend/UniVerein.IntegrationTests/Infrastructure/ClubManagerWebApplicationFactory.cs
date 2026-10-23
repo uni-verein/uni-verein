@@ -1,5 +1,8 @@
 using UniVerein.Api;
 using UniVerein.Api.Services;
+using UniVerein.Api.Services.Calendar;
+using UniVerein.Api.Security;
+using UniVerein.Api.Services.Firmware;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
@@ -11,6 +14,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using System.Net;
+using Microsoft.AspNetCore.Builder;
 using Xunit;
 
 namespace UniVerein.IntegrationTests.Infrastructure;
@@ -18,6 +24,7 @@ namespace UniVerein.IntegrationTests.Infrastructure;
 public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IAsyncLifetime
 {
     private readonly SqliteConnection _keepAliveConnection;
+    private readonly string _connectionString;
     public MutableFakeTimeProvider FakeTime { get; set; } = new();
 
     private static readonly string TestDirectory =
@@ -25,7 +32,16 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
 
     public UniVereinWebApplicationFactory()
     {
-        _keepAliveConnection = new SqliteConnection("DataSource=:memory:");
+        // A named shared-cache database gives every DbContext its own connection. With one connection shared by all of
+        // them, a request still running in the background (e.g. the token validation of a SignalR poll) collides with
+        // the test thread ("database is locked", "unable to delete/modify user-function due to active statements").
+        _connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = $"test-{Guid.NewGuid():N}",
+            Mode = SqliteOpenMode.Memory,
+            Cache = SqliteCacheMode.Shared
+        }.ToString();
+        _keepAliveConnection = new SqliteConnection(_connectionString);
         _keepAliveConnection.Open();
     }
 
@@ -47,10 +63,22 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
             services.AddScoped<MailService, FakeMailService>();
             services.AddScoped<BackupService, SqliteBackupService>();
             services.AddSingleton<TimeProvider>(FakeTime);
+            services.AddTransient<IStartupFilter, ReverseProxyPeerStartupFilter>();
+
+            Type[] timerServices =
+            [
+                typeof(ContributionBackgroundService), typeof(FirmwareCheckBackgroundService),
+                typeof(PendingSelfEnrollmentCleanupService), typeof(CalendarReminderBackgroundService)
+            ];
+            foreach (ServiceDescriptor descriptor in services
+                         .Where(d => d.ServiceType == typeof(IHostedService) &&
+                                     d.ImplementationType != null && timerServices.Contains(d.ImplementationType))
+                         .ToList())
+                services.Remove(descriptor);
 
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlite(_keepAliveConnection)
+                options.UseSqlite(_connectionString)
                     .ReplaceService<IModelCustomizer, SqliteDateTimeOffsetCustomizer>();
             });
         });
@@ -75,6 +103,8 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
     {
         using IServiceScope scope = Services.CreateScope();
         AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        scope.ServiceProvider.GetRequiredService<LoginAttemptTracker>().Clear();
 
         db.AuditLogs.RemoveRange(db.AuditLogs.IgnoreQueryFilters());
         db.Notifications.RemoveRange(db.Notifications.IgnoreQueryFilters());
@@ -130,6 +160,27 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
             }
 
             await db.SaveChangesAsync();
+        }
+    }
+
+    // The test server has no network peer. Production always sits behind the nginx container (optionally behind Caddy
+    // in front of it), which hands the client address over in X-Real-IP, so tests act as that proxy and the real
+    // forwarded-header handling of the API decides what the client address is.
+    private sealed class ReverseProxyPeerStartupFilter : IStartupFilter
+    {
+        public static readonly IPAddress ProxyAddress = IPAddress.Parse("172.18.0.2");
+
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+        {
+            return app =>
+            {
+                app.Use((context, nextMiddleware) =>
+                {
+                    context.Connection.RemoteIpAddress ??= ProxyAddress;
+                    return nextMiddleware(context);
+                });
+                next(app);
+            };
         }
     }
 

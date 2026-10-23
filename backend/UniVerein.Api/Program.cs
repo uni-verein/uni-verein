@@ -15,7 +15,7 @@ using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
-    .WriteTo.Console()
+    .WriteTo.Console(new SanitizingTextFormatter(ConsoleOutputTemplate))
     .CreateLogger();
 
 try
@@ -28,12 +28,12 @@ try
             .ReadFrom.Services(services)
             .Enrich.FromLogContext()
             .Enrich.WithEnvironmentName()
-            .WriteTo.Console()
+            .WriteTo.Console(new SanitizingTextFormatter(ConsoleOutputTemplate))
             .WriteTo.File(
+                formatter: new SanitizingTextFormatter("{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}"),
                 path: "/app/logs/uni-verein-.log",
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 7,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+                retainedFileCountLimit: 7
             );
     });
     builder.WebHost.UseUrls("http://0.0.0.0:8095");
@@ -42,6 +42,8 @@ try
     startup.ConfigureServices(builder.Services);
 
     WebApplication app = builder.Build();
+    Log.Information("UniVerein {Version} starting in environment {Environment}.",
+        builder.Configuration["Version"] ?? "unknown", app.Environment.EnvironmentName);
     startup.Configure(app);
 
     using (IServiceScope scope = app.Services.CreateScope())
@@ -55,6 +57,7 @@ try
         else
         {
             db.Database.Migrate();
+            Log.Information("Database migrations applied.");
             Guid id = Guid.Parse(AdminUserId);
             if (!db.Users.IgnoreQueryFilters().Any())
             {
@@ -66,6 +69,7 @@ try
                     Role = UserRole.ADMIN
                 });
                 db.SaveChanges();
+                Log.Information("Seeding: Default admin user {UserId} created. Change its password after the first login.", id);
             }
 
             bool contributionPlanExists = db.ContributionPlans.Any();
@@ -79,6 +83,7 @@ try
                     Interval = Interval.YEARLY,
                 });
                 db.SaveChanges();
+                Log.Information("Seeding: Default contribution plan created.");
             }
 
             foreach ((string id, string name) category in DefaultMemberCategories)
@@ -92,13 +97,12 @@ try
                         Name = category.name
                     });
                     db.SaveChanges();
+                    Log.Information("Seeding: Default member category {CategoryName} created.", category.name);
                 }
             }
         }
     }
 
-    app.UseSerilogRequestLogging(options =>
-        options.GetMessageTemplateProperties = RequestLogSanitizer.GetMessageTemplateProperties);
     app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
     app.MapControllers().RequireCors("AllowFrontend");
     app.MapHub<EmailProgressHub>("/emailProgress");
@@ -117,6 +121,8 @@ finally
 
 public partial class Program
 {
+    private const string ConsoleOutputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}";
+
     private const string AdminUserId = "08de9405-ed5b-4a92-84e0-c7458221447f";
     public const string ContributionPlanDefaultId = "46481ead-eb3c-4977-a3dc-805af9bd2e8c";
 

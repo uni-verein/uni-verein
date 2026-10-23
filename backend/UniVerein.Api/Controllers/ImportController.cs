@@ -9,6 +9,8 @@ using UniVerein.Api.ApiResults;
 using UniVerein.Api.Converter;
 using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
+using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.Api.Validators;
 using UniVerein.DAL.Data;
@@ -33,6 +35,7 @@ public class ImportController : ControllerBase
 
     private readonly AppDbContext _db;
     private readonly CryptoService _crypto;
+    private readonly AuditService _auditService;
 
     private readonly Dictionary<string, AcademicDegree> _academicDegreeMapping = new()
     {
@@ -110,32 +113,34 @@ public class ImportController : ControllerBase
         ["docent"] = AcademicDegree.DOCENT,
     };
 
-    public ImportController(AppDbContext db, CryptoService crypto)
+    public ImportController(AppDbContext db, CryptoService crypto, AuditService auditService)
     {
         _db = db;
         _crypto = crypto;
+        _auditService = auditService;
     }
 
     [HttpPost("upload")]
     public async Task<ActionResult<int>> UploadCsvAsync(IFormFile file)
     {
-        Log.Information("ImportController: UploadCsvAsync -> Try to upload csv file: {FileName}", file.FileName);
+        Log.Information("ImportController: UploadCsvAsync -> Try to import a csv file of {SizeBytes} bytes by {ActorId}.",
+            file.Length, HttpContext.GetActorId());
 
         if (await _db.Members.AnyAsync(x => x.DeletedAt == null))
         {
-            Log.Error("ImportController: UploadCsvAsync -> This endpoint can only be used on empty member list");
+            Log.Warning("ImportController: UploadCsvAsync -> This endpoint can only be used on empty member list");
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "This endpoint can only be used on empty member list."));
         }
 
         if (file.Length == 0)
         {
-            Log.Error("ImportController: UploadCsvAsync -> CSV file is not valid because file is empty");
+            Log.Warning("ImportController: UploadCsvAsync -> CSV file is not valid because file is empty");
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Please upload a valid CSV-File."));
         }
 
         if (file.Length > MaxCsvFileSizeBytes)
         {
-            Log.Error("ImportController: UploadCsvAsync -> CSV file is not valid because file is too large");
+            Log.Warning("ImportController: UploadCsvAsync -> CSV file is not valid because file is too large");
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "CSV file must not exceed 10 MB."));
         }
 
@@ -188,15 +193,18 @@ public class ImportController : ControllerBase
 
         if (importErrors.Any())
         {
-            Log.Error(
-                $"ImportController: UploadCsvAsync -> {importErrors.Count} Validation errors:\n{string.Join("\n", importErrors)}");
+            Log.Warning("ImportController: UploadCsvAsync -> {ErrorCount} validation errors, error keys: {ErrorKeys}",
+                importErrors.Count, string.Join(",", importErrors.Select(x => x.TranslationKey).Distinct()));
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(errorMessage: "Please upload a valid CSV-File.",
                 moreInfo: "The CSV file contains errors. No data was imported.", errorTranslation: importErrors));
         }
 
         await ImportMembers(records);
+        await _auditService.LogAsync(AuditLogActions.IMPORT, nameof(MemberEntity),
+            new { MemberCount = records.Count, file.FileName });
 
-        Log.Information($"ImportController: UploadCsvAsync -> {records.Count} Members successfully imported.");
+        Log.Information("ImportController: UploadCsvAsync -> {MemberCount} members imported by {ActorId}.",
+            records.Count, HttpContext.GetActorId());
         return Ok(records.Count);
     }
 
@@ -214,6 +222,10 @@ public class ImportController : ControllerBase
                 Enum.TryParse(record.TaskWithinTheClub, ignoreCase: true, out TaskWithinTheClub parsedTask)
                     ? parsedTask
                     : TaskWithinTheClub.MEMBER;
+            MembershipStatus membershipStatus =
+                Enum.TryParse(record.MembershipStatus, ignoreCase: true, out MembershipStatus parsedStatus)
+                    ? parsedStatus
+                    : MembershipStatus.MEMBER;
 
             MemberEntity member = new()
             {
@@ -244,6 +256,7 @@ public class ImportController : ControllerBase
                     : _academicDegreeMapping[record.AcademicDegree.ToLower()],
                 CourseOfStudy = record.CourseOfStudy ?? string.Empty,
                 TaskWithinTheClub = taskWithinTheClub,
+                MembershipStatus = membershipStatus,
                 MemberCategoryId = memberCategory?.Id,
                 MemberCategory = memberCategory,
                 IBAN_Encrypted = _crypto.Encrypt(record.Iban?.Replace(" ", "") ?? string.Empty),
@@ -287,6 +300,7 @@ public class ImportController : ControllerBase
             AcademicDegree = "b.sc.",
             CourseOfStudy = "Informatics",
             TaskWithinTheClub = $"{TaskWithinTheClub.MEMBER}",
+            MembershipStatus = $"{MembershipStatus.MEMBER}",
             MemberCategory = "STUDENT",
             EntryDate = DateTimeOffset.ParseExact("10.10.2015", "dd.MM.yyyy", null),
             ExitDate = null,
@@ -320,7 +334,7 @@ public class ImportController : ControllerBase
     [HttpGet("export")]
     public async Task<ActionResult<byte[]>> ExportCsvAsync()
     {
-        Log.Information("ImportController: ExportCsvAsync -> Try to export member data");
+        Log.Information("ImportController: ExportCsvAsync -> Try to export member data by {ActorId}.", HttpContext.GetActorId());
 
         List<MemberEntity> members = await _db.Members
             .Include(x => x.ContributionPlan)
@@ -346,6 +360,7 @@ public class ImportController : ControllerBase
             AcademicDegree = x.AcademicDegree?.GetDisplayName(),
             CourseOfStudy = x.CourseOfStudy,
             TaskWithinTheClub = x.TaskWithinTheClub.ToString(),
+            MembershipStatus = x.MembershipStatus.ToString(),
             MemberCategory = x.MemberCategory?.Name ?? string.Empty,
             EntryDate = x.EntryDate,
             ExitDate = x.ExitDate,
@@ -374,7 +389,8 @@ public class ImportController : ControllerBase
         await csvWriter.WriteRecordsAsync(data);
         await streamWriter.FlushAsync();
 
-        Log.Information($"ImportController: ExportCsvAsync -> Member data successfully exported.");
+        Log.Information("ImportController: ExportCsvAsync -> {MemberCount} members exported by {ActorId}.",
+            data.Count, HttpContext.GetActorId());
         return File(memoryStream.ToArray(), "text/csv; charset=utf-8", $"export_{DateTime.UtcNow:ddMMyyyy_HHmmss}.csv");
     }
 

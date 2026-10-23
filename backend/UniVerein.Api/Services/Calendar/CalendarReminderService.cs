@@ -118,12 +118,16 @@ public class CalendarReminderService
         DateTimeOffset notificationCutoff = now - NotificationRetention;
         DateTimeOffset logCutoff = now - ReminderLogRetention;
 
-        await _db.Notifications.IgnoreQueryFilters()
+        int notificationCount = await _db.Notifications.IgnoreQueryFilters()
             .Where(n => n.CreatedAt < notificationCutoff)
             .ExecuteDeleteAsync();
-        await _db.CalendarReminderLogs.IgnoreQueryFilters()
+        int reminderLogCount = await _db.CalendarReminderLogs.IgnoreQueryFilters()
             .Where(l => l.OccurrenceStart < logCutoff)
             .ExecuteDeleteAsync();
+
+        if (notificationCount > 0 || reminderLogCount > 0)
+            Log.Information("CalendarReminderService: CleanupAsync -> Removed {NotificationCount} old notifications and {ReminderLogCount} old reminder logs.",
+                notificationCount, reminderLogCount);
     }
 
     private async Task<Dictionary<Guid, bool>> LoadUsersAsync(IEnumerable<CalendarEventEntity> events)

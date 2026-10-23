@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
+using UniVerein.Api.Extensions;
 using UniVerein.Api.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,13 +26,13 @@ public class AuthController : ControllerBase
 
     private readonly AppDbContext _db;
     private readonly JwtService _jwt;
-    private readonly TimeProvider _timeProvider;
+    private readonly LoginAttemptTracker _loginAttempts;
 
-    public AuthController(AppDbContext db, JwtService jwt, TimeProvider timeProvider)
+    public AuthController(AppDbContext db, JwtService jwt, LoginAttemptTracker loginAttempts)
     {
         _db = db;
         _jwt = jwt;
-        _timeProvider = timeProvider;
+        _loginAttempts = loginAttempts;
     }
 
     [AllowAnonymous]
@@ -39,7 +40,19 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<LoginApiResult>> LoginAsync([FromBody] LoginRequest request)
     {
-        DateTimeOffset now = _timeProvider.GetUtcNow();
+        string clientIp = HttpContext.GetClientIpAddress();
+
+        TimeSpan? remaining = _loginAttempts.GetRemainingLockout(request.Username, clientIp);
+        if (remaining.HasValue)
+        {
+            Log.Warning("AuthController: LoginAsync -> Login blocked by lockout, {RemainingSeconds} seconds remaining.",
+                (int)remaining.Value.TotalSeconds);
+            return StatusCode((int)HttpStatusCode.Forbidden, new LoginApiBlockedResult()
+            {
+                Error = $"To many login attempts.",
+                RemainingTime = remaining.Value.TotalSeconds
+            });
+        }
 
         UserEntity? user = await _db.Users.FirstOrDefaultAsync(x => x.Username == request.Username);
         if (user == null)
@@ -55,45 +68,35 @@ public class AuthController : ControllerBase
                 // ignored: only used to equalize timing
             }
 
+            _loginAttempts.RegisterFailure(request.Username, clientIp);
             Log.Warning("AuthController: Login failed, user not found.");
             return Unauthorized();
-        }
-
-        if (user.BlockingLoginTimeout.HasValue && user.BlockingLoginTimeout > now)
-        {
-            Log.Warning("AuthController: Login blocked by timeout.");
-            TimeSpan remaining = user.BlockingLoginTimeout.Value - now;
-            return StatusCode((int)HttpStatusCode.Forbidden, new LoginApiBlockedResult()
-            {
-                Error = $"To many login attempts.",
-                RemainingTime = remaining.TotalSeconds
-            });
         }
 
         try
         {
             if (!CryptoService.VerifyPassword(request.Password, user.PasswordHash))
             {
-                user.FailedAttempts = LoginGuard.GetEffectiveFailedAttempts(user.FailedAttempts, user.LastFailedLoginAttempt, now) + 1;
-                user.LastFailedLoginAttempt = now;
-                user.BlockingLoginTimeout = LoginGuard.GetLockoutReleaseTime(user.FailedAttempts, now);
-                _db.Users.Update(user);
-                await _db.SaveChangesAsync();
+                _loginAttempts.RegisterFailure(request.Username, clientIp);
+                Log.Warning("AuthController: LoginAsync -> Wrong password for user {UserId}.", user.Id);
                 return Unauthorized();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Log.Warning("AuthController: Password validation threw an exception.");
+            Log.Warning("AuthController: LoginAsync -> Password validation for user {UserId} threw {ExceptionType}.",
+                user.Id, ex.GetType().Name);
             return Unauthorized();
         }
 
+        _loginAttempts.Reset(request.Username, clientIp);
         user.FailedAttempts = 0;
         user.LastFailedLoginAttempt = null;
         user.BlockingLoginTimeout = null;
 
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
+        Log.Information("AuthController: LoginAsync -> User {UserId} logged in with role {Role}.", user.Id, user.Role);
         LoginApiResult result = new()
         {
             Token = _jwt.CreateToken(user),

@@ -65,9 +65,9 @@ public class CalendarMailBackgroundService : BackgroundService
         {
             try
             {
-                List<(string Username, string Email)> recipients = await ResolveRecipientsWithRetryAsync(job);
+                List<(Guid UserId, string Email)> recipients = await ResolveRecipientsWithRetryAsync(job);
                 pending.AddRange(recipients.Select(r =>
-                    new PendingMail(r.Username, job.SettingType, new Recipient { Email = r.Email }, job.Request)));
+                    new PendingMail(r.UserId, job.SettingType, new Recipient { Email = r.Email }, job.Request)));
             }
             catch (Exception ex)
             {
@@ -87,13 +87,13 @@ public class CalendarMailBackgroundService : BackgroundService
         foreach ((PendingMail mail, EmailResult result) in pending.Zip(results))
         {
             if (result.Success)
-                Log.Information($"CalendarMailBackgroundService: Sent '{mail.SettingType}' mail to {mail.Username}.");
+                Log.Information("CalendarMailBackgroundService: Sent '{SettingType}' mail to user {UserId}.", mail.SettingType, mail.UserId);
             else
-                Log.Error($"CalendarMailBackgroundService: Error while sending mail to {mail.Username}: {result.ErrorMessage}");
+                Log.Error("CalendarMailBackgroundService: Error while sending '{SettingType}' mail to user {UserId}.", mail.SettingType, mail.UserId);
         }
     }
 
-    private async Task<List<(string Username, string Email)>> ResolveRecipientsWithRetryAsync(CalendarMailJob job)
+    private async Task<List<(Guid UserId, string Email)>> ResolveRecipientsWithRetryAsync(CalendarMailJob job)
     {
         for (int attempt = 1; ; attempt++)
         {
@@ -109,7 +109,7 @@ public class CalendarMailBackgroundService : BackgroundService
         }
     }
 
-    private async Task<List<(string Username, string Email)>> ResolveRecipientsAsync(CalendarMailJob job)
+    private async Task<List<(Guid UserId, string Email)>> ResolveRecipientsAsync(CalendarMailJob job)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -132,10 +132,10 @@ public class CalendarMailBackgroundService : BackgroundService
             .ToListAsync();
 
         return users
-            .Select(u => (u.Username, Email: crypto.Decrypt(u.Email) ?? string.Empty))
+            .Select(u => (UserId: u.Id, Email: crypto.Decrypt(u.Email) ?? string.Empty))
             .Where(r => !string.IsNullOrWhiteSpace(r.Email))
             .ToList();
     }
 
-    private record PendingMail(string Username, UserSettingType SettingType, Recipient Recipient, EmailRequest Request);
+    private record PendingMail(Guid UserId, UserSettingType SettingType, Recipient Recipient, EmailRequest Request);
 }

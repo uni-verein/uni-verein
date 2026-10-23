@@ -43,7 +43,7 @@ export function AuditLogTableRow({ l, index }: { l: AuditLog; index: number }) {
         <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
           {new Date(l.timestamp).toLocaleString()}
         </TableCell>
-        <TableCell>{l.userName}</TableCell>
+        <TableCell>{l.userName ?? t('pages.audit.deletedUser')}</TableCell>
         <TableCell>
           <Chip
             label={l.action}

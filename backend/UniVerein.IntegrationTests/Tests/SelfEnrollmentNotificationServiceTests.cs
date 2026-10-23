@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Data;
@@ -116,6 +111,37 @@ public class SelfEnrollmentNotificationServiceTests : IntegrationTestBase
         await WaitForConditionAsync(() => _receivedMails.Count >= 2);
         _receivedMails.Count.ShouldBe(2);
         _receivedMails[1].To.ToString().ShouldContain("opted-in@test.de");
+    }
+
+    [Fact]
+    public async Task SelfEnrollment_HtmlInName_IsEncodedInConfirmationAndNotificationMail()
+    {
+        // Arrange
+        await SetMailSettingsAsync();
+        await CreateSelfEnrollmentConfigEntity(true);
+        await SetSelfEnrollmentNotificationSettingAsync(UserRole.ADMIN, enabled: true, email: "opted-in@test.de");
+        HttpClient publicClient = CreateClient();
+        SelfEnrollmentRequest request = CreateSelfEnrollmentRequest();
+        request.FirstName = "<a href=\"https://evil.example\">Klick</a>";
+        request.LastName = "<img src=\"https://evil.example/pixel.png\">";
+
+        // Act
+        await publicClient.PostAsJsonAsync("/self-enrollment", request);
+        await WaitForConditionAsync(() => _receivedMails.Count >= 1);
+        string token = ExtractConfirmationToken(_receivedMails[0]);
+        await publicClient.PostAsJsonAsync("/self-enrollment/confirm", new ConfirmSelfEnrollmentRequest { Token = token });
+        await WaitForConditionAsync(() => _receivedMails.Count >= 2);
+
+        // Assert
+        foreach (MimeMessage mail in _receivedMails)
+        {
+            string body = mail.HtmlBody ?? mail.TextBody ?? string.Empty;
+            body.ShouldNotContain("<a href=\"https://evil.example");
+            body.ShouldNotContain("<img");
+        }
+
+        (_receivedMails[0].HtmlBody ?? string.Empty).ShouldContain("&lt;a href=&quot;https://evil.example&quot;&gt;");
+        (_receivedMails[1].HtmlBody ?? string.Empty).ShouldContain("&lt;img src=");
     }
 
     [Fact]

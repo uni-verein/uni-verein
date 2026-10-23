@@ -6,6 +6,7 @@ using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace UniVerein.Api.Services;
 
@@ -34,6 +35,8 @@ public class ContributionService
         contributions.ForEach(x => x.DeletedAt = DateTimeOffset.UtcNow);
 
         await _db.SaveChangesAsync();
+        Log.Information("ContributionService: DeletePaidContributions -> {Count} paid contributions older than 14 days soft-deleted.",
+            contributions.Count);
     }
 
     public async Task GenerateDueContributions()
@@ -43,7 +46,9 @@ public class ContributionService
             return;
 
         List<MemberEntity> members = _db.Members
-            .Include(m => m.ContributionPlan).Where(x => x.ContributionPlan != null)
+            .Include(m => m.ContributionPlan).Where(x => x.ContributionPlan != null && x.DeletedAt == null)
+            .AsEnumerable()
+            .Where(x => x.ExitDate == null || x.ExitDate > today)
             .ToList();
 
         SepaExportEntity? export = await _db.SepaExports.Where(x => x.DeletedAt == null)
@@ -86,5 +91,7 @@ public class ContributionService
 
         await _db.SepaExports.AddAsync(sepaExport);
         await _db.SaveChangesAsync();
+        Log.Information("ContributionService: GenerateDueContributions -> {Count} contributions with total {Amount} generated for SEPA export {ExportId}.",
+            count, amount, exportId);
     }
 }

@@ -205,7 +205,18 @@ public class UserSettingsControllerTests : IntegrationTestBase
 
         await WithDbContext(async db =>
         {
-            await db.Users.AddAsync(userEntity);
+            UserEntity? existing = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userEntity.Id);
+            if (existing == null)
+            {
+                await db.Users.AddAsync(userEntity);
+            }
+            else
+            {
+                if (role != null)
+                    existing.Role = userEntity.Role;
+                userEntity.Role = existing.Role;
+            }
+
             await db.SaveChangesAsync();
         });
 

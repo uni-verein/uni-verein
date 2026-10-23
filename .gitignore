@@ -4,6 +4,9 @@ logs
 
 # Receipt images (local bind-mounted volume)
 /receipts
+
+# Addresses of a reverse proxy in front of the stack (local, see README)
+/trusted-proxies
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

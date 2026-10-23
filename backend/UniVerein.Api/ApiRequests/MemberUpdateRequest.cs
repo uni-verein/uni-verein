@@ -57,6 +57,9 @@ public class MemberUpdateRequest
     [JsonPropertyName("taskWithinTheClub")]
     public TaskWithinTheClub? TaskWithinTheClub { get; set; }
 
+    [JsonPropertyName("membershipStatus")]
+    public MembershipStatus? MembershipStatus { get; set; }
+
     [JsonPropertyName("memberCategoryId")]
     public Guid? MemberCategoryId { get; set; }
 

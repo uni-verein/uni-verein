@@ -184,7 +184,7 @@ public class NotificationControllerTests : IntegrationTestBase
         });
 
         IConfiguration configuration = versionedFactory.Services.GetRequiredService<IConfiguration>();
-        return client.AsAdmin(configuration, UserId);
+        return client.AsAdmin(configuration, EnsureActorUser(UserRole.ADMIN));
     }
 
     private async Task<FirmwareVersionEntity> CreateFirmwareVersionEntity(string tagName, string version)

@@ -6,6 +6,8 @@ using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Serilog;
+using UniVerein.Api.Services;
 
 namespace UniVerein.Api.Extensions;
 
@@ -14,6 +16,8 @@ public class GlobalExceptionHandler : IExceptionHandler
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
+        LogException(httpContext, exception);
+
         if (exception is BaseHttpException baseException)
         {
             httpContext.Response.StatusCode = baseException.StatusCode;
@@ -38,5 +42,25 @@ public class GlobalExceptionHandler : IExceptionHandler
         }
 
         return true;
+    }
+
+    private static void LogException(HttpContext httpContext, Exception exception)
+    {
+        string method = httpContext.Request.Method;
+        string path = RequestLogSanitizer.Redact(httpContext.Request.Path);
+
+        if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
+        {
+            Log.Information("GlobalExceptionHandler: {Method} {Path} was cancelled by the client.", method, path);
+        }
+        else if (exception is BaseHttpException { StatusCode: < 500 } baseException)
+        {
+            Log.Warning("GlobalExceptionHandler: {Method} {Path} failed with {StatusCode} {ErrorCode}: {ErrorMessage}",
+                method, path, baseException.StatusCode, baseException.ErrorCode, baseException.ErrorMessage);
+        }
+        else
+        {
+            Log.Error(exception, "GlobalExceptionHandler: Unhandled exception on {Method} {Path}", method, path);
+        }
     }
 }

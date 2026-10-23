@@ -231,6 +231,99 @@ public class SepaServiceTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task GenerateXml_ExcludesContributions_WithNonAsciiDigitsInIban()
+    {
+        // Arrange
+        MemberEntity member = CreateMember(iban: "DE\u0660\uFF18370400440532013000");
+        await _db.Members.AddAsync(member);
+        await _db.SaveChangesAsync();
+        await CreateDueContributionAsync(member);
+
+        // Act
+        (string xml, _, _) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+
+        // Assert
+        xml.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GenerateXml_ExcludesContributions_OfSoftDeletedMembers()
+    {
+        // Arrange
+        MemberEntity member = CreateMember();
+        member.DeletedAt = DateTimeOffset.UtcNow;
+        await _db.Members.AddAsync(member);
+        await _db.SaveChangesAsync();
+        await CreateDueContributionAsync(member);
+
+        // Act
+        (string xml, _, int count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+
+        // Assert
+        xml.ShouldBeEmpty();
+        count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task GenerateXml_ExcludesContributions_OfExitedMembers()
+    {
+        // Arrange
+        MemberEntity member = CreateMember();
+        member.ExitDate = DateTimeOffset.UtcNow.AddDays(-1);
+        await _db.Members.AddAsync(member);
+        await _db.SaveChangesAsync();
+        await CreateDueContributionAsync(member);
+
+        // Act
+        (string xml, _, int count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+
+        // Assert
+        xml.ShouldBeEmpty();
+        count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task GenerateXml_IncludesContributions_OfMembersWithFutureExitDate()
+    {
+        // Arrange
+        MemberEntity member = CreateMember();
+        member.ExitDate = DateTimeOffset.UtcNow.AddDays(30);
+        await _db.Members.AddAsync(member);
+        await _db.SaveChangesAsync();
+        await CreateDueContributionAsync(member);
+
+        // Act
+        (string xml, _, int count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+
+        // Assert
+        xml.ShouldNotBeNullOrWhiteSpace();
+        count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task GenerateXml_OnlyDebitsActiveMembers_WhenMixedWithDeletedAndExited()
+    {
+        // Arrange
+        MemberEntity active = await CreateMemberAsync(1, "MANDATE_001");
+        MemberEntity deleted = CreateMember(2, "MANDATE_002");
+        deleted.DeletedAt = DateTimeOffset.UtcNow;
+        MemberEntity exited = CreateMember(3, "MANDATE_003");
+        exited.ExitDate = DateTimeOffset.UtcNow.AddDays(-5);
+        await _db.Members.AddRangeAsync(deleted, exited);
+        await _db.SaveChangesAsync();
+        await CreateDueContributionAsync(active, amount: 120m);
+        await CreateDueContributionAsync(deleted, amount: 60m);
+        await CreateDueContributionAsync(exited, amount: 30m);
+
+        // Act
+        (string _, decimal amount, int count) = await _sepaService.GenerateXml(ValidCreditor, DefaultExportId);
+
+        // Assert
+        count.ShouldBe(1);
+        amount.ShouldBe(120m);
+    }
+
+    [Fact]
     public async Task GenerateXml_OnlyProcessesContributions_ForGivenExportId()
     {
         // Arrange

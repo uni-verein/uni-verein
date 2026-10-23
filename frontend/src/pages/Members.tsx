@@ -46,6 +46,7 @@ import {
   Gender,
   Member,
   MemberCategory,
+  MembershipStatus,
   Role,
   TaskWithinTheClub,
   UserRoleProps,
@@ -85,6 +86,9 @@ export default function Members({ role }: UserRoleProps) {
 
   const [search, setSearch] = useState('');
   const [task, setTask] = useState<TaskWithinTheClub | null>(null);
+  const [membershipStatusFilter, setMembershipStatusFilter] = useState<MembershipStatus | null>(
+    null,
+  );
   const [status, setStatus] = useState<UUIDTypes | null>(null);
   const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
@@ -130,6 +134,7 @@ export default function Members({ role }: UserRoleProps) {
     async (
       s: string | undefined,
       a: TaskWithinTheClub | null,
+      ms: MembershipStatus | null,
       st: UUIDTypes | null,
       d: boolean,
       p: number,
@@ -141,6 +146,7 @@ export default function Members({ role }: UserRoleProps) {
         const params = new URLSearchParams({
           name: s !== undefined ? s : '',
           taskWithinTheClub: a !== null ? a : '',
+          membershipStatus: ms !== null ? ms : '',
           memberCategoryId: st !== null ? st.toString() : '',
           deleted: d.toString(),
           limit: l.toString(),
@@ -165,19 +171,29 @@ export default function Members({ role }: UserRoleProps) {
         (
           s: string | undefined,
           a: TaskWithinTheClub | null,
+          ms: MembershipStatus | null,
           st: UUIDTypes | null,
           d: boolean,
           p: number,
           l: number,
-        ) => fetchData(s, a, st, d, p, l),
+        ) => fetchData(s, a, ms, st, d, p, l),
         500,
       ),
     [fetchData],
   );
 
   useEffect(() => {
-    debouncedFetch(search, task, status, showDeleted, page, rowsPerPage);
-  }, [search, task, status, showDeleted, page, rowsPerPage, debouncedFetch]);
+    debouncedFetch(search, task, membershipStatusFilter, status, showDeleted, page, rowsPerPage);
+  }, [
+    search,
+    task,
+    membershipStatusFilter,
+    status,
+    showDeleted,
+    page,
+    rowsPerPage,
+    debouncedFetch,
+  ]);
 
   const getTaskLabel = (task: string): string => {
     return TASK_WITHIN_THE_CLUB_LABELS[task as TaskWithinTheClub] || 'unknownTask';
@@ -204,7 +220,7 @@ export default function Members({ role }: UserRoleProps) {
         });
       }
       await load();
-      await fetchData(search, task, status, showDeleted, page, rowsPerPage);
+      await fetchData(search, task, membershipStatusFilter, status, showDeleted, page, rowsPerPage);
     }
   }
 
@@ -229,7 +245,7 @@ export default function Members({ role }: UserRoleProps) {
         });
       }
       await load();
-      await fetchData(search, task, status, showDeleted, page, rowsPerPage);
+      await fetchData(search, task, membershipStatusFilter, status, showDeleted, page, rowsPerPage);
     }
   }
 
@@ -261,6 +277,7 @@ export default function Members({ role }: UserRoleProps) {
       startOfStudies: null,
       street: '',
       taskWithinTheClub: TaskWithinTheClub.MEMBER,
+      membershipStatus: MembershipStatus.MEMBER,
       deletedAt: null,
     });
   };
@@ -272,7 +289,12 @@ export default function Members({ role }: UserRoleProps) {
     return t(translationKey).startsWith(translationKey) ? category.name : t(translationKey);
   };
 
-  const isFiltered = search !== '' || task !== null || status !== null || showDeleted;
+  const isFiltered =
+    search !== '' ||
+    task !== null ||
+    membershipStatusFilter !== null ||
+    status !== null ||
+    showDeleted;
   const allId = memberCategories.find((x) => x.category === 'ALL')?.id.toString() ?? '';
   const selectValue = !status || status === '' ? allId : status;
 
@@ -309,7 +331,17 @@ export default function Members({ role }: UserRoleProps) {
         >
           <Tooltip title={t('pages.members.refresh')}>
             <IconButton
-              onClick={() => fetchData(search, task, status, showDeleted, page, rowsPerPage)}
+              onClick={() =>
+                fetchData(
+                  search,
+                  task,
+                  membershipStatusFilter,
+                  status,
+                  showDeleted,
+                  page,
+                  rowsPerPage,
+                )
+              }
             >
               <RefreshIcon />
             </IconButton>
@@ -335,7 +367,7 @@ export default function Members({ role }: UserRoleProps) {
             setEdit(null);
             setView(false);
             load();
-            fetchData(search, task, status, showDeleted, page, rowsPerPage);
+            fetchData(search, task, membershipStatusFilter, status, showDeleted, page, rowsPerPage);
           }}
         />
       )}
@@ -355,7 +387,7 @@ export default function Members({ role }: UserRoleProps) {
         <PendingEnrollmentsTab
           onMemberCreated={() => {
             load();
-            fetchData(search, task, status, showDeleted, page, rowsPerPage);
+            fetchData(search, task, membershipStatusFilter, status, showDeleted, page, rowsPerPage);
           }}
           onPendingCountChange={setPendingCount}
           contributionPlans={contributionPlans}
@@ -403,13 +435,48 @@ export default function Members({ role }: UserRoleProps) {
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth>
-                <InputLabel shrink>{t('pages.members.filter.memberCategory')}</InputLabel>
+                <InputLabel id="members-membership-status-filter-label">
+                  {t('pages.members.filter.membershipStatus')}
+                </InputLabel>
                 <Select
+                  labelId="members-membership-status-filter-label"
+                  SelectDisplayProps={{ id: 'members-membership-status-filter' }}
+                  value={membershipStatusFilter === null ? 'all' : membershipStatusFilter}
+                  label={t('pages.members.filter.membershipStatus')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setMembershipStatusFilter(
+                      value in MembershipStatus
+                        ? MembershipStatus[value as keyof typeof MembershipStatus]
+                        : null,
+                    );
+                    setPage(0);
+                  }}
+                >
+                  <MenuItem value="all">{t('pages.members.filter.allMembershipStatus')}</MenuItem>
+                  {Object.values(MembershipStatus).map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {t(`components.membershipStatusOptions.${value}`)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <FormControl fullWidth>
+                <InputLabel id="members-category-filter-label" shrink>
+                  {t('pages.members.filter.memberCategory')}
+                </InputLabel>
+                <Select
+                  labelId="members-category-filter-label"
+                  SelectDisplayProps={{ id: 'members-category-filter' }}
                   value={selectValue}
                   label={t('pages.members.filter.memberCategory')}
                   displayEmpty
                   onChange={(e) => {
-                    setStatus(e.target.value.toString());
+                    const value = e.target.value.toString();
+                    setStatus(value === allId ? null : value);
                     setPage(0);
                   }}
                 >
@@ -448,6 +515,7 @@ export default function Members({ role }: UserRoleProps) {
                   onClick={() => {
                     setSearch('');
                     setTask(null);
+                    setMembershipStatusFilter(null);
                     setStatus(null);
                     setPage(0);
                   }}
@@ -513,6 +581,9 @@ export default function Members({ role }: UserRoleProps) {
                       {t('pages.members.table.colTask')}
                     </TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>
+                      {t('pages.members.table.colMembershipStatus')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>
                       {t('pages.members.table.colEmail')}
                     </TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>
@@ -529,7 +600,7 @@ export default function Members({ role }: UserRoleProps) {
                 <TableBody>
                   {members.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                      <TableCell colSpan={8} align="center" sx={{ py: 3, color: 'text.secondary' }}>
                         {t('pages.members.table.noMembers')}
                       </TableCell>
                     </TableRow>
@@ -554,6 +625,11 @@ export default function Members({ role }: UserRoleProps) {
                         <TableCell color="text.secondary">
                           {t(
                             `components.taskWithinTheClubOptions.${getTaskLabel(m.taskWithinTheClub)}`,
+                          )}
+                        </TableCell>
+                        <TableCell color="text.secondary">
+                          {t(
+                            `components.membershipStatusOptions.${m.membershipStatus ?? MembershipStatus.MEMBER}`,
                           )}
                         </TableCell>
                         <TableCell color="text.secondary">{m.email}</TableCell>

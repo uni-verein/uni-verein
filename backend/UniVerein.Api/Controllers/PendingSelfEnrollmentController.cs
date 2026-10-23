@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Extensions;
 using UniVerein.Api.Models;
 using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Query;
@@ -119,7 +120,8 @@ public class PendingSelfEnrollmentController : ControllerBase
                     moreInfo: $"No member category found with ID {request.MemberCategoryId}."));
         }
 
-        Log.Information($"PendingSelfEnrollmentController: UpdateAsync -> Pending self-enrollment {id} updated");
+        Log.Information("PendingSelfEnrollmentController: UpdateAsync -> Pending self-enrollment {PendingId} updated by {ActorId}.",
+            id, HttpContext.GetActorId());
         return Ok(GetDetailResult(result.Pending!));
     }
 
@@ -149,6 +151,7 @@ public class PendingSelfEnrollmentController : ControllerBase
             MemberCategoryName = pending.MemberCategory?.Name,
             IBAN = IbanMasking.MaskUnlessPrivileged(_crypto.Decrypt(pending.IBAN_Encrypted), _isPrivileged),
             Bic = _crypto.Decrypt(pending.Bic_Encrypted) ?? string.Empty,
+            SepaConsent = pending.SepaConsent,
             ContributionPlanId = pending.ContributionPlanId,
             SubmittedAt = pending.CreatedAt,
             SubmittedIp = pending.SubmittedIp,
@@ -189,7 +192,8 @@ public class PendingSelfEnrollmentController : ControllerBase
         }
 
         MemberEntity member = result.Member!;
-        Log.Information($"PendingSelfEnrollmentController: ApproveAsync -> Pending self-enrollment {id} approved as member {member.Id}");
+        Log.Information("PendingSelfEnrollmentController: ApproveAsync -> Pending self-enrollment {PendingId} approved as member {MemberId} by {ActorId}.",
+            id, member.Id, HttpContext.GetActorId());
 
         return Created(string.Empty, new MemberResult
         {
@@ -212,6 +216,7 @@ public class PendingSelfEnrollmentController : ControllerBase
             AcademicDegree = member.AcademicDegree,
             CourseOfStudy = member.CourseOfStudy,
             TaskWithinTheClub = member.TaskWithinTheClub,
+            MembershipStatus = member.MembershipStatus,
             MemberCategoryId = member.MemberCategoryId,
             IBAN = IbanMasking.MaskUnlessPrivileged(_crypto.Decrypt(member.IBAN_Encrypted), _isPrivileged),
             Bic = _crypto.Decrypt(member.Bic_Encrypted) ?? string.Empty,
@@ -233,7 +238,8 @@ public class PendingSelfEnrollmentController : ControllerBase
                 errorMessage: "Pending self-enrollment not found.",
                 moreInfo: $"No pending self-enrollment with the ID {id} could be found."));
 
-        Log.Information($"PendingSelfEnrollmentController: RejectAsync -> Pending self-enrollment {id} rejected");
+        Log.Information("PendingSelfEnrollmentController: RejectAsync -> Pending self-enrollment {PendingId} rejected by {ActorId}.",
+            id, HttpContext.GetActorId());
         return Ok();
     }
 }

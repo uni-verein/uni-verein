@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
@@ -130,7 +131,7 @@ public class MemberControllerTests : IntegrationTestBase
         string? memberCategory, bool? deleted)
     {
         // Arrange
-        string testName = Guid.NewGuid().ToString();
+        const string testName = "Xyzzy Ghost";
         HttpClient client = CreateClient(role);
         foreach (int index in Enumerable.Range(0, 5))
             await CreateMemberEntity(index);
@@ -157,6 +158,106 @@ public class MemberControllerTests : IntegrationTestBase
         MemberResult? result = results.Items.FirstOrDefault();
         result.ShouldNotBeNull();
         CompareMember(member, result, role);
+    }
+
+    [Fact]
+    public async Task GetAllMembers_NameSearch_MatchesSubstringInName()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        foreach (int index in Enumerable.Range(0, 3))
+            await CreateMemberEntity(index);
+        MemberEntity member = await CreateMemberEntity(10, "xxrene-tester-xx");
+        MemberQuery memberQuery = new() { Name = "tester" };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/members{memberQuery.GetQueryString()}");
+        AllMemberResults? results = await response.Content.ReadFromJsonAsync<AllMemberResults>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results.Total.ShouldBe(1);
+        results.Items.Single().Id.ShouldBe(member.Id);
+    }
+
+    [Theory]
+    [InlineData(MembershipStatus.MEMBER)]
+    [InlineData(MembershipStatus.SUPPORTING_MEMBER)]
+    public async Task GetAllMembers_FilterByMembershipStatus_Success(MembershipStatus filterStatus)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMemberEntity(1, membershipStatus: MembershipStatus.MEMBER);
+        await CreateMemberEntity(2, membershipStatus: MembershipStatus.MEMBER);
+        await CreateMemberEntity(3, membershipStatus: MembershipStatus.MEMBER);
+        await CreateMemberEntity(4, membershipStatus: MembershipStatus.SUPPORTING_MEMBER);
+        await CreateMemberEntity(5, membershipStatus: MembershipStatus.SUPPORTING_MEMBER);
+        MemberQuery memberQuery = new() { MembershipStatus = filterStatus };
+        int expectedCount = filterStatus == MembershipStatus.MEMBER ? 3 : 2;
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/members{memberQuery.GetQueryString()}");
+        AllMemberResults? results = await response.Content.ReadFromJsonAsync<AllMemberResults>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results.Total.ShouldBe(expectedCount);
+        results.Items.Count.ShouldBe(expectedCount);
+        results.Items.ShouldAllBe(x => x.MembershipStatus == filterStatus);
+    }
+
+    [Fact]
+    public async Task GetAllMembers_WithoutMembershipStatusFilter_ReturnsAllStatuses()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMemberEntity(1, membershipStatus: MembershipStatus.MEMBER);
+        await CreateMemberEntity(2, membershipStatus: MembershipStatus.SUPPORTING_MEMBER);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/members");
+        AllMemberResults? results = await response.Content.ReadFromJsonAsync<AllMemberResults>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results.Total.ShouldBe(2);
+        results.Items.Select(x => x.MembershipStatus).ShouldBe([MembershipStatus.MEMBER, MembershipStatus.SUPPORTING_MEMBER]);
+    }
+
+    [Fact]
+    public async Task GetAllMembers_InvalidMembershipStatusFilter_BadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/members?membershipStatus=NOT_A_STATUS");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllMembers_AllCategory_ReturnsAllMembers()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMemberEntity(0, memberCategory: Guid.Parse(Program.MemberCategoriesAlumni));
+        await CreateMemberEntity(1, memberCategory: Guid.Parse(Program.MemberCategoriesStudent));
+        await CreateMemberEntity(2);
+        MemberQuery memberQuery = new() { MemberCategoryId = Guid.Parse(Program.MemberCategoriesAll) };
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync($"/members{memberQuery.GetQueryString()}");
+        AllMemberResults? results = await response.Content.ReadFromJsonAsync<AllMemberResults>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        results.ShouldNotBeNull();
+        results.Total.ShouldBe(3);
     }
 
     [Fact]
@@ -287,6 +388,26 @@ public class MemberControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task GetMemberCount_AllCategory_CountsAllMembers()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        await CreateMemberEntity(0, memberCategory: Guid.Parse(Program.MemberCategoriesAlumni));
+        await CreateMemberEntity(1, memberCategory: Guid.Parse(Program.MemberCategoriesStudent));
+        await CreateMemberEntity(2);
+
+        // Act
+        HttpResponseMessage response =
+            await client.GetAsync($"/members/count?memberCategoryId={Program.MemberCategoriesAll}");
+        MemberCountResult? result = await response.Content.ReadFromJsonAsync<MemberCountResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Count.ShouldBe(3);
+    }
+
+    [Fact]
     public async Task CreateMember_Unauthorized()
     {
         // Arrange
@@ -400,6 +521,72 @@ public class MemberControllerTests : IntegrationTestBase
     }
 
     [Theory]
+    [InlineData(MembershipStatus.MEMBER)]
+    [InlineData(MembershipStatus.SUPPORTING_MEMBER)]
+    public async Task CreateMember_WithMembershipStatus_StoresStatus(MembershipStatus membershipStatus)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MemberRequest memberRequest = CreateMemberRequest();
+        memberRequest.MembershipStatus = membershipStatus;
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/members", memberRequest);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result.ShouldNotBeNull();
+        result.MembershipStatus.ShouldBe(membershipStatus);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? member = await db.Members.FirstOrDefaultAsync(m => m.FirstName == memberRequest.FirstName);
+            member.ShouldNotBeNull();
+            member.MembershipStatus.ShouldBe(membershipStatus);
+        });
+    }
+
+    [Fact]
+    public async Task CreateMember_WithoutMembershipStatus_DefaultsToMember()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MemberRequest memberRequest = CreateMemberRequest();
+        JsonNode body = JsonSerializer.SerializeToNode(memberRequest, _jsonSerializerOptions)!;
+        body.AsObject().Remove("membershipStatus").ShouldBeTrue();
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/members", body);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result.ShouldNotBeNull();
+        result.MembershipStatus.ShouldBe(MembershipStatus.MEMBER);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? member = await db.Members.FirstOrDefaultAsync(m => m.FirstName == memberRequest.FirstName);
+            member.ShouldNotBeNull();
+            member.MembershipStatus.ShouldBe(MembershipStatus.MEMBER);
+        });
+    }
+
+    [Fact]
+    public async Task CreateMember_WithInvalidMembershipStatus_BadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        JsonNode body = JsonSerializer.SerializeToNode(CreateMemberRequest(), _jsonSerializerOptions)!;
+        body["membershipStatus"] = "HONORARY";
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/members", body);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
     [InlineData(UserRole.ADMIN)]
     [InlineData(UserRole.USER)]
     [InlineData(UserRole.FINANCIAL_MANAGER)]
@@ -439,17 +626,6 @@ public class MemberControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(role);
-        await WithDbContext(async db =>
-        {
-            await db.Users.AddAsync(new UserEntity()
-            {
-                Id = UserId,
-                Username = Guid.NewGuid().ToString(),
-                PasswordHash = Guid.NewGuid().ToString(),
-                Role = role
-            });
-            await db.SaveChangesAsync();
-        });
         MemberRequest memberRequest = CreateMemberRequest();
 
         // Act
@@ -523,6 +699,59 @@ public class MemberControllerTests : IntegrationTestBase
         result.ShouldNotBeNull();
         result.StatusCode.ShouldBe((int)HttpStatusCode.NotFound);
         result.ErrorMessage.ShouldBe("Member with ID not found.");
+    }
+
+    [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task UpdateMember_SoftDeletedMember_NonAdmin_NotFound(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        MemberEntity member = await CreateMemberEntity(deleted: true);
+
+        // Act
+        HttpResponseMessage emptyResponse = await client.PatchAsJsonAsync($"/members/{member.Id}", new MemberUpdateRequest());
+        HttpResponseMessage changeResponse =
+            await client.PatchAsJsonAsync($"/members/{member.Id}", new MemberUpdateRequest() { City = "Hamburg" });
+        ErrorDetailsResult? result =
+            await changeResponse.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
+
+        // Assert
+        emptyResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        changeResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        result.ShouldNotBeNull();
+        result.ErrorCode.ShouldBe(ApiErrorCodes.RESOURCE_NOT_FOUND);
+        result.ErrorMessage.ShouldBe("Member with ID not found.");
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            dbMember.City.ShouldBe("Kiel");
+            dbMember.DeletedAt.ShouldNotBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task UpdateMember_SoftDeletedMember_Admin_Success()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MemberEntity member = await CreateMemberEntity(deleted: true);
+
+        // Act
+        HttpResponseMessage response =
+            await client.PatchAsJsonAsync($"/members/{member.Id}", new MemberUpdateRequest() { City = "Hamburg" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            dbMember.City.ShouldBe("Hamburg");
+            dbMember.DeletedAt.ShouldNotBeNull();
+        });
     }
 
     [Theory]
@@ -612,6 +841,65 @@ public class MemberControllerTests : IntegrationTestBase
         });
     }
 
+    [Fact]
+    public async Task UpdateMember_MembershipStatus_ChangesStatusAndWritesAudit()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MemberEntity member = await CreateMemberEntity(membershipStatus: MembershipStatus.MEMBER);
+        MemberUpdateRequest updateRequest = new() { MembershipStatus = MembershipStatus.SUPPORTING_MEMBER };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/members/{member.Id}", updateRequest);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.MembershipStatus.ShouldBe(MembershipStatus.SUPPORTING_MEMBER);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            dbMember.MembershipStatus.ShouldBe(MembershipStatus.SUPPORTING_MEMBER);
+
+            AuditLogEntity? auditLog =
+                await db.AuditLogs.FirstOrDefaultAsync(l => l.Data.Contains(member.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog.Action.ShouldBe(nameof(AuditLogActions.UPDATE));
+            auditLog.Data.ShouldContain(nameof(MemberEntity.MembershipStatus));
+            auditLog.Data.ShouldContain(nameof(MembershipStatus.SUPPORTING_MEMBER));
+            UserEntity? user = await db.Users.FindAsync(UserId);
+            db.Remove(user!);
+            await db.ForceSaveChangesAsync();
+        });
+    }
+
+    [Fact]
+    public async Task UpdateMember_WithoutMembershipStatus_KeepsStatus()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MemberEntity member = await CreateMemberEntity(membershipStatus: MembershipStatus.SUPPORTING_MEMBER);
+        MemberUpdateRequest updateRequest = new() { City = "Hamburg" };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/members/{member.Id}", updateRequest);
+        MemberResult? result = await response.Content.ReadFromJsonAsync<MemberResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.City.ShouldBe("Hamburg");
+        result.MembershipStatus.ShouldBe(MembershipStatus.SUPPORTING_MEMBER);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            dbMember.MembershipStatus.ShouldBe(MembershipStatus.SUPPORTING_MEMBER);
+        });
+    }
+
     [Theory]
     [InlineData(UserRole.ADMIN)]
     [InlineData(UserRole.USER)]
@@ -620,17 +908,6 @@ public class MemberControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(role);
-        await WithDbContext(async db =>
-        {
-            await db.Users.AddAsync(new UserEntity()
-            {
-                Id = UserId,
-                Username = Guid.NewGuid().ToString(),
-                PasswordHash = Guid.NewGuid().ToString(),
-                Role = role
-            });
-            await db.SaveChangesAsync();
-        });
         MemberEntity member = await CreateMemberEntity();
         MemberUpdateRequest updateRequest = UpdateMemberRequest();
 
@@ -740,17 +1017,6 @@ public class MemberControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(UserRole.ADMIN);
-        await WithDbContext(async db =>
-        {
-            await db.Users.AddAsync(new UserEntity()
-            {
-                Id = UserId,
-                Username = Guid.NewGuid().ToString(),
-                PasswordHash = Guid.NewGuid().ToString(),
-                Role = UserRole.ADMIN
-            });
-            await db.SaveChangesAsync();
-        });
         MemberEntity member = await CreateMemberEntity(deleted: true);
 
         // Act
@@ -810,6 +1076,51 @@ public class MemberControllerTests : IntegrationTestBase
     }
 
     [Theory]
+    [InlineData(UserRole.USER)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task DeleteMember_SoftDeletedMember_NonAdmin_NotFound(UserRole role)
+    {
+        // Arrange
+        HttpClient client = CreateClient(role);
+        MemberEntity member = await CreateMemberEntity(deleted: true);
+        DateTimeOffset? deletedAtBefore = null;
+        await WithDbContext(async db =>
+        {
+            deletedAtBefore = (await db.Members.FindAsync(member.Id))!.DeletedAt;
+        });
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/members/{member.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await WithDbContext(async db =>
+        {
+            MemberEntity? dbMember = await db.Members.FindAsync(member.Id);
+            dbMember.ShouldNotBeNull();
+            dbMember.DeletedAt.ShouldBe(deletedAtBefore);
+        });
+    }
+
+    [Fact]
+    public async Task DeleteMember_SoftDeletedMember_Admin_PermanentlyDeletes()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MemberEntity member = await CreateMemberEntity(deleted: true);
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/members/{member.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            (await db.Members.FindAsync(member.Id)).ShouldBeNull();
+        });
+    }
+
+    [Theory]
     [InlineData(UserRole.ADMIN)]
     [InlineData(UserRole.USER)]
     [InlineData(UserRole.FINANCIAL_MANAGER)]
@@ -864,17 +1175,6 @@ public class MemberControllerTests : IntegrationTestBase
     {
         // Arrange
         HttpClient client = CreateClient(role);
-        await WithDbContext(async db =>
-        {
-            await db.Users.AddAsync(new UserEntity()
-            {
-                Id = UserId,
-                Username = Guid.NewGuid().ToString(),
-                PasswordHash = Guid.NewGuid().ToString(),
-                Role = UserRole.ADMIN
-            });
-            await db.SaveChangesAsync();
-        });
         MemberEntity member = await CreateMemberEntity();
 
         // Act
@@ -995,6 +1295,7 @@ public class MemberControllerTests : IntegrationTestBase
         entity.AcademicDegree.ShouldBe(result.AcademicDegree);
         entity.CourseOfStudy.ShouldBe(result.CourseOfStudy);
         entity.TaskWithinTheClub.ShouldBe(result.TaskWithinTheClub);
+        entity.MembershipStatus.ShouldBe(result.MembershipStatus);
         entity.MemberCategoryId.ShouldBe(result.MemberCategoryId);
         string? iban = _cryptoService.Decrypt(entity.IBAN_Encrypted);
         if (role == UserRole.USER)
@@ -1015,7 +1316,7 @@ public class MemberControllerTests : IntegrationTestBase
 
     private async Task<MemberEntity> CreateMemberEntity(int number = 1, string? firstName = null,
         TaskWithinTheClub? taskWithinTheClub = null, Guid? memberCategory = null, bool? deleted = null,
-        string? iban = null)
+        string? iban = null, MembershipStatus? membershipStatus = null)
     {
         Guid memberId = Guid.NewGuid();
         MemberEntity member = new()
@@ -1041,6 +1342,7 @@ public class MemberControllerTests : IntegrationTestBase
             AcademicDegree = AcademicDegree.BA,
             CourseOfStudy = "IT",
             TaskWithinTheClub = taskWithinTheClub ?? TaskWithinTheClub.MEMBER,
+            MembershipStatus = membershipStatus ?? MembershipStatus.MEMBER,
             MemberCategoryId = memberCategory ?? Guid.Parse(Program.MemberCategoriesAlumni),
             IBAN_Encrypted = _cryptoService.Encrypt(iban ?? TestIban),
             IBAN_Hash = _cryptoService.Hash(iban ?? TestIban),

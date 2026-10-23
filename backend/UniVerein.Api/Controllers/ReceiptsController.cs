@@ -188,8 +188,8 @@ public class ReceiptsController : ControllerBase
 
         List<ReceiptFileEntity> allFiles = receipts.SelectMany(r => r.Files).ToList();
 
-        Log.Information(
-            $"ReceiptsController: ExportAsync -> {rows.Count} receipts, {allFiles.Count} files exported.");
+        Log.Information("ReceiptsController: ExportAsync -> {ReceiptCount} receipts, {FileCount} files exported by {ActorId}.",
+            rows.Count, allFiles.Count, _currentUserId);
 
         IHttpBodyControlFeature? bodyControlFeature = HttpContext.Features.Get<IHttpBodyControlFeature>();
         if (bodyControlFeature != null)
@@ -300,6 +300,8 @@ public class ReceiptsController : ControllerBase
                 moreInfo: $"File for ID {fileId} could not be found on disk."));
 
         byte[] bytes = await System.IO.File.ReadAllBytesAsync(path);
+        Log.Information("ReceiptsController: GetFileAsync -> File {FileId} of receipt {ReceiptId} downloaded by {ActorId}.",
+            fileId, id, _currentUserId);
 
         Response.Headers["X-Content-Type-Options"] = "nosniff";
         string extension = ReceiptService.GetExtensionFromContentType(receiptFile.ContentType);
@@ -378,7 +380,7 @@ public class ReceiptsController : ControllerBase
         await _auditService.LogAsync(AuditLogActions.CREATE, nameof(ReceiptEntity),
             new { ReceiptId = receipt.Id, receipt.Amount, receipt.ReceiptDate });
 
-        Log.Information($"ReceiptsController: CreateAsync -> Receipt with ID: {receipt.Id} successfully created.");
+        Log.Information("ReceiptsController: CreateAsync -> Receipt {ReceiptId} created by {ActorId}.", receipt.Id, _currentUserId);
 
         await _receiptNotificationService.NotifyFinancialManagersAsync(receipt, user);
 
@@ -461,7 +463,7 @@ public class ReceiptsController : ControllerBase
         await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(ReceiptEntity),
             new { ReceiptId = id, receipt.Amount, receipt.ReceiptDate });
 
-        Log.Information($"ReceiptsController: UpdateAsync -> Receipt with ID: {receipt.Id} successfully updated.");
+        Log.Information("ReceiptsController: UpdateAsync -> Receipt {ReceiptId} updated by {ActorId}.", receipt.Id, _currentUserId);
 
         ReceiptEntity updated = await _db.Receipts
             .Include(r => r.User)
@@ -501,7 +503,7 @@ public class ReceiptsController : ControllerBase
         await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(ReceiptEntity),
             new { ReceiptId = id, receipt.PaymentMethod, Paid = true });
 
-        Log.Information($"ReceiptsController: MarkAsPaidAsync -> Receipt with ID: {receipt.Id} marked as paid.");
+        Log.Information("ReceiptsController: MarkAsPaidAsync -> Receipt {ReceiptId} marked as paid by {ActorId}.", receipt.Id, _currentUserId);
 
         return Ok();
     }
@@ -527,7 +529,7 @@ public class ReceiptsController : ControllerBase
         await _auditService.LogAsync(AuditLogActions.RESTORE, nameof(ReceiptEntity),
             new { ReceiptId = id, receipt.Amount });
 
-        Log.Information($"ReceiptsController: RestoreAsync -> Receipt with ID: {id} successfully restored.");
+        Log.Information("ReceiptsController: RestoreAsync -> Receipt {ReceiptId} restored by {ActorId}.", id, _currentUserId);
         return Ok();
     }
 
@@ -576,6 +578,8 @@ public class ReceiptsController : ControllerBase
 
         await _auditService.LogAsync(hardDelete ? AuditLogActions.DELETE : AuditLogActions.SOFT_DELETE, nameof(ReceiptEntity),
             new { ReceiptId = id, receipt.Amount });
+        Log.Information("ReceiptsController: DeleteReceiptAsync -> Receipt {ReceiptId} {DeleteType} by {ActorId}, {FileCount} files.",
+            id, hardDelete ? "permanently deleted" : "soft-deleted", _currentUserId, receipt.Files.Count);
 
         return Ok();
     }

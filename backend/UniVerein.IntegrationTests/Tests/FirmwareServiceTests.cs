@@ -377,6 +377,74 @@ public class FirmwareServiceTests : IntegrationTestBase
         });
     }
 
+    [Fact]
+    public async Task CheckLatestFirmwareAsync_AdminWithoutEmail_DoesNotBlockOtherAdminsAndMailIsSentOnlyOnce()
+    {
+        // Arrange
+        Guid seedAdminId = Guid.Empty;
+        await WithDbContext(async db =>
+        {
+            UserEntity seedAdmin = await db.Users.SingleAsync(u => u.Username == "admin");
+            seedAdmin.Email = null;
+            await db.SaveChangesAsync();
+            seedAdminId = seedAdmin.Id;
+        });
+
+        Guid adminWithEmailId = Guid.NewGuid();
+        await WithDbContext(async db =>
+        {
+            await db.Users.AddAsync(new UserEntity()
+            {
+                Id = adminWithEmailId,
+                Username = Guid.NewGuid().ToString(),
+                PasswordHash = Guid.NewGuid().ToString(),
+                Role = UserRole.ADMIN,
+                Email = _cryptoService.Encrypt("admin-with-email@test.de")
+            });
+            await db.MailSettings.AddAsync(new MailSettingsEntity()
+            {
+                SmtpServer = "localhost",
+                Port = 2522,
+                ImapServer = "localhost",
+                ImapPort = 2522,
+                Username = "test",
+                Password = _cryptoService.Encrypt("test"),
+                FromMail = "noreply@test.de",
+                EnableSsl = false
+            });
+            await db.SaveChangesAsync();
+        });
+
+        IConfiguration configuration = BuildConfiguration("1.0.0");
+
+        // Act
+        for (int i = 0; i < 2; i++)
+        {
+            (HttpClient httpClient, _) = BuildHttpClient(BuildRelease("2.0.0"));
+            await WithDbContext(async db =>
+            {
+                await BuildService(httpClient, configuration, db).CheckLatestFirmwareAsync(CancellationToken.None);
+            });
+        }
+
+        // Assert
+        await WaitForConditionAsync(() => _receivedMails.Count >= 1, timeoutMs: 5000);
+        await Task.Delay(500);
+
+        _receivedMails.Count.ShouldBe(1);
+        _receivedMails[0].To.ToString().ShouldContain("admin-with-email@test.de");
+
+        await WithDbContext(async db =>
+        {
+            List<Guid> notifiedUserIds = await db.FirmwareVersionNotifications
+                .Select(n => n.UserId)
+                .ToListAsync();
+
+            notifiedUserIds.ShouldBe([adminWithEmailId]);
+            notifiedUserIds.ShouldNotContain(seedAdminId);
+        });
+    }
+
     // ---------------------------------------------------------------
     // Helper functions
     // ---------------------------------------------------------------

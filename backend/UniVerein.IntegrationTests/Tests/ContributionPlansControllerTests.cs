@@ -1,3 +1,4 @@
+using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -546,6 +547,70 @@ public class ContributionPlansControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task CreateContributionPlan_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        ContributionPlanRequest request = CreateContributionPlanRequest();
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/contribution-plans", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(ContributionPlanEntity) && l.Data.Contains(request.Name));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.CREATE));
+        });
+    }
+
+    [Fact]
+    public async Task UpdateContributionPlan_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        ContributionPlanEntity contributionPlanEntity = await CreateContributionPlanEntity();
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/contribution-plans/{contributionPlanEntity.Id}",
+            CreateContributionPlanUpdateRequest());
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(ContributionPlanEntity) && l.Data.Contains(contributionPlanEntity.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.UPDATE));
+        });
+    }
+
+    [Fact]
+    public async Task DeleteContributionPlan_WritesAuditLog()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        ContributionPlanEntity contributionPlanEntity = await CreateContributionPlanEntity();
+
+        // Act
+        HttpResponseMessage response = await client.DeleteAsync($"/contribution-plans/{contributionPlanEntity.Id}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            AuditLogEntity? auditLog = await db.AuditLogs.FirstOrDefaultAsync(l =>
+                l.Entity == nameof(ContributionPlanEntity) && l.Data.Contains(contributionPlanEntity.Id.ToString()));
+            auditLog.ShouldNotBeNull();
+            auditLog!.Action.ShouldBe(nameof(AuditLogActions.SOFT_DELETE));
+        });
     }
 
     // ---------------------------------------------------------------

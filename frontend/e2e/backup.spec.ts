@@ -256,7 +256,7 @@ test.describe('Backup page', () => {
 
       const fileContent = fs.readFileSync(backupPath, 'utf-8');
       expect(fileContent.length).toBeGreaterThan(0);
-      const lines = fileContent.split('\n').filter((line) => line.trim() !== '');
+      const lines = fileContent.split(/\r?\n/).filter((line) => line.trim() !== '');
       const headers = lines[0].split(';').map((h) => h.trim());
       expect(headers).toContain('Member number');
       expect(headers).toContain('Gender');
@@ -304,7 +304,7 @@ test.describe('Backup page', () => {
       expect(firstDataRow).toContain('10.10.2015');
       expect(firstDataRow).toContain('DE89370400440532013000');
       expect(firstDataRow).toContain('INGDDEFFXXX');
-      expect(firstDataRow).toContain('12\r');
+      expect(firstDataRow).toContain('12');
 
       fs.unlinkSync(backupPath);
     });

@@ -31,12 +31,12 @@ public class AuditController : ControllerBase
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Offset and/or Limit must be greater than or equal to 1."));
 
         IQueryable<AuditLogResult> logs = _db.AuditLogs
-            .Include(c => c.User)
+            .IgnoreQueryFilters()
             .OrderByDescending(a => a.CreatedAt)
             .Select(x => new AuditLogResult()
             {
                 Timestamp = x.CreatedAt,
-                UserName = x.User.Username,
+                UserName = x.User.DeletedAt == null ? x.User.Username : null,
                 Action = x.Action,
                 Entity = x.Entity,
                 Data = x.Data

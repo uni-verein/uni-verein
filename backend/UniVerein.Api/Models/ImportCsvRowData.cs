@@ -55,4 +55,6 @@ public class ImportCsvRowData
     public DateTimeOffset? SepaConsentDate { get; set; }
     [Name("Contribution amount")]
     public int? ContributionAmount { get; set; }
+    [Name("Membership status")]
+    public string? MembershipStatus { get; set; }
 }
