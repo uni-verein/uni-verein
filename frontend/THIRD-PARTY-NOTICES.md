@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-10-23
+Generated automatically on 2026-10-26
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -140,7 +140,9 @@ Generated automatically on 2026-10-23
 | @humanwhocodes/retry@0.4.3 | - | Apache-2.0 |
 | @img/colour@1.1.0 | - | MIT |
 | @img/sharp-libvips-linux-x64@1.3.4 | - | LGPL-3.0-or-later |
+| @img/sharp-libvips-linuxmusl-x64@1.3.4 | - | LGPL-3.0-or-later |
 | @img/sharp-linux-x64@0.35.5 | - | Apache-2.0 |
+| @img/sharp-linuxmusl-x64@0.35.5 | - | Apache-2.0 |
 | @isaacs/cliui@9.0.0 | - | BlueOak-1.0.0 |
 | @jridgewell/gen-mapping@0.3.13 | - | MIT |
 | @jridgewell/remapping@2.3.5 | - | MIT |
@@ -355,7 +357,7 @@ Generated automatically on 2026-10-23
 | fast-equals@5.4.2 | - | MIT |
 | fast-json-stable-stringify@2.1.0 | - | MIT |
 | fast-levenshtein@2.0.6 | - | MIT |
-| fast-uri@3.1.8 | - | BSD-3-Clause |
+| fast-uri@3.1.9 | - | BSD-3-Clause |
 | fdir@6.5.0 | - | MIT |
 | fetch-cookie@2.2.0 | - | Unlicense |
 | file-entry-cache@11.1.5 | - | MIT |
@@ -553,7 +555,7 @@ Generated automatically on 2026-10-23
 | scheduler@0.23.2 | - | MIT |
 | semver@6.3.1 | - | ISC |
 | semver@7.8.5 | - | ISC |
-| serialize-javascript@7.1.2 | - | BSD-3-Clause |
+| serialize-javascript@7.1.4 | - | BSD-3-Clause |
 | set-cookie-parser@2.7.2 | - | MIT |
 | set-function-length@1.2.2 | - | MIT |
 | set-function-name@2.0.2 | - | MIT |
@@ -653,4 +655,4 @@ Generated automatically on 2026-10-23
 | yocto-queue@0.1.0 | - | MIT |
 | zlibjs@0.3.1 | - | MIT |
 | zod-validation-error@4.0.2 | - | MIT |
-| zod@4.5.4 | - | MIT |
+| zod@4.6.7 | - | MIT |
