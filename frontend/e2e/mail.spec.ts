@@ -1,14 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import { Role, TestUser } from '../src/types';
 
 const createdUserIds = new Set<string>();
 const backend = new BackendClient();
 
 async function openDashboard(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });

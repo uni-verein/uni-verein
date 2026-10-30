@@ -9,10 +9,12 @@ export const PageConfigProvider = ({ children }: { children: ReactNode }) => {
     pageName: string;
     logo: string;
     selfEnrollmentEnabled: boolean;
+    demo: boolean;
   }>({
     pageName: '',
     logo: '',
     selfEnrollmentEnabled: false,
+    demo: false,
   });
   const [loading, setLoading] = useState(true);
   const [serverReachable, setServerReachable] = useState(true);

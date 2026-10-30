@@ -632,6 +632,71 @@ public class MailControllerTests : IntegrationTestBase
         });
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task UpdateMailSetting_WithBlankPassword_BadRequest_AndKeepsSettings(string password)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MailSettingsEntity existing = await CreateMailSettingsEntity(password: "stored-secret", server: "mail.club.test");
+        MailSettingsRequest request = CreateMailSettingRequest();
+        request.SmtpServer = "attacker.example";
+        request.ImapServer = "attacker.example";
+        request.Password = password;
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/mail", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await WithDbContext(async db =>
+        {
+            MailSettingsEntity? stored = await db.MailSettings.FirstOrDefaultAsync(x => x.Id == existing.Id);
+            stored.ShouldNotBeNull();
+            stored.SmtpServer.ShouldBe("mail.club.test");
+            _cryptoService.Decrypt(stored.Password).ShouldBe("stored-secret");
+        });
+    }
+
+    [Fact]
+    public async Task UpdateMailSetting_WithPassword_ReplacesStoredPassword()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MailSettingsEntity existing = await CreateMailSettingsEntity(password: "old-secret");
+        MailSettingsRequest request = CreateMailSettingRequest();
+        request.Password = "new-secret";
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/mail", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await WithDbContext(async db =>
+        {
+            MailSettingsEntity? stored = await db.MailSettings.FirstOrDefaultAsync(x => x.Id == existing.Id);
+            stored.ShouldNotBeNull();
+            _cryptoService.Decrypt(stored.Password).ShouldBe("new-secret");
+        });
+    }
+
+    [Fact]
+    public async Task CreateMailSetting_WithBlankPassword_BadRequest()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        MailSettingsRequest request = CreateMailSettingRequest();
+        request.Password = "";
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/mail", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await WithDbContext(async db => (await db.MailSettings.AnyAsync()).ShouldBeFalse());
+    }
+
     // ---------------------------------------------------------------
     // DELETE /api/mail/{id}
     // ---------------------------------------------------------------

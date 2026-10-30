@@ -25,6 +25,8 @@ namespace UniVerein.Api.Controllers;
 [AllowAnonymous]
 public class SelfEnrollmentController : ControllerBase
 {
+    private const int MaxRequestSizeBytes = 32 * 1024;
+
     private readonly AppDbContext _db;
     private readonly PendingSelfEnrollmentService _pendingSelfEnrollmentService;
     private readonly ReferenceDataService _referenceDataService;
@@ -58,6 +60,7 @@ public class SelfEnrollmentController : ControllerBase
         return Ok(result);
     }
 
+    [RequestSizeLimit(MaxRequestSizeBytes)]
     [EnableRateLimiting("self-enrollment")]
     [HttpPost]
     public async Task<ActionResult<SelfEnrollmentSubmitResult>> CreateAsync([FromBody] SelfEnrollmentRequest request)

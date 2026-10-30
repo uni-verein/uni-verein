@@ -449,6 +449,7 @@ export default function MemberForm({
                   required
                   error={!!errors.firstName}
                   helperText={errors.firstName ?? `${m.firstName.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -461,6 +462,7 @@ export default function MemberForm({
                   onChange={handleChange('middleName')}
                   error={!!errors.middleName}
                   helperText={errors.middleName ?? `${m.middleName.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -474,6 +476,7 @@ export default function MemberForm({
                   required
                   error={!!errors.lastName}
                   helperText={errors.lastName ?? `${m.lastName.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -514,6 +517,7 @@ export default function MemberForm({
                   required
                   error={!!errors.street}
                   helperText={errors.street ?? `${m.street.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -527,6 +531,7 @@ export default function MemberForm({
                   required
                   error={!!errors.postalCode}
                   helperText={errors.postalCode ?? `${m.postalCode.length}/10`}
+                  slotProps={{ htmlInput: { maxLength: 10 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -540,6 +545,7 @@ export default function MemberForm({
                   required
                   error={!!errors.city}
                   helperText={errors.city ?? `${m.city.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -573,6 +579,7 @@ export default function MemberForm({
                   required
                   error={!!errors.email}
                   helperText={errors.email ?? `${m.email.length}/50`}
+                  slotProps={{ htmlInput: { maxLength: 50 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -583,6 +590,7 @@ export default function MemberForm({
                   variant="outlined"
                   value={m.phone}
                   onChange={handleChange('phone')}
+                  slotProps={{ htmlInput: { maxLength: 50 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -686,6 +694,7 @@ export default function MemberForm({
                   onChange={handleChange('courseOfStudy')}
                   error={!!errors.courseOfStudy}
                   helperText={errors.courseOfStudy ?? `${m.courseOfStudy.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               {mode === 'admin' && (
@@ -778,6 +787,7 @@ export default function MemberForm({
                     required
                     error={!!errors.motivation}
                     helperText={errors.motivation ?? `${motivation.length}/1000`}
+                    slotProps={{ htmlInput: { maxLength: 1000 } }}
                   />
                 </Grid>
               )}
@@ -840,6 +850,7 @@ export default function MemberForm({
                   value={formattedIBAN}
                   onChange={handleIbanChange}
                   onFocus={(e) => ibanMasked && e.target.select()}
+                  slotProps={{ htmlInput: { maxLength: 50 } }}
                   required={mode === 'public'}
                   error={errors.iban !== undefined}
                   helperText={
@@ -857,6 +868,7 @@ export default function MemberForm({
                   placeholder="DEUTDEXXX"
                   value={m.bic}
                   onChange={handleBicChange}
+                  slotProps={{ htmlInput: { maxLength: 20 } }}
                   required={mode === 'public'}
                   error={errors.bic !== undefined}
                   helperText={errors.bic}

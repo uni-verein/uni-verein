@@ -37,9 +37,17 @@ export interface MemberApiResult extends MemberPayload {
   email: string;
 }
 
+export enum TaxArea {
+  NON_PROFIT = 'NON_PROFIT',
+  ASSET_MANAGEMENT = 'ASSET_MANAGEMENT',
+  PURPOSE_RELATED_OPERATION = 'PURPOSE_RELATED_OPERATION',
+  COMMERCIAL_OPERATION = 'COMMERCIAL_OPERATION',
+}
+
 export interface ReceiptCategoryApiResult {
   id: string;
   name: string;
+  taxArea: TaxArea;
 }
 
 interface ReceiptFileApiResult {
@@ -60,13 +68,15 @@ export interface ReceiptApiResult {
   description: string | null;
   paymentMethod: string | null;
   paid: boolean;
+  bookingNumber: string | null;
+  paymentDate: string | null;
   files: ReceiptFileApiResult[];
   createdAt: string;
   deletedAt: string | null;
 }
 
 export interface ConfigContextType {
-  config: { pageName: string; logo: string; selfEnrollmentEnabled: boolean };
+  config: { pageName: string; logo: string; selfEnrollmentEnabled: boolean; demo: boolean };
   loading: boolean;
   reloadConfig: () => Promise<void>;
   serverReachable: boolean;
@@ -189,6 +199,7 @@ export interface User {
   email: string | null;
   password: string;
   role: Role;
+  twoFactorEnabled?: boolean;
 }
 
 export interface ContributionPlans {
@@ -207,6 +218,7 @@ export interface MemberCategory {
 export interface ReceiptCategory {
   id: UUIDTypes;
   name: string;
+  taxArea: TaxArea;
 }
 
 export interface ReceiptFile {
@@ -227,6 +239,8 @@ export interface Receipt {
   description: string | null;
   paymentMethod: ReceiptPaymentMethod | null;
   paid: boolean;
+  bookingNumber: string | null;
+  paymentDate: string | null;
   files: ReceiptFile[];
   createdAt: Date;
   deletedAt: Date | null;
@@ -486,20 +500,84 @@ export interface TestContext {
 
 export const SNACKBAR_INITIAL_STATE: SnackbarState = { status: null, message: '' };
 
-export interface Contribution {
+export enum IncomeKind {
+  MEMBERSHIP = 'MEMBERSHIP',
+  CATEGORY = 'CATEGORY',
+}
+
+export enum IncomeSource {
+  CONTRIBUTION = 'CONTRIBUTION',
+  MANUAL = 'MANUAL',
+}
+
+export interface IncomeRow {
   id: UUIDTypes;
-  name: string;
+  source: IncomeSource;
+  kind: IncomeKind;
+  categoryId: UUIDTypes | null;
+  categoryName: string | null;
+  payer: string;
+  memberNumber: number | null;
+  membershipStatus: MembershipStatus | null;
+  acknowledgementNumber: string | null;
+  bookingNumber: string | null;
+  paymentDate: string | null;
+  description: string | null;
   amount: number;
-  dueDate: Date;
+  dueDate: string;
   paid: boolean;
-  memberNumber: number;
-  membershipStatus: MembershipStatus;
   deletedAt: Date | null;
 }
 
-export interface ContributionInfo {
-  openPayments: number;
+export interface IncomeBreakdown {
+  kind: IncomeKind;
+  categoryId: UUIDTypes | null;
+  categoryName: string | null;
+  amount: number;
+  count: number;
+}
+
+export interface IncomeSummary {
   openAmount: number;
+  openCount: number;
+  paidAmount: number;
+  paidCount: number;
+  breakdown: IncomeBreakdown[];
+}
+
+export interface IncomePayload {
+  categoryId: UUIDTypes;
+  payer: string;
+  description?: string | null;
+  amount: number;
+  incomeDate: string;
+  paid: boolean;
+  paymentDate?: string;
+}
+
+export interface IncomeCategory {
+  id: UUIDTypes;
+  name: string;
+  taxArea: TaxArea;
+}
+
+export enum FinanceEntryKind {
+  MEMBERSHIP = 'MEMBERSHIP',
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
+}
+
+export interface FinanceAnalyticsRow {
+  year: number;
+  month: number;
+  kind: FinanceEntryKind;
+  categoryId: UUIDTypes | null;
+  categoryName: string | null;
+  amount: number;
+}
+
+export interface FinanceAnalytics {
+  rows: FinanceAnalyticsRow[];
 }
 
 export interface AuditLog {

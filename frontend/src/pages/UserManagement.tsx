@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { UserManagementProps } from '../types';
 import { ProfileSettingsTab } from '../components/ProfileSettingsTab';
 import { NotificationSettingsTab } from '../components/NotificationSettingsTab';
+import { SecuritySettingsTab } from '../components/SecuritySettingsTab';
 
 export default function UserManagement({ userId, accountView, role }: UserManagementProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security'>('profile');
   const { t } = useTranslation();
 
   return (
@@ -30,6 +31,7 @@ export default function UserManagement({ userId, accountView, role }: UserManage
           >
             <Tab value="profile" label={t('pages.userManagement.tabs.profile')} />
             <Tab value="notifications" label={t('pages.userManagement.tabs.notifications')} />
+            <Tab value="security" label={t('pages.userManagement.tabs.security')} />
           </Tabs>
         </Paper>
       )}
@@ -39,6 +41,8 @@ export default function UserManagement({ userId, accountView, role }: UserManage
       )}
 
       {accountView && activeTab === 'notifications' && <NotificationSettingsTab role={role} />}
+
+      {accountView && activeTab === 'security' && <SecuritySettingsTab />}
     </Box>
   );
 }

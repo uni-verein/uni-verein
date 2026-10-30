@@ -9,4 +9,7 @@ public class LoginApiBlockedResult
 
     [JsonPropertyName("remainingTime")]
     public double RemainingTime { get; set; }
+
+    [JsonPropertyName("recoveryCodeAllowed")]
+    public bool RecoveryCodeAllowed { get; set; }
 }

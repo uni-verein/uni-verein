@@ -20,6 +20,7 @@ import {
 import { api } from '../api';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { ReceiptCategory } from '../types';
 import { UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
@@ -40,6 +41,7 @@ export default function ReceiptCategoryConfig() {
   }>({ message: '', buttonText: '', confirmColor: 'error' });
   const [categories, setCategories] = useState<ReceiptCategory[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [editing, setEditing] = useState<ReceiptCategory | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const setReceiptCategoryChange = useSnackbar();
   const { t } = useTranslation();
@@ -59,6 +61,11 @@ export default function ReceiptCategoryConfig() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCategories();
   }, [loadCategories]);
+
+  const closeDialog = () => {
+    setOpenDialog(false);
+    setEditing(null);
+  };
 
   const handleDelete = async (id: UUIDTypes) => {
     setConfirmDialog({
@@ -131,12 +138,25 @@ export default function ReceiptCategoryConfig() {
             <MobileListCard
               key={c.id.toString()}
               primary={<Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>}
+              secondaryRows={[
+                {
+                  label: t('pages.receiptCategoryConfig.table.taxArea'),
+                  value: t(`components.taxArea.${c.taxArea}`),
+                },
+              ]}
               actions={
-                <Tooltip title={t('pages.receiptCategoryConfig.tooltip.delete')}>
-                  <IconButton onClick={() => handleDelete(c.id)} color="error" size="small">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{ display: 'flex' }}>
+                  <Tooltip title={t('pages.receiptCategoryConfig.tooltip.edit')}>
+                    <IconButton onClick={() => setEditing(c)} size="small">
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={t('pages.receiptCategoryConfig.tooltip.delete')}>
+                    <IconButton onClick={() => handleDelete(c.id)} color="error" size="small">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               }
             />
           ))}
@@ -149,6 +169,9 @@ export default function ReceiptCategoryConfig() {
                 <TableCell sx={{ fontWeight: 700 }}>
                   {t('pages.receiptCategoryConfig.table.name')}
                 </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t('pages.receiptCategoryConfig.table.taxArea')}
+                </TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>
                   {t('pages.receiptCategoryConfig.table.actions')}
                 </TableCell>
@@ -158,7 +181,13 @@ export default function ReceiptCategoryConfig() {
               {categories.map((c) => (
                 <TableRow key={c.id.toString()} hover>
                   <TableCell>{c.name}</TableCell>
+                  <TableCell>{t(`components.taxArea.${c.taxArea}`)}</TableCell>
                   <TableCell align="right">
+                    <Tooltip title={t('pages.receiptCategoryConfig.tooltip.edit')}>
+                      <IconButton onClick={() => setEditing(c)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title={t('pages.receiptCategoryConfig.tooltip.delete')}>
                       <IconButton onClick={() => handleDelete(c.id)} color="error">
                         <DeleteIcon />
@@ -172,11 +201,12 @@ export default function ReceiptCategoryConfig() {
         </TableContainer>
       )}
 
-      {openDialog && (
+      {(openDialog || editing) && (
         <ReceiptCategoryDialog
-          onClose={() => setOpenDialog(false)}
+          category={editing ?? undefined}
+          onClose={closeDialog}
           onSaved={() => {
-            setOpenDialog(false);
+            closeDialog();
             loadCategories();
           }}
           onError={setApiError}

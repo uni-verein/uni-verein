@@ -21,6 +21,9 @@ public class ContributionEntity : BaseEntity
     [Column("paid")]
     public DateTimeOffset? Paid { get; set; }
 
+    [Column("payment_date")]
+    public DateTime? PaymentDate { get; set; }
+
     [Column("exportId")]
     public Guid ExportId { get; set; }
 }

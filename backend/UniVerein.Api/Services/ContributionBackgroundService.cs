@@ -33,7 +33,6 @@ public class ContributionBackgroundService : BackgroundService
             using IServiceScope scope = _scopeFactory.CreateScope();
             ContributionService contributionService = scope.ServiceProvider.GetRequiredService<ContributionService>();
 
-            await contributionService.DeletePaidContributions();
             await contributionService.GenerateDueContributions();
             Log.Debug("ContributionBackgroundService: Contribution run finished.");
         }

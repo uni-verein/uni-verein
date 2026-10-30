@@ -218,7 +218,8 @@
         "description": "Description",
         "files": "Files",
         "noFiles": "No files available.",
-        "scanning": "Scanning receipt…"
+        "scanning": "Scanning receipt…",
+        "previewUnavailable": "Preview not available"
       },
       "buttons": {
         "addFiles": "Add files",
@@ -231,12 +232,38 @@
       },
       "validation": {
         "amountInvalid": "Amount must be greater than 0.",
+        "amountTooLarge": "Amount must not exceed €1,000,000.",
         "receiptDateRequired": "Receipt date is required."
       },
       "alerts": {
         "saveFailed": "Save failed. Please try again.",
-        "fileTooLarge": "A PDF file must not exceed 10 MB."
+        "fileTooLarge": "A PDF file must not exceed 10 MB.",
+        "pdfUnreadable": "The PDF file could not be read."
       }
+    },
+    "incomeForm": {
+      "titleCreate": "Add income",
+      "titleEdit": "Edit income",
+      "fields": {
+        "type": "Type",
+        "payer": "Payer / source",
+        "payerPlaceholder": "e.g. company, person or event",
+        "amount": "Amount (€)",
+        "date": "Due / received on",
+        "description": "Description",
+        "alreadyReceived": "Amount has already been received",
+        "paymentDate": "Payment date"
+      },
+      "validation": {
+        "payerRequired": "Payer / source is required.",
+        "amountPositive": "Amount must be greater than 0.",
+        "amountTooLarge": "Amount must not exceed €1,000,000.",
+        "dateRequired": "Date is required."
+      },
+      "saveFailed": "Saving failed. Please try again.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "noCategories": "There is no income category yet. An admin can create one under Settings → Manage income categories (e.g. \"Donations\")."
     },
     "markReceiptPaidDialog": {
       "title": "Mark receipt as paid",
@@ -244,7 +271,15 @@
       "confirm": "Mark as paid",
       "cancel": "Cancel",
       "saveFailed": "Save failed. Please try again.",
-      "alreadyPaid": "This receipt has already been marked as paid."
+      "alreadyPaid": "This receipt has already been marked as paid.",
+      "paymentDate": "Payment date"
+    },
+    "paymentDateDialog": {
+      "title": "Book payment",
+      "message": "On which day did the money arrive? The date decides the tax year and the order in the income and expense statement.",
+      "label": "Payment date",
+      "confirm": "Mark as paid",
+      "cancel": "Cancel"
     },
     "calendarEventForm": {
       "title": {
@@ -478,6 +513,14 @@
         "createFailed": "Subscription link could not be created.",
         "revokeFailed": "Subscription link could not be revoked."
       }
+    },
+    "taxArea": {
+      "label": "Tax area",
+      "hint": "Determines the block of the income and expense statement (EÜR) in which the category appears.",
+      "NON_PROFIT": "Non-profit sphere",
+      "ASSET_MANAGEMENT": "Asset management",
+      "PURPOSE_RELATED_OPERATION": "Purpose-related operation",
+      "COMMERCIAL_OPERATION": "Commercial operation"
     }
   },
   "pages": {
@@ -722,29 +765,68 @@
         "deleteButton": "Delete"
       }
     },
-    "contributions": {
-      "title": "Membership fees",
-      "description": "Overview of all fee demands and their payment status.",
-      "openDemands": "Open Demands ({{count}} items)",
+    "income": {
+      "title": "Income",
+      "description": "Membership fees from the SEPA export and all other income of the club in one place.",
+      "year": {
+        "label": "Year",
+        "all": "All years",
+        "custom": "Custom range"
+      },
+      "tabs": {
+        "label": "Type of income",
+        "all": "All",
+        "membership": "Membership fees"
+      },
+      "kind": {
+        "MEMBERSHIP": "Membership fee"
+      },
+      "source": {
+        "CONTRIBUTION": "SEPA export",
+        "MANUAL": "Entered manually"
+      },
+      "kpi": {
+        "open": "Open demands ({{count}} items)",
+        "received": "{{count}} payments received",
+        "membership": "Membership fees · {{share}} % of receipts",
+        "other": "Other income from categories"
+      },
+      "distribution": {
+        "title": "Received by type",
+        "total": "Total: {{amount}}"
+      },
       "filter": {
-        "searchName": "Name search",
-        "status": "Membership fee status",
+        "search": "Search",
+        "searchMember": "Search member",
+        "memberNumber": "Member number",
+        "status": "Payment status",
         "all": "All",
         "unpaid": "Open",
-        "paid": "Paid",
-        "resetFilter": "Reset filters",
         "membershipStatus": "Membership status",
         "allMembershipStatus": "All",
-        "showDeleted": "Show deleted"
+        "paid": "Paid",
+        "dateFrom": "From",
+        "dateTo": "To",
+        "allTime": "All time",
+        "showDeleted": "Show deleted",
+        "resetFilter": "Reset filters"
+      },
+      "hint": {
+        "contributions": "Due fees come automatically from the SEPA export: monthly plans on the 1st of each month, yearly plans on 1 January. \"Payment received\" completes a fee, \"Payment open\" undoes that – which is no longer possible once an acknowledgement has been issued. Completed fees are kept permanently."
       },
       "table": {
-        "memberNumber": "No.",
-        "member": "Member",
-        "membershipStatus": "Membership status",
+        "dueDate": "Due on",
+        "bookingNumber": "Booking no.",
+        "paymentDate": "Payment date",
+        "payer": "Payer",
+        "kind": "Type",
+        "source": "Source",
+        "description": "Description",
         "amount": "Amount",
-        "dueDate": "Due Date",
         "status": "Status",
+        "payment": "Payment",
         "action": "Action",
+        "empty": "No income found.",
         "rowsPerPage": "Rows per page:"
       },
       "status": {
@@ -752,23 +834,37 @@
         "open": "Open"
       },
       "button": {
+        "create": "Add income",
+        "refresh": "Refresh",
         "markAsPaid": "Payment received",
         "markAsUnPaid": "Payment open",
+        "edit": "Edit",
         "delete": "Delete",
-        "restore": "Restore"
+        "restore": "Restore",
+        "acknowledgement": "Create acknowledgement",
+        "acknowledgementDownload": "Download acknowledgement {{number}}"
+      },
+      "tooltip": {
+        "reopenBlocked": "An acknowledgement has already been issued for this entry."
       },
       "confirmDialog": {
-        "deleteQuestion": "Really delete this open fee permanently? It will be removed from the list.",
-        "delete": "Delete permanently",
-        "restoreQuestion": "Really restore this fee?",
+        "deleteQuestion": "Really delete this open item? It will be removed from the list.",
+        "delete": "Delete",
+        "restoreQuestion": "Really restore this item?",
         "restore": "Restore"
       },
       "responseMessages": {
-        "deleted": "Fee was deleted.",
-        "deleteError": "Fee could not be deleted. Only open fees can be deleted.",
-        "restored": "Fee was restored.",
-        "restoreError": "Fee could not be restored."
-      }
+        "created": "Income was added.",
+        "updated": "Income was saved.",
+        "deleted": "Entry was deleted.",
+        "deleteError": "Entry could not be deleted. Only open entries can be deleted.",
+        "restored": "Entry was restored.",
+        "restoreError": "Entry could not be restored.",
+        "acknowledgementCreated": "Acknowledgement was created.",
+        "acknowledgementError": "Acknowledgement could not be created.",
+        "paymentError": "The payment could not be booked. The payment date must be in the year of the booking number that was already assigned."
+      },
+      "acknowledgementNumber": "Acknowledgement {{number}}"
     },
     "creditorConfig": {
       "title": "Bank account configuration",
@@ -802,6 +898,10 @@
         },
         "countryCode": {
           "label": "Country Code"
+        },
+        "taxNumber": {
+          "label": "Tax number",
+          "placeholder": "00/000/00000"
         }
       },
       "buttons": {
@@ -823,7 +923,8 @@
         "postCodeMaxLength": "Postal code must not exceed 10 characters.",
         "cityRequired": "City must not be empty.",
         "cityMaxLength": "City must not exceed 50 characters.",
-        "countryCodeRequired": "Country code must be selected."
+        "countryCodeRequired": "Country code must be selected.",
+        "taxNumberMaxLength": "Tax number must not be longer than 50 characters."
       },
       "snackbar": {
         "saveSuccess": "Saved successfully.",
@@ -939,8 +1040,7 @@
           "helperText": "Shown to recipients as the sender. Empty = address."
         },
         "password": {
-          "label": "Password",
-          "labelKeep": "Password (leave empty to keep current)"
+          "label": "Password (re-enter on every save)"
         }
       },
       "validation": {
@@ -980,7 +1080,10 @@
       "apiError": {
         "saveFailed": "Saving failed. Please try again.",
         "deleteFailed": "Settings could not be deleted. Please try again.",
-        "testSendFailed": "Sending of test mail failed. Please try again."
+        "testSendFailed": "Sending of test mail failed. Please try again.",
+        "connectionFailed": "The mail server cannot be reached. Please check the SMTP host and port.",
+        "authFailed": "Login to the mail server failed. Please check the username and password.",
+        "tlsUnavailable": "The mail server does not offer an encrypted connection or its certificate is not accepted. The password was not sent. Please use port 465 (SSL/TLS) or 587 (STARTTLS) and a server with a valid certificate."
       },
       "testMode": {
         "title": "Test mode",
@@ -1061,6 +1164,15 @@
       "loginError": "Login failed. Please check your details.",
       "toManyLoginError": "Too many failed login attempts. Wait {{seconds}} seconds to try again.",
       "offline": "You're offline. Please check your internet connection.",
+      "twoFactor": {
+        "hint": "Enter the 6-digit code from your authenticator app.",
+        "code": "Code",
+        "recoveryHint": "Alternatively, you can use a recovery code.",
+        "blockedRecoveryHint": "Codes from the app are blocked right now. You can still sign in with a recovery code.",
+        "verify": "Verify",
+        "back": "Back",
+        "error": "The code is incorrect or has expired."
+      },
       "forcePasswordChange": {
         "title": "Change your password",
         "description": "You're using the default password. For security reasons, please set a new password before continuing.",
@@ -1082,7 +1194,9 @@
         "login": "Demo credentials",
         "admin": "Admin: Admin / admin12345678",
         "user": "User: User / user12345678",
-        "finance": "Finance director: Finance / finance1234"
+        "finance": "Finance director: Finance / finance1234",
+        "mail": "Emails are not delivered. You can read them in the test inbox:",
+        "mailLink": "Open test inbox"
       },
       "showPassword": "Show password",
       "hidePassword": "Hide password"
@@ -1209,6 +1323,7 @@
         "generalConfig": "Website settings",
         "profileSettings": "Profile settings",
         "receiptCategoryConfig": "Manage receipt categories",
+        "incomeCategoryConfig": "Manage income categories",
         "calendarCategoryConfig": "Manage calendar categories"
       },
       "pageNames": {
@@ -1218,14 +1333,14 @@
         "broadcastEmailShort": "Mail",
         "sepa": "SEPA export",
         "sepaShort": "SEPA",
-        "contributions": "Membership fees",
-        "contributionsShort": "Fees",
+        "income": "Income",
+        "incomeShort": "Income",
         "audit": "Audit",
         "backup": "Backup",
         "receipts": "Receipts",
         "receiptsShort": "Receipts",
-        "receiptAnalytics": "Receipt analytics",
-        "receiptAnalyticsShort": "Analytics",
+        "financeAnalytics": "Financial analysis",
+        "financeAnalyticsShort": "Analysis",
         "calendar": "Calendar",
         "calendarShort": "Calendar"
       },
@@ -1344,7 +1459,8 @@
       },
       "tooltip": {
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "resetTwoFactor": "Reset two-factor authentication"
       },
       "dialog": {
         "titleCreate": "New user",
@@ -1378,6 +1494,8 @@
         "updateSuccess": "User changes saved successfully.",
         "createSuccess": "User created successfully.",
         "deleteSuccess": "User deleted successfully.",
+        "resetTwoFactorSuccess": "Two-factor authentication reset.",
+        "resetTwoFactorFailed": "Reset failed. Please try again.",
         "usernameDuplicate": "Username already exists.",
         "saveFailed": "Saving failed. Please try again.",
         "deleteFailed": "Deletion failed. Please try again."
@@ -1391,11 +1509,42 @@
       },
       "confirm": {
         "deleteMessage": "Really delete user?",
-        "deleteButton": "Delete"
+        "deleteButton": "Delete",
+        "resetTwoFactorMessage": "Really reset this user's two-factor authentication? They will be able to sign in with only their password afterwards.",
+        "resetTwoFactorButton": "Reset"
       },
       "tabs": {
         "profile": "Profile",
-        "notifications": "Notifications"
+        "notifications": "Notifications",
+        "security": "Security"
+      },
+      "security": {
+        "title": "Two-factor authentication",
+        "description": "Protect your account with an additional code from an authenticator app (e.g. Google Authenticator, Aegis or Bitwarden).",
+        "statusOn": "Active",
+        "statusOff": "Not active",
+        "enable": "Enable",
+        "disable": "Disable",
+        "passwordTitle": "Confirm your password",
+        "passwordHint": "For your security, enter your password again before two-factor authentication is set up.",
+        "passwordWrong": "The password is incorrect.",
+        "passwordContinue": "Continue",
+        "scanHint": "Scan the QR code with your authenticator app, then enter the 6-digit code it shows.",
+        "manualKey": "Or enter this key manually:",
+        "code": "6-digit code",
+        "codeOrRecovery": "Code or recovery code",
+        "confirm": "Confirm and enable",
+        "loadFailed": "The status could not be loaded.",
+        "setupFailed": "The setup could not be started.",
+        "codeWrong": "The code is incorrect. Please try again.",
+        "disableTitle": "Disable two-factor authentication",
+        "disableHint": "Your password and a current code (or a recovery code) are required to confirm.",
+        "disableFailed": "Disabling failed. The password or code is incorrect.",
+        "disabled": "Two-factor authentication disabled.",
+        "recoveryTitle": "Recovery codes",
+        "recoveryHint": "Store these codes safely. Each code works only once and replaces the app if you lose your device. They will not be shown again.",
+        "copy": "Copy",
+        "recoverySaved": "I have saved them"
       },
       "notificationSettings": {
         "title": "Notification settings",
@@ -1432,6 +1581,7 @@
         "colAmount": "Amount",
         "colCategory": "Category",
         "colVendor": "Vendor",
+        "colBookingNumber": "Booking no.",
         "colStatus": "Status",
         "colSubmittedBy": "Submitted by",
         "colActions": "Actions",
@@ -1478,16 +1628,19 @@
       "newButton": "New receipt category",
       "table": {
         "name": "Name",
-        "actions": "Actions"
+        "actions": "Actions",
+        "taxArea": "Tax area"
       },
       "tooltip": {
-        "delete": "Delete"
+        "delete": "Delete",
+        "edit": "Edit"
       },
       "dialog": {
         "titleCreate": "New receipt category",
         "nameLabel": "Name",
         "cancel": "Cancel",
-        "save": "Save"
+        "save": "Save",
+        "titleEdit": "Edit receipt category"
       },
       "validation": {
         "nameEmpty": "Name must not be empty.",
@@ -1499,29 +1652,108 @@
         "saveFailed": "Save failed. Please try again.",
         "deleteSuccess": "Receipt category successfully deleted.",
         "deleteFailed": "Deletion failed. Please try again.",
-        "deleteFailedInUse": "Receipt category cannot be deleted because it is assigned to a receipt."
+        "deleteFailedInUse": "Receipt category cannot be deleted because it is assigned to a receipt.",
+        "updateSuccess": "Receipt category saved successfully."
       },
       "apiError": {
         "createExists": "Cannot create receipt category. Receipt category already exists.",
         "saveFailed": "Save failed. Please try again.",
         "deleteFailed": "Deletion failed. Please try again.",
-        "deleteFailedInUse": "Receipt category cannot be deleted because it is assigned to a receipt."
+        "deleteFailedInUse": "Receipt category cannot be deleted because it is assigned to a receipt.",
+        "updateExists": "Receipt category could not be saved. A receipt category with this name already exists."
       },
       "confirm": {
         "deleteMessage": "Really delete this receipt category?",
         "deleteButton": "Delete"
       }
     },
-    "receiptAnalytics": {
-      "title": "Receipt analytics",
+    "incomeCategoryConfig": {
+      "title": "Manage income categories",
+      "description": "Each category appears as its own tab in the income area (e.g. donations, sponsoring or events). Membership fees are fixed.",
+      "newButton": "New income category",
+      "table": {
+        "name": "Name",
+        "actions": "Actions",
+        "taxArea": "Tax area"
+      },
+      "tooltip": {
+        "delete": "Delete",
+        "edit": "Edit"
+      },
+      "dialog": {
+        "titleCreate": "New income category",
+        "nameLabel": "Name",
+        "cancel": "Cancel",
+        "save": "Save",
+        "titleEdit": "Edit income category"
+      },
+      "validation": {
+        "nameEmpty": "Name must not be empty.",
+        "nameTooLong": "Name must not be longer than 50 characters."
+      },
+      "snackbar": {
+        "createSuccess": "Income category created.",
+        "createExists": "Income category already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteSuccess": "Income category deleted.",
+        "deleteFailed": "Deleting failed. Please try again.",
+        "deleteFailedInUse": "Income category cannot be deleted because incomes are assigned to it.",
+        "updateSuccess": "Income category saved successfully."
+      },
+      "apiError": {
+        "createExists": "Income category cannot be created. It already exists.",
+        "saveFailed": "Saving failed. Please try again.",
+        "deleteFailed": "Deleting failed. Please try again.",
+        "deleteFailedInUse": "Income category cannot be deleted because incomes are assigned to it.",
+        "updateExists": "Income category could not be saved. An income category with this name already exists."
+      },
+      "confirm": {
+        "deleteMessage": "Really delete income category?",
+        "deleteButton": "Delete"
+      }
+    },
+    "financeAnalytics": {
+      "title": "Financial analysis",
       "year": "Year",
-      "byMonth": "Expenses per month ({{year}})",
-      "byCategory": "Expenses per category ({{year}})",
-      "byYear": "Expenses per year",
-      "amountLabel": "Amount (€)",
       "total": "Total",
-      "noData": "No data to display",
+      "noData": "No data available.",
       "noCategory": "No category",
+      "membership": "Membership fees",
+      "loadError": "The financial analysis could not be loaded.",
+      "tabs": {
+        "overview": "Overview",
+        "income": "Income",
+        "expenses": "Expenses",
+        "categories": "Categories"
+      },
+      "kpi": {
+        "income": "Income",
+        "expenses": "Expenses (receipts)",
+        "balance": "Balance",
+        "membershipShare": "Share of membership fees in income"
+      },
+      "takeaway": {
+        "surplus": "Surplus of {{amount}} in {{year}}.",
+        "deficit": "Deficit of {{amount}} in {{year}}.",
+        "balanced": "Income and expenses are balanced in {{year}}.",
+        "membershipShare": "{{share}} of income comes from membership fees."
+      },
+      "compareByMonth": "Income and expenses per month ({{year}})",
+      "compareByYear": "Income and expenses per year",
+      "incomeByMonth": "Income per month ({{year}})",
+      "incomeByCategory": "Income per category ({{year}})",
+      "expenseByMonth": "Expenses per month ({{year}})",
+      "expenseByCategory": "Expenses per category ({{year}})",
+      "table": {
+        "search": "Search category",
+        "category": "Category",
+        "type": "Type",
+        "income": "Income",
+        "expense": "Expense",
+        "total": "Total",
+        "share": "Share",
+        "monthlyAverage": "Avg. per month"
+      },
       "months": {
         "jan": "Jan",
         "feb": "Feb",
@@ -1535,6 +1767,12 @@
         "oct": "Oct",
         "nov": "Nov",
         "dec": "Dec"
+      },
+      "exportEur": {
+        "button": "Export EÜR",
+        "tooltip": "Download the {{year}} income and expense statement as an Excel file (.xlsx)",
+        "success": "EÜR {{year}} exported.",
+        "error": "The export failed. Please try again."
       }
     },
     "calendar": {

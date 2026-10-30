@@ -16,4 +16,7 @@ public class WebPageConfigResult
 
     [JsonPropertyName("selfEnrollmentEnabled")]
     public bool SelfEnrollmentEnabled { get; set; }
+
+    [JsonPropertyName("demo")]
+    public bool Demo { get; set; }
 }

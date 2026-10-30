@@ -9,6 +9,7 @@ using UniVerein.Api.ApiResults;
 using UniVerein.Api.Models;
 using UniVerein.Api.Models.Mail;
 using UniVerein.Api.Exceptions;
+using UniVerein.Api.Helper;
 using UniVerein.Api.Interfaces;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
@@ -24,6 +25,9 @@ namespace UniVerein.Api.Services;
 
 public class MailService
 {
+    // MailKit waits two minutes by default, which is too long for an admin who just typed a wrong host.
+    private const int ConnectionCheckTimeoutMs = 15_000;
+
     private readonly AppDbContext _db;
     private readonly CryptoService _crypto;
     private readonly IHubContext<EmailProgressHub> _hubContext;
@@ -43,13 +47,22 @@ public class MailService
         MailSettingsEntity? mailSettings = await _db.MailSettings
             .FirstOrDefaultAsync(x => x.DeletedAt == null);
 
+        if (mailSettings is not null)
+            await EnsureSmtpConnectionAsync(mailSettings);
+
         EmailRequest request = new()
         {
             Subject = $"Test mail from {mailSettings?.FromMail ?? ""}",
             HtmlBody = "Email successfully configured"
         };
 
-        await SendEmailsAsync([new Recipient() { Email = email }], request, "123456789");
+        SendSummaryResult summary =
+            await SendEmailsAsync([new Recipient() { Email = email }], request, "123456789");
+
+        if (summary.Failed > 0)
+            throw new BaseHttpException(ApiErrorCodes.MAIL_SEND_FAILED, HttpStatusCode.UnprocessableEntity,
+                errorMessage: "The test mail could not be sent.",
+                moreInfo: summary.Results.FirstOrDefault(x => !x.Success)?.ErrorMessage);
     }
 
     public async Task SendEmailWithBccOnlyAsync(List<Recipient> bccRecipients, EmailRequest request,
@@ -137,7 +150,8 @@ public class MailService
         await _hubContext.Clients.Client(connectionId).SendAsync("SendComplete", summary);
     }
 
-    public async Task SendEmailsAsync(List<Recipient> recipients, EmailRequest request, string connectionId)
+    public async Task<SendSummaryResult> SendEmailsAsync(List<Recipient> recipients, EmailRequest request,
+        string connectionId)
     {
         SendSummaryResult summary = new() { Total = recipients.Count };
         MailSettingsEntity? mailSettings = await _db.MailSettings.FirstOrDefaultAsync(x => x.DeletedAt == null);
@@ -182,6 +196,7 @@ public class MailService
         await _hubContext.Clients.Client(connectionId).SendAsync("SendComplete", summary);
         Log.Information("MailService: SendEmailsAsync -> Finished sending, total {Total}, successful {Successful}, failed {Failed}.",
             summary.Total, summary.Successful, summary.Failed);
+        return summary;
     }
 
     public async Task<List<EmailResult>> SendBatchAsync(List<(Recipient Recipient, EmailRequest Request)> mails)
@@ -317,7 +332,8 @@ public class MailService
 
         try
         {
-            SecureSocketOptions option = settings.EnableSsl ? SecureSocketOptions.Auto : SecureSocketOptions.None;
+            SecureSocketOptions option = MailTlsHelper.ResolveSocketOptions(settings.EnableSsl, settings.ImapPort,
+                MailTlsHelper.ImapImplicitTlsPort);
 
             await _imapClient.ConnectAsync(settings.ImapServer, settings.ImapPort, option);
             await _imapClient.AuthenticateAsync(settings.Username, _crypto.Decrypt(settings.Password) ?? string.Empty);
@@ -339,8 +355,7 @@ public class MailService
             if (client.IsConnected)
                 await client.DisconnectAsync(true);
 
-            SecureSocketOptions option = settings.EnableSsl ? SecureSocketOptions.Auto : SecureSocketOptions.None;
-            await client.ConnectAsync(settings.SmtpServer, settings.Port, option);
+            await client.ConnectAsync(settings.SmtpServer, settings.Port, SmtpSocketOptions(settings));
 
             if (client.Capabilities.HasFlag(SmtpCapabilities.Authentication) &&
                 !string.IsNullOrWhiteSpace(settings.Username))
@@ -348,7 +363,51 @@ public class MailService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "SMTP connection failed");
+            if (MailTlsHelper.IsTlsUnavailable(ex))
+                Log.Error(ex, "SMTP connection refused: the mail server does not offer a secure connection " +
+                              "(port {Port}), the password was not sent.", settings.Port);
+            else
+                Log.Error(ex, "SMTP connection failed");
+        }
+    }
+
+    private static SecureSocketOptions SmtpSocketOptions(MailSettingsEntity settings)
+    {
+        return MailTlsHelper.ResolveSocketOptions(settings.EnableSsl, settings.Port,
+            MailTlsHelper.SmtpImplicitTlsPort);
+    }
+
+    private async Task EnsureSmtpConnectionAsync(MailSettingsEntity settings)
+    {
+        using SmtpClient client = new SmtpClient { Timeout = ConnectionCheckTimeoutMs };
+
+        try
+        {
+            await client.ConnectAsync(settings.SmtpServer, settings.Port, SmtpSocketOptions(settings));
+
+            if (client.Capabilities.HasFlag(SmtpCapabilities.Authentication) &&
+                !string.IsNullOrWhiteSpace(settings.Username))
+                await client.AuthenticateAsync(settings.Username, _crypto.Decrypt(settings.Password) ?? string.Empty);
+
+            await client.DisconnectAsync(true);
+        }
+        catch (Exception ex) when (MailTlsHelper.IsTlsUnavailable(ex))
+        {
+            throw new BaseHttpException(ApiErrorCodes.MAIL_TLS_UNAVAILABLE, HttpStatusCode.UnprocessableEntity, ex,
+                errorMessage: "The mail server does not offer a secure connection.",
+                moreInfo: ex.Message);
+        }
+        catch (AuthenticationException ex)
+        {
+            throw new BaseHttpException(ApiErrorCodes.MAIL_AUTH_FAILED, HttpStatusCode.UnprocessableEntity, ex,
+                errorMessage: "The mail server rejected the login.",
+                moreInfo: ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new BaseHttpException(ApiErrorCodes.MAIL_CONNECTION_FAILED, HttpStatusCode.UnprocessableEntity, ex,
+                errorMessage: "The mail server could not be reached.",
+                moreInfo: ex.Message);
         }
     }
 

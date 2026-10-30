@@ -18,6 +18,7 @@ namespace UniVerein.Api.Controllers;
 [ApiController]
 [Route("backup")]
 [EnableCors("AllowFrontend")]
+[DisabledInDemo]
 public class BackupController : ControllerBase
 {
     // Must match client_max_body_size for /api/backup/restore in nginx.conf.

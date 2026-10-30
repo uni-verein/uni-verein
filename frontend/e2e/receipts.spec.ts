@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -14,9 +14,7 @@ const MINIMAL_TEST_PDF_BASE64 =
   'JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAyMDAgMjAwXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA0IDAgUiA+PiA+PiAvQ29udGVudHMgNSAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggNTMgPj4Kc3RyZWFtCkJUIC9GMSAyNCBUZiAyMCAxMDAgVGQgKEdlc2FtdGJldHJhZyAxMiwzNCBFVVIpIFRqIEVUCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzMTEgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTQKJSVFT0Y=';
 
 async function openDashboard(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
@@ -162,6 +160,51 @@ test.describe('Receipts page', () => {
     });
 
     fs.unlinkSync(pdfPath);
+  });
+
+  test('Receipt with a PDF declaring a huge page still shows a preview', async ({ page }) => {
+    await tc.setup(Role.ADMIN);
+    const hugePagePdf = Buffer.from(
+      '%PDF-1.4\n' +
+        '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n' +
+        '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n' +
+        '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 50000 50000]>>endobj\n' +
+        'trailer<</Root 1 0 R>>\n%%EOF',
+    );
+    await backend.createTestReceiptWithPdf(tc.get().token, hugePagePdf);
+    await openDashboard(page, tc.get().token);
+    await goToReceipts(page);
+
+    await page.getByLabel('Ansehen').first().click();
+    const viewDialog = page.getByRole('dialog');
+    await expect(viewDialog.locator('img')).toBeVisible({ timeout: 15000 });
+    await expect(viewDialog.getByText('Vorschau nicht verfügbar')).not.toBeVisible();
+  });
+
+  test('Receipt with an unreadable PDF shows a placeholder and the original link', async ({
+    page,
+  }) => {
+    await tc.setup(Role.ADMIN);
+    const brokenPdf = Buffer.from(
+      '%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF',
+    );
+    await backend.createTestReceiptWithPdf(tc.get().token, brokenPdf);
+    await openDashboard(page, tc.get().token);
+    await goToReceipts(page);
+
+    await page.getByLabel('Ansehen').first().click();
+    const viewDialog = page.getByRole('dialog');
+    await expect(
+      viewDialog.getByRole('heading', { name: 'Beleg ansehen', level: 5 }),
+    ).toBeVisible();
+    await expect(viewDialog.getByText('Vorschau nicht verfügbar')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(viewDialog.getByText('Keine Dateien vorhanden.')).not.toBeVisible();
+
+    await viewDialog.getByText('Vorschau nicht verfügbar').click();
+    const lightbox = page.getByRole('dialog').last();
+    await expect(lightbox.getByRole('link', { name: 'PDF öffnen' })).toBeVisible();
   });
 
   test('Soft delete then hard delete receipt as ADMIN', async ({ page }) => {

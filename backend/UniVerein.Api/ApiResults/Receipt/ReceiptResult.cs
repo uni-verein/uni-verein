@@ -40,6 +40,12 @@ public class ReceiptResult
     [JsonPropertyName("paid")]
     public bool Paid { get; set; }
 
+    [JsonPropertyName("paymentDate")]
+    public DateTime? PaymentDate { get; set; }
+
+    [JsonPropertyName("bookingNumber")]
+    public string? BookingNumber { get; set; }
+
     [JsonPropertyName("files")]
     public List<ReceiptFileResult> Files { get; set; } = new();
 

@@ -1,10 +1,14 @@
-import { request } from '@playwright/test';
+import { Page, request } from '@playwright/test';
 import {
   BulkMail,
   CalendarEvent,
   CalendarEventPayload,
   CalendarEventVisibility,
   Gender,
+  IncomeCategory,
+  IncomePayload,
+  IncomeRow,
+  IncomeSource,
   Interval,
   Link,
   MemberApiResult,
@@ -16,12 +20,19 @@ import {
   TaskWithinTheClub,
   TestUser,
 } from '../src/types';
+import { totpCode } from './totp';
 
 export const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:80/api';
 export const APP_BASE = process.env.APP_BASE_URL ?? 'http://localhost:80';
 export const PAPERCUT_BASE = process.env.PAPERCUT_BASE_URL ?? 'http://localhost:8080';
 const ADMIN_USER = process.env.TEST_ADMIN_USER ?? 'Admin';
 const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? 'admin123';
+
+export async function authenticate(page: Page, token: string) {
+  await page
+    .context()
+    .addCookies([{ name: 'uv_auth', value: token, url: APP_BASE, httpOnly: true }]);
+}
 
 export class BackendClient {
   private adminToken: string | null = null;
@@ -397,6 +408,47 @@ export class BackendClient {
     return body.token ?? body.accessToken ?? body.jwt;
   }
 
+  async enableTwoFactor(
+    userToken: string,
+    password: string,
+  ): Promise<{ secret: string; recoveryCodes: string[]; token: string }> {
+    const ctx = await this.userCtx(userToken);
+
+    const setup = await ctx.post('/api/users/account/2fa/setup', { data: { password } });
+    if (!setup.ok()) {
+      throw new Error(`2FA setup failed: ${setup.status()} ${await setup.text()}`);
+    }
+    const { secret } = await setup.json();
+
+    const enable = await ctx.post('/api/users/account/2fa/enable', {
+      data: { code: totpCode(secret) },
+    });
+    if (!enable.ok()) {
+      throw new Error(`2FA enable failed: ${enable.status()} ${await enable.text()}`);
+    }
+    const { recoveryCodes } = await enable.json();
+    const cookie = enable
+      .headersArray()
+      .find((h) => h.name.toLowerCase() === 'set-cookie' && h.value.startsWith('uv_auth='));
+    if (!cookie) {
+      throw new Error('2FA enable returned no session cookie');
+    }
+    const token = cookie.value.split(';')[0].slice('uv_auth='.length);
+    await ctx.dispose();
+
+    return { secret, recoveryCodes, token };
+  }
+
+  async startTwoFactorSetup(userToken: string, password?: string): Promise<number> {
+    const ctx = await this.userCtx(userToken);
+    const res = await ctx.post('/api/users/account/2fa/setup', {
+      data: password === undefined ? {} : { password },
+    });
+    const status = res.status();
+    await ctx.dispose();
+    return status;
+  }
+
   async setSidebarSettings(settings: SidebarSettings) {
     const ctx = await this.ctx();
 
@@ -494,6 +546,55 @@ export class BackendClient {
       for (const category of result.items) {
         await ctx.delete(`/api/receipt-categories/${category.id}`);
       }
+    }
+    await ctx.dispose();
+  }
+
+  async createIncomeCategory(name = 'playwright_income_category'): Promise<IncomeCategory> {
+    const ctx = await this.ctx();
+    const res = await ctx.post('/api/income-categories', { data: { name } });
+    if (!res.ok()) {
+      throw new Error(`Income category creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  async deleteAllIncomeCategories(): Promise<void> {
+    const ctx = await this.ctx();
+    const res = await ctx.get('/api/income-categories');
+    if (res.ok()) {
+      const result = await res.json();
+      for (const category of result.items) {
+        await ctx.delete(`/api/income-categories/${category.id}`);
+      }
+    }
+    await ctx.dispose();
+  }
+
+  async createIncome(income: IncomePayload): Promise<IncomeRow> {
+    const ctx = await this.ctx();
+    const res = await ctx.post('/api/income', { data: income });
+    if (!res.ok()) {
+      throw new Error(`Income creation failed: ${res.status()} ${await res.text()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body;
+  }
+
+  // Only open incomes can be deleted, so paid ones are reopened first.
+  async deleteAllIncome(): Promise<void> {
+    const ctx = await this.ctx();
+    const res = await ctx.get('/api/income?limit=300&kind=DONATION');
+    const categoryRes = await ctx.get('/api/income?limit=300&kind=CATEGORY');
+    const rows: IncomeRow[] = [];
+    if (res.ok()) rows.push(...(await res.json()).items);
+    if (categoryRes.ok()) rows.push(...(await categoryRes.json()).items);
+    for (const row of rows.filter((r) => r.source === IncomeSource.MANUAL)) {
+      await ctx.post(`/api/income/${row.id}`, { data: { paid: false } });
+      await ctx.delete(`/api/income/${row.id}`);
     }
     await ctx.dispose();
   }
@@ -702,10 +803,15 @@ export class BackendClient {
     await ctx.dispose();
   }
 
-  async payReceipt(token: string, receiptId: string, paymentMethod?: string): Promise<void> {
+  async payReceipt(
+    token: string,
+    receiptId: string,
+    paymentMethod?: string,
+    paymentDate?: string,
+  ): Promise<void> {
     const ctx = await this.userCtx(token);
     const res = await ctx.post(`/api/receipts/${receiptId}/pay`, {
-      data: { paymentMethod: paymentMethod ?? null },
+      data: { paymentMethod: paymentMethod ?? null, paymentDate: paymentDate ?? null },
     });
     if (!res.ok()) {
       throw new Error(`Marking receipt as paid failed: ${res.status()} ${await res.text()}`);

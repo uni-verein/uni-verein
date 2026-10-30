@@ -9,7 +9,6 @@ import {
   CircularProgress,
   FormControl,
   FormControlLabel,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -44,6 +43,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { api } from '../api';
 import { Receipt, ReceiptCategory, Role, UserRoleProps } from '../types';
+import { AutoFitGrid } from '../components/AutoFitGrid';
 import ReceiptForm from '../components/dialogs/ReceiptForm';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { MarkReceiptPaidDialog } from '../components/dialogs/MarkReceiptPaidDialog';
@@ -262,9 +262,6 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
     if (dateTo) params.set('dateTo', dateTo.toISOString());
     if (categoryId) params.set('categoryId', categoryId);
 
-    const token = localStorage.getItem('token');
-    if (token) params.set('access_token', token);
-
     setExporting(true);
     const a = document.createElement('a');
     a.href = `/api/receipts/export?${params.toString()}`;
@@ -308,6 +305,9 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
                   value: r.categoryName ?? '-',
                 },
                 { label: t('pages.receipts.table.colVendor'), value: r.vendor ?? '-' },
+                ...(r.bookingNumber
+                  ? [{ label: t('pages.receipts.table.colBookingNumber'), value: r.bookingNumber }]
+                  : []),
                 ...(isPrivileged
                   ? [
                       {
@@ -386,6 +386,16 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
               <TableCell>{r.vendor ?? '-'}</TableCell>
               <TableCell>
                 <ReceiptStatusChip paid={r.paid} t={t} />
+                {r.bookingNumber && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mt: 0.5 }}
+                  >
+                    {r.bookingNumber}
+                    {r.paymentDate ? ` · ${dayjs(r.paymentDate).format('DD.MM.YYYY')}` : ''}
+                  </Typography>
+                )}
               </TableCell>
               {isPrivileged && (
                 <TableCell>{r.userName ?? t('pages.receipts.deletedUser')}</TableCell>
@@ -554,8 +564,8 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
         />
       )}
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+      <AutoFitGrid minColumnWidth={220} sx={{ mb: 3 }}>
+        <Box>
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
             <DatePicker
               label={t('pages.receipts.filter.dateFrom')}
@@ -568,8 +578,8 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
               slotProps={{ textField: { fullWidth: true } }}
             />
           </LocalizationProvider>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        </Box>
+        <Box>
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
             <DatePicker
               label={t('pages.receipts.filter.dateTo')}
@@ -582,8 +592,8 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
               slotProps={{ textField: { fullWidth: true } }}
             />
           </LocalizationProvider>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        </Box>
+        <Box>
           <FormControl fullWidth>
             <InputLabel id="receipts-category-filter-label" shrink>
               {t('pages.receipts.filter.category')}
@@ -606,8 +616,8 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
               ))}
             </Select>
           </FormControl>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        </Box>
+        <Box>
           <FormControl fullWidth>
             <InputLabel id="receipts-status-filter-label" shrink>
               {t('pages.receipts.filter.status')}
@@ -627,9 +637,9 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
               <MenuItem value="true">{t('pages.receipts.filter.paid')}</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
+        </Box>
         {role === Role.ADMIN && (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Box>
             <FormControlLabel
               control={
                 <Checkbox
@@ -642,10 +652,10 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
               }
               label={t('pages.receipts.filter.showDeleted')}
             />
-          </Grid>
+          </Box>
         )}
         {isFiltered && (
-          <Grid size={{ xs: 12 }}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Button
               variant="outlined"
               color="secondary"
@@ -661,9 +671,9 @@ export default function Receipts({ role, userId }: UserRoleProps & { userId?: UU
             >
               {t('pages.receipts.filter.resetFilter')}
             </Button>
-          </Grid>
+          </Box>
         )}
-      </Grid>
+      </AutoFitGrid>
 
       {isMobile ? (
         <Box sx={{ position: 'relative' }}>

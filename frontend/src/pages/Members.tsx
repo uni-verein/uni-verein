@@ -8,7 +8,6 @@ import {
   CircularProgress,
   FormControl,
   FormControlLabel,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -28,6 +27,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { AutoFitGrid } from '../components/AutoFitGrid';
 import { MembersMobileView } from '../components/MembersMobileView';
 import { PendingEnrollmentsTab } from '../components/PendingEnrollmentsTab';
 import ResponsiveTablePagination from '../components/ResponsiveTablePagination';
@@ -395,8 +395,8 @@ export default function Members({ role }: UserRoleProps) {
         />
       ) : (
         <>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <AutoFitGrid minColumnWidth={220} sx={{ mb: 3 }}>
+            <Box>
               <TextField
                 label={t('pages.members.filter.searchName')}
                 fullWidth
@@ -406,9 +406,9 @@ export default function Members({ role }: UserRoleProps) {
                   setPage(0);
                 }}
               />
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box>
               <FormControl fullWidth>
                 <InputLabel>{t('pages.members.filter.taskInClub')}</InputLabel>
                 <Select
@@ -431,9 +431,9 @@ export default function Members({ role }: UserRoleProps) {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box>
               <FormControl fullWidth>
                 <InputLabel id="members-membership-status-filter-label">
                   {t('pages.members.filter.membershipStatus')}
@@ -461,9 +461,9 @@ export default function Members({ role }: UserRoleProps) {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
+            </Box>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box>
               <FormControl fullWidth>
                 <InputLabel id="members-category-filter-label" shrink>
                   {t('pages.members.filter.memberCategory')}
@@ -489,9 +489,9 @@ export default function Members({ role }: UserRoleProps) {
                   })}
                 </Select>
               </FormControl>
-            </Grid>
+            </Box>
             {role === Role.ADMIN && (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Box>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -504,10 +504,10 @@ export default function Members({ role }: UserRoleProps) {
                   }
                   label={t('pages.members.filter.showDeleted')}
                 />
-              </Grid>
+              </Box>
             )}
             {isFiltered && (
-              <Grid size={{ xs: 12, md: role === Role.ADMIN ? 12 : 3 }}>
+              <Box sx={role === Role.ADMIN ? { gridColumn: '1 / -1' } : undefined}>
                 <Button
                   variant="outlined"
                   color="secondary"
@@ -522,9 +522,9 @@ export default function Members({ role }: UserRoleProps) {
                 >
                   {t('pages.members.filter.resetFilter')}
                 </Button>
-              </Grid>
+              </Box>
             )}
-          </Grid>
+          </AutoFitGrid>
 
           {isMobile ? (
             <MembersMobileView

@@ -1,23 +1,30 @@
 version: 2
 
-# All ecosystems are bundled into a single weekly PR. Dependabot labels it
-# 'ready-for-ci' so the full pipeline runs exactly once per PR; each other label
-# would start an extra `pull_request: labeled` run whose gate fails. The
-# pipeline needs the application secrets as Dependabot secrets.
+# All ecosystems are bundled into a single weekly PR. Dependabot does NOT label it:
+# 'ready-for-ci' is the maintainer's approval to run the pipeline, which installs
+# the dependencies (npm ci, dotnet restore) next to the application secrets, so a
+# maintainer adds it after looking at the bump. `labels: []` also switches off
+# Dependabot's default 'dependencies' label; any label would start an extra
+# `pull_request: labeled` run whose gate fails.
+# New versions are only proposed after a cooldown, so a freshly published (and
+# possibly malicious) release is not picked up right away. Security updates ignore
+# the cooldown.
 # Major updates are ignored so the bundled PR stays mergeable; they are done
 # manually.
 multi-ecosystem-groups:
   dependencies:
     schedule:
       interval: "weekly"
-    labels: ["ready-for-ci"]
+    labels: []
 
 updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
-    labels: ["ready-for-ci"]
+    labels: []
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -26,7 +33,9 @@ updates:
     directory: "/backend"
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
-    labels: ["ready-for-ci"]
+    labels: []
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -38,7 +47,9 @@ updates:
       - "/backend/UniVerein.DbMigrator"
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
-    labels: ["ready-for-ci"]
+    labels: []
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -47,7 +58,9 @@ updates:
     directory: "/"
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
-    labels: ["ready-for-ci"]
+    labels: []
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]

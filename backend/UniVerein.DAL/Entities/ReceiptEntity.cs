@@ -38,5 +38,8 @@ public class ReceiptEntity : BaseEntity
     [Column("paid")]
     public DateTimeOffset? Paid { get; set; }
 
+    [Column("payment_date")]
+    public DateTime? PaymentDate { get; set; }
+
     public List<ReceiptFileEntity> Files { get; set; } = new();
 }

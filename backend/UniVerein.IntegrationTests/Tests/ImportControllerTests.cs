@@ -1,4 +1,5 @@
 using UniVerein.Api.Models.Enums;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -10,6 +11,8 @@ using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using UniVerein.IntegrationTests.Infrastructure;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Shouldly;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -630,6 +633,39 @@ public class ImportControllerTests : IntegrationTestBase
                                "Sepa consent date;Contribution amount;Membership status\r\n999;MALE;Member;Existing;;01.01.2000;+49 172 12345678;" +
                                "ALLOWED;max@test.de;Musterstraße 1;12345;City;DE;15.05.2015;;;;MEMBER;STUDENT;15.10.2015;;" +
                                "DE89370400440532013000;INGDDEFFXXX;;;MEMBER\r\n");
+    }
+
+    [Theory]
+    [InlineData("=HYPERLINK(\"http://x.invalid/\",\"x\")")]
+    [InlineData("+1+1")]
+    [InlineData("-1+1")]
+    [InlineData("@SUM(1+1)")]
+    public async Task ExportCsvAsync_NeutralisesFormulaCharacters_InTextFields(string malicious)
+    {
+        // Arrange
+        MemberEntity member = await CreateMemberAsync(firstName: malicious);
+        CryptoService cryptoService = GetService<CryptoService>();
+        member.LastName = malicious;
+        member.City = malicious;
+        member.PhoneEncrypted = cryptoService.Encrypt(malicious);
+        await _db.SaveChangesAsync();
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/import/export");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        string csvContent = Encoding.UTF8.GetString(await response.Content.ReadAsByteArrayAsync());
+        using StringReader stringReader = new(csvContent);
+        using CsvReader csv = new(stringReader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" });
+        csv.Read();
+        csv.ReadHeader();
+        csv.Read();
+        csv.GetField("Name").ShouldBe("'" + malicious);
+        csv.GetField("First name").ShouldBe("'" + malicious);
+        csv.GetField("City").ShouldBe("'" + malicious);
+        csv.GetField("Phone nummer").ShouldBe("'" + malicious);
     }
 
     [Fact]

@@ -17,4 +17,7 @@ public class UserResult
 
     [JsonPropertyName("role")]
     public UserRole Role { get; set; }
+
+    [JsonPropertyName("twoFactorEnabled")]
+    public bool TwoFactorEnabled { get; set; }
 }

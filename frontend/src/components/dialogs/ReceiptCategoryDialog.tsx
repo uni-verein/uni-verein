@@ -12,19 +12,24 @@ import {
 import { api } from '../../api';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
+import { ReceiptCategory, TaxArea } from '../../types';
+import { TaxAreaSelect } from '../finance/TaxAreaSelect';
 
 export function ReceiptCategoryDialog({
+  category,
   onClose,
   onSaved,
   onError,
 }: {
+  category?: ReceiptCategory;
   onClose: () => void;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
-  const [name, setName] = useState('');
+  const [name, setName] = useState(category?.name ?? '');
+  const [taxArea, setTaxArea] = useState<TaxArea>(category?.taxArea ?? TaxArea.NON_PROFIT);
   const [error, setError] = useState<string | undefined>();
   const setReceiptCategoryChange = useSnackbar();
   const { t } = useTranslation();
@@ -47,13 +52,20 @@ export function ReceiptCategoryDialog({
     if (!validate()) return;
 
     try {
-      const response = await api('/receipt-categories', {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      });
+      const response = await api(
+        category ? `/receipt-categories/${category.id}` : '/receipt-categories',
+        {
+          method: category ? 'PUT' : 'POST',
+          body: JSON.stringify({ name, taxArea }),
+        },
+      );
 
       if (response === 409) {
-        onError(t('pages.receiptCategoryConfig.apiError.createExists'));
+        onError(
+          category
+            ? t('pages.receiptCategoryConfig.apiError.updateExists')
+            : t('pages.receiptCategoryConfig.apiError.createExists'),
+        );
         setReceiptCategoryChange({
           status: 'error',
           message: t('pages.receiptCategoryConfig.snackbar.createExists'),
@@ -61,7 +73,9 @@ export function ReceiptCategoryDialog({
       } else {
         setReceiptCategoryChange({
           status: 'success',
-          message: t('pages.receiptCategoryConfig.snackbar.createSuccess'),
+          message: category
+            ? t('pages.receiptCategoryConfig.snackbar.updateSuccess')
+            : t('pages.receiptCategoryConfig.snackbar.createSuccess'),
         });
       }
     } catch {
@@ -76,7 +90,11 @@ export function ReceiptCategoryDialog({
 
   return (
     <Dialog open onClose={onClose} fullWidth={!isMobile} fullScreen={isMobile} maxWidth="xs">
-      <DialogTitle>{t('pages.receiptCategoryConfig.dialog.titleCreate')}</DialogTitle>
+      <DialogTitle>
+        {category
+          ? t('pages.receiptCategoryConfig.dialog.titleEdit')
+          : t('pages.receiptCategoryConfig.dialog.titleCreate')}
+      </DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <TextField
           sx={{ mt: 1 }}
@@ -91,6 +109,7 @@ export function ReceiptCategoryDialog({
             setError(undefined);
           }}
         />
+        <TaxAreaSelect value={taxArea} onChange={setTaxArea} />
       </DialogContent>
       <DialogActions sx={{ p: 3 }}>
         <Button onClick={onClose}>{t('pages.receiptCategoryConfig.dialog.cancel')}</Button>

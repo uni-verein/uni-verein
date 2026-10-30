@@ -39,6 +39,10 @@ public class AppDbContext : DbContext
     public DbSet<ReceiptEntity> Receipts => Set<ReceiptEntity>();
     public DbSet<ReceiptCategoryEntity> ReceiptCategories => Set<ReceiptCategoryEntity>();
     public DbSet<ReceiptFileEntity> ReceiptFiles => Set<ReceiptFileEntity>();
+    public DbSet<IncomeEntity> Incomes => Set<IncomeEntity>();
+    public DbSet<IncomeCategoryEntity> IncomeCategories => Set<IncomeCategoryEntity>();
+    public DbSet<PaymentAcknowledgementEntity> PaymentAcknowledgements => Set<PaymentAcknowledgementEntity>();
+    public DbSet<BookingNumberEntity> BookingNumbers => Set<BookingNumberEntity>();
     public DbSet<UserSettingEntity> UserSettings => Set<UserSettingEntity>();
     public DbSet<PendingSelfEnrollmentEntity> PendingSelfEnrollments => Set<PendingSelfEnrollmentEntity>();
     public DbSet<CalendarEventEntity> CalendarEvents => Set<CalendarEventEntity>();
@@ -49,6 +53,7 @@ public class AppDbContext : DbContext
     public DbSet<CalendarReminderLogEntity> CalendarReminderLogs => Set<CalendarReminderLogEntity>();
     public DbSet<CalendarFeedTokenEntity> CalendarFeedTokens => Set<CalendarFeedTokenEntity>();
     public DbSet<CalendarSettingsEntity> CalendarSettings => Set<CalendarSettingsEntity>();
+    public DbSet<UserRecoveryCodeEntity> UserRecoveryCodes => Set<UserRecoveryCodeEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -128,7 +133,53 @@ public class AppDbContext : DbContext
             .IsRequired(false);
 
         modelBuilder.Entity<ReceiptCategoryEntity>()
+            .Property(x => x.TaxArea)
+            .HasConversion<string>()
+            .HasDefaultValue(TaxArea.NON_PROFIT);
+
+        modelBuilder.Entity<ReceiptCategoryEntity>()
             .HasQueryFilter(x => x.DeletedAt == null);
+
+
+        modelBuilder.Entity<IncomeCategoryEntity>()
+            .Property(x => x.TaxArea)
+            .HasConversion<string>()
+            .HasDefaultValue(TaxArea.NON_PROFIT);
+
+        modelBuilder.Entity<IncomeCategoryEntity>()
+            .HasQueryFilter(x => x.DeletedAt == null);
+
+        modelBuilder.Entity<PaymentAcknowledgementEntity>()
+            .HasIndex(x => new { x.Year, x.Sequence })
+            .IsUnique();
+
+        modelBuilder.Entity<PaymentAcknowledgementEntity>()
+            .HasIndex(x => x.ContributionId)
+            .IsUnique();
+
+        modelBuilder.Entity<PaymentAcknowledgementEntity>()
+            .HasIndex(x => x.IncomeId)
+            .IsUnique();
+
+        modelBuilder.Entity<BookingNumberEntity>()
+            .Property(x => x.Kind)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<BookingNumberEntity>()
+            .HasIndex(x => new { x.Year, x.Kind, x.Sequence })
+            .IsUnique();
+
+        modelBuilder.Entity<BookingNumberEntity>()
+            .HasIndex(x => x.ContributionId)
+            .IsUnique();
+
+        modelBuilder.Entity<BookingNumberEntity>()
+            .HasIndex(x => x.IncomeId)
+            .IsUnique();
+
+        modelBuilder.Entity<BookingNumberEntity>()
+            .HasIndex(x => x.ReceiptId)
+            .IsUnique();
 
 
         modelBuilder.Entity<UserSettingEntity>()
@@ -269,6 +320,15 @@ public class AppDbContext : DbContext
             .IsUnique();
 
 
+        modelBuilder.Entity<UserRecoveryCodeEntity>()
+            .HasIndex(x => new { x.UserId, x.CodeHash });
+
+        modelBuilder.Entity<UserRecoveryCodeEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<CalendarFeedTokenEntity>()
             .HasIndex(x => x.TokenHash)
             .IsUnique();
@@ -297,6 +357,14 @@ public class AppDbContext : DbContext
 
             modelBuilder.Entity<ReceiptEntity>()
                 .Property(x => x.Paid)
+                .HasConversion(converter);
+
+            modelBuilder.Entity<IncomeEntity>()
+                .Property(x => x.Paid)
+                .HasConversion(converter);
+
+            modelBuilder.Entity<IncomeEntity>()
+                .Property(x => x.DeletedAt)
                 .HasConversion(converter);
         }
     }

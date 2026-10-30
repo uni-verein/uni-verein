@@ -7,19 +7,18 @@ import PublicEnrollmentPage from './pages/PublicEnrollmentPage';
 import ConfirmEnrollmentPage from './pages/ConfirmEnrollmentPage';
 
 const PublicCalendar = lazy(() => import('./pages/PublicCalendar'));
-import { isTokenValid } from './utils';
+import { fetchSession, logout, Session } from './api';
 import { usePageConfig } from './hooks/usePageConfig';
 import { useThemeMode } from './hooks/useThemeMode';
 
 export default function App() {
-  const [logged, setLogged] = useState(!!localStorage.getItem('token'));
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
   const { config, reloadConfig } = usePageConfig();
   const { resolvedMode } = useThemeMode();
 
   // @ts-expect-error - injected at build time via Vite define, not part of ImportMetaEnv types
   const version = import.meta.env.VITE_APP_VERSION;
-  // @ts-expect-error - injected at build time via Vite define, not part of ImportMetaEnv types
-  const demo = import.meta.env.VITE_APP_DEMO === 'true';
+  const demo = config.demo;
 
   const theme = useMemo(
     () =>
@@ -76,34 +75,47 @@ export default function App() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && isTokenValid(token)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLogged(true);
-    } else {
+    let cancelled = false;
+
+    try {
       localStorage.removeItem('token');
-      setLogged(false);
+    } catch {
+      // storage not available
     }
+
+    fetchSession()
+      .then((current) => {
+        if (!cancelled) setSession(current);
+      })
+      .catch(() => {
+        if (!cancelled) setSession(null);
+      });
     reloadConfig().catch(() => {});
 
     const interval = setInterval(() => {
-      const currentToken = localStorage.getItem('token');
-      if (!currentToken || !isTokenValid(currentToken)) {
-        localStorage.removeItem('token');
-        setLogged(false);
-      }
+      fetchSession()
+        .then((current) => {
+          if (!cancelled && !current) setSession(null);
+        })
+        .catch(() => {});
     }, 60_000);
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [reloadConfig]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setLogged(false);
+    logout()
+      .catch(() => {})
+      .finally(() => setSession(null));
   };
 
   const handleLoginSuccess = () => {
-    setLogged(true);
+    fetchSession()
+      .then(setSession)
+      .catch(() => setSession(null));
   };
 
   return (
@@ -118,10 +130,15 @@ export default function App() {
         <ConfirmEnrollmentPage />
       ) : window.location.pathname === '/enroll' ? (
         <PublicEnrollmentPage />
-      ) : !logged ? (
+      ) : session === undefined ? null : !session ? (
         <Login onLogin={handleLoginSuccess} demo={demo} />
       ) : (
-        <Dashboard onLogout={handleLogout} pageName={config.pageName} logo={config.logo} />
+        <Dashboard
+          user={session}
+          onLogout={handleLogout}
+          pageName={config.pageName}
+          logo={config.logo}
+        />
       )}
       {!isMobile && (
         <Typography

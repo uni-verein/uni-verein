@@ -33,17 +33,20 @@ public static class JwtTestHelper
         Guid userId,
         string username,
         UserRole role,
-        TimeSpan? lifetime = null)
+        TimeSpan? lifetime = null,
+        int? sessionVersion = 0)
     {
         SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
         SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        Claim[] claims = new[]
+        List<Claim> claims = new()
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, username),
             new Claim(ClaimTypes.Role, role.ToString())
         };
+        if (sessionVersion.HasValue)
+            claims.Add(new Claim("session_version", sessionVersion.Value.ToString(), ClaimValueTypes.Integer32));
 
         JwtSecurityToken token = new JwtSecurityToken(
             issuer: configuration["Jwt:Issuer"],

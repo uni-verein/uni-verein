@@ -31,4 +31,7 @@ public class CreditorConfigResult
 
     [JsonPropertyName("countryCode")]
     public required string CountryCode { get; set; }
+
+    [JsonPropertyName("taxNumber")]
+    public string? TaxNumber { get; set; }
 }

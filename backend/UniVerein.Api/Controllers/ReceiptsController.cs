@@ -45,19 +45,21 @@ public class ReceiptsController : ControllerBase
     private readonly ReceiptNotificationService _receiptNotificationService;
     private readonly AuditService _auditService;
     private readonly TimeProvider _timeProvider;
+    private readonly BookingNumberService _bookingNumberService;
     private readonly Guid _currentUserId;
     private readonly bool _isAdmin;
     private readonly bool _isPrivileged;
 
     public ReceiptsController(AppDbContext db, ReceiptService receiptService,
         ReceiptNotificationService receiptNotificationService, AuditService auditService,
-        TimeProvider timeProvider, IHttpContextAccessor http)
+        TimeProvider timeProvider, BookingNumberService bookingNumberService, IHttpContextAccessor http)
     {
         _db = db;
         _receiptService = receiptService;
         _receiptNotificationService = receiptNotificationService;
         _auditService = auditService;
         _timeProvider = timeProvider;
+        _bookingNumberService = bookingNumberService;
 
         string? userIdClaim = http.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         _currentUserId = Guid.TryParse(userIdClaim, out Guid id) ? id : Guid.Empty;
@@ -65,77 +67,6 @@ public class ReceiptsController : ControllerBase
         string? role = http.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
         _isAdmin = role == nameof(UserRole.ADMIN);
         _isPrivileged = role is nameof(UserRole.ADMIN) or nameof(UserRole.FINANCIAL_MANAGER);
-    }
-
-    [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
-    [HttpGet("analytics")]
-    public async Task<ActionResult<ReceiptAnalyticsResult>> GetAnalyticsAsync([FromQuery] int? year)
-    {
-        int targetYear = year ?? DateTime.UtcNow.Year;
-
-        List<ReceiptAnalyticsRow> receipts = await _db.Receipts
-            .Where(r => r.DeletedAt == null)
-            .GroupBy(r => new
-            {
-                Year = r.ReceiptDate.Year,
-                Month = r.ReceiptDate.Month,
-                r.CategoryId,
-                CategoryName = r.Category != null ? r.Category.Name : null
-            })
-            .Select(g => new ReceiptAnalyticsRow
-            {
-                Year = g.Key.Year,
-                Month = g.Key.Month,
-                CategoryId = g.Key.CategoryId,
-                CategoryName = g.Key.CategoryName,
-                Amount = g.Sum(r => r.Amount)
-            })
-            .ToListAsync();
-
-        List<ReceiptCategoryTotal> ByCategoryTotals(IEnumerable<ReceiptAnalyticsRow> rows) => rows
-            .GroupBy(r => r.CategoryId)
-            .Select(g => new ReceiptCategoryTotal
-            {
-                CategoryId = g.Key,
-                CategoryName = g.First().CategoryName,
-                Total = g.Sum(r => r.Amount)
-            })
-            .OrderByDescending(x => x.Total)
-            .ToList();
-
-        List<ReceiptYearlyTotal> byYear = receipts
-            .GroupBy(r => r.Year)
-            .Select(g => new ReceiptYearlyTotal
-            {
-                Year = g.Key,
-                Total = g.Sum(r => r.Amount),
-                ByCategory = ByCategoryTotals(g)
-            })
-            .OrderBy(x => x.Year)
-            .ToList();
-
-        List<ReceiptAnalyticsRow> receiptsForYear = receipts.Where(r => r.Year == targetYear).ToList();
-
-        List<ReceiptMonthlyTotal> byMonth = receiptsForYear
-            .GroupBy(r => r.Month)
-            .Select(g => new ReceiptMonthlyTotal
-            {
-                Month = g.Key,
-                Total = g.Sum(r => r.Amount),
-                ByCategory = ByCategoryTotals(g)
-            })
-            .OrderBy(x => x.Month)
-            .ToList();
-
-        List<ReceiptCategoryTotal> byCategory = ByCategoryTotals(receiptsForYear);
-
-        return Ok(new ReceiptAnalyticsResult
-        {
-            Year = targetYear,
-            ByYear = byYear,
-            ByMonth = byMonth,
-            ByCategory = byCategory
-        });
     }
 
     [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
@@ -164,11 +95,11 @@ public class ReceiptsController : ControllerBase
         {
             ReceiptDate = r.ReceiptDate,
             Amount = r.Amount,
-            Category = r.Category?.Name ?? string.Empty,
-            Vendor = r.Vendor ?? string.Empty,
-            Description = r.Description ?? string.Empty,
+            Category = CsvSanitizer.Sanitize(r.Category?.Name) ?? string.Empty,
+            Vendor = CsvSanitizer.Sanitize(r.Vendor) ?? string.Empty,
+            Description = CsvSanitizer.Sanitize(r.Description) ?? string.Empty,
             PaymentMethod = r.PaymentMethod?.ToString() ?? string.Empty,
-            SubmittedBy = r.User?.Username ?? "(deleted user)",
+            SubmittedBy = CsvSanitizer.Sanitize(r.User?.Username) ?? "(deleted user)",
             FileIds = string.Join(",", r.Files.Select(f => f.Id))
         }).ToList();
 
@@ -243,9 +174,10 @@ public class ReceiptsController : ControllerBase
         int total = await receiptQuery.CountAsync();
         List<ReceiptEntity> items = await receiptQuery.Skip(query.Offset).Take(query.Limit).ToListAsync();
 
+        Dictionary<Guid, string> numbers = await _bookingNumberService.GetReceiptNumbersAsync(items.Select(r => r.Id).ToList());
         return Ok(new AllReceiptResults()
         {
-            Items = items.Select(MapToResult).ToList(),
+            Items = items.Select(r => MapToResult(r, numbers)).ToList(),
             Total = total
         });
     }
@@ -269,7 +201,7 @@ public class ReceiptsController : ControllerBase
                 errorMessage: "Receipt not found.",
                 moreInfo: $"No receipt with the ID {id} could be found."));
 
-        return Ok(MapToResult(receipt));
+        return Ok(MapToResult(receipt, await _bookingNumberService.GetReceiptNumbersAsync(new[] { receipt.Id })));
     }
 
     [HttpGet("{id}/files/{fileId}")]
@@ -317,6 +249,10 @@ public class ReceiptsController : ControllerBase
     {
         if (request.Amount <= 0)
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Amount must be greater than 0."));
+
+        if (request.Amount > MoneyLimits.MaxAmount)
+            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+                moreInfo: $"Amount must not exceed {MoneyLimits.MaxAmount:0}."));
 
         if (request.ReceiptDate == default)
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "ReceiptDate is required."));
@@ -390,7 +326,7 @@ public class ReceiptsController : ControllerBase
             .Include(r => r.Files)
             .FirstAsync(r => r.Id == receipt.Id);
 
-        return Created("", MapToResult(saved));
+        return Created("", MapToResult(saved, new Dictionary<Guid, string>()));
     }
 
     [HttpPatch("{id}")]
@@ -437,6 +373,10 @@ public class ReceiptsController : ControllerBase
         if (request.Amount is <= 0)
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Amount must be greater than 0."));
 
+        if (request.Amount > MoneyLimits.MaxAmount)
+            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+                moreInfo: $"Amount must not exceed {MoneyLimits.MaxAmount:0}."));
+
         if (request.ReceiptDate == default(DateTime))
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "ReceiptDate must not be empty."));
 
@@ -471,7 +411,7 @@ public class ReceiptsController : ControllerBase
             .Include(r => r.Files)
             .FirstAsync(r => r.Id == id);
 
-        return Ok(MapToResult(updated));
+        return Ok(MapToResult(updated, await _bookingNumberService.GetReceiptNumbersAsync(new[] { updated.Id })));
     }
 
     [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
@@ -495,13 +435,19 @@ public class ReceiptsController : ControllerBase
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
                 moreInfo: "PaymentMethod is required to mark a receipt as paid."));
 
+        DateTime paymentDate = IncomeService.ToUtcDate(request.PaymentDate ?? _timeProvider.GetUtcNow().UtcDateTime);
         receipt.PaymentMethod = effectivePaymentMethod;
         receipt.Paid = _timeProvider.GetUtcNow();
+        receipt.PaymentDate = paymentDate;
         _db.Update(receipt);
-        await _db.SaveChangesAsync();
+
+        BookingNumberEntity? number = await _bookingNumberService.TryAssignReceiptAsync(receipt, paymentDate);
+        if (number == null)
+            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+                moreInfo: "The payment date must be in the year of the booking number that was already assigned."));
 
         await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(ReceiptEntity),
-            new { ReceiptId = id, receipt.PaymentMethod, Paid = true });
+            new { ReceiptId = id, receipt.PaymentMethod, Paid = true, receipt.PaymentDate, BookingNumber = number.Number });
 
         Log.Information("ReceiptsController: MarkAsPaidAsync -> Receipt {ReceiptId} marked as paid by {ActorId}.", receipt.Id, _currentUserId);
 
@@ -584,7 +530,7 @@ public class ReceiptsController : ControllerBase
         return Ok();
     }
 
-    private static ReceiptResult MapToResult(ReceiptEntity receipt)
+    private static ReceiptResult MapToResult(ReceiptEntity receipt, IReadOnlyDictionary<Guid, string> bookingNumbers)
     {
         return new ReceiptResult
         {
@@ -599,6 +545,8 @@ public class ReceiptsController : ControllerBase
             Description = receipt.Description,
             PaymentMethod = receipt.PaymentMethod,
             Paid = receipt.Paid != null,
+            PaymentDate = receipt.PaymentDate,
+            BookingNumber = bookingNumbers.GetValueOrDefault(receipt.Id),
             Files = receipt.Files
                 .OrderBy(i => i.Position)
                 .Select(i => new ReceiptFileResult() { Id = i.Id, ContentType = i.ContentType, Position = i.Position })
@@ -606,14 +554,5 @@ public class ReceiptsController : ControllerBase
             CreatedAt = receipt.CreatedAt,
             DeletedAt = receipt.DeletedAt
         };
-    }
-
-    private sealed class ReceiptAnalyticsRow
-    {
-        public int Year { get; init; }
-        public int Month { get; init; }
-        public Guid? CategoryId { get; init; }
-        public string? CategoryName { get; init; }
-        public decimal Amount { get; init; }
     }
 }

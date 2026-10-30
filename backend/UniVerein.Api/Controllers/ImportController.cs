@@ -10,6 +10,7 @@ using UniVerein.Api.Converter;
 using UniVerein.Api.Models;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Extensions;
+using UniVerein.Api.Helper;
 using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
 using UniVerein.Api.Validators;
@@ -344,28 +345,28 @@ public class ImportController : ControllerBase
         {
             MemberNumber = x.MemberNumber,
             Gender = x.Gender.ToString(),
-            Name = x.LastName,
-            FirstName = x.FirstName,
-            MiddleName = x.MiddleName,
+            Name = CsvSanitizer.Sanitize(x.LastName),
+            FirstName = CsvSanitizer.Sanitize(x.FirstName),
+            MiddleName = CsvSanitizer.Sanitize(x.MiddleName),
             Birthday = _crypto.DecryptDate(x.BirthdayEncrypted),
-            PhoneNummer = _crypto.Decrypt(x.PhoneEncrypted),
-            EMail = _crypto.Decrypt(x.EmailEncrypted),
+            PhoneNummer = CsvSanitizer.SanitizePhoneNumber(_crypto.Decrypt(x.PhoneEncrypted)),
+            EMail = CsvSanitizer.Sanitize(_crypto.Decrypt(x.EmailEncrypted)),
             BulkMail = x.BulkMail.ToString(),
-            StreetAndNumber = _crypto.Decrypt(x.StreetEncrypted),
-            Zip = x.PostalCode,
-            City = x.City,
-            CountryCode = x.CountryCode,
+            StreetAndNumber = CsvSanitizer.Sanitize(_crypto.Decrypt(x.StreetEncrypted)),
+            Zip = CsvSanitizer.Sanitize(x.PostalCode),
+            City = CsvSanitizer.Sanitize(x.City),
+            CountryCode = CsvSanitizer.Sanitize(x.CountryCode),
             StudyStart = x.StartOfStudies,
             StudyEnd = x.EndOfStudies,
             AcademicDegree = x.AcademicDegree?.GetDisplayName(),
-            CourseOfStudy = x.CourseOfStudy,
+            CourseOfStudy = CsvSanitizer.Sanitize(x.CourseOfStudy),
             TaskWithinTheClub = x.TaskWithinTheClub.ToString(),
             MembershipStatus = x.MembershipStatus.ToString(),
-            MemberCategory = x.MemberCategory?.Name ?? string.Empty,
+            MemberCategory = CsvSanitizer.Sanitize(x.MemberCategory?.Name) ?? string.Empty,
             EntryDate = x.EntryDate,
             ExitDate = x.ExitDate,
-            Iban = _crypto.Decrypt(x.IBAN_Encrypted),
-            Bic = _crypto.Decrypt(x.Bic_Encrypted),
+            Iban = CsvSanitizer.Sanitize(_crypto.Decrypt(x.IBAN_Encrypted)),
+            Bic = CsvSanitizer.Sanitize(_crypto.Decrypt(x.Bic_Encrypted)),
             SepaConsentDate = x.SepaConsent,
             ContributionAmount = (int?)x.ContributionPlan?.Amount
         }).ToList();

@@ -53,9 +53,7 @@ export default function Backup() {
   }, [load]);
 
   const triggerDownload = (query: string, filename: string) => {
-    const token = localStorage.getItem('token');
     const params = new URLSearchParams(query);
-    if (token) params.set('access_token', token);
 
     setLoading(true);
     const a = document.createElement('a');

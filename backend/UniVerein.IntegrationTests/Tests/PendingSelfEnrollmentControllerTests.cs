@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
@@ -605,6 +606,52 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync($"/pending-self-enrollments/{pending.Id}",
             new PendingSelfEnrollmentUpdateRequest { LastName = "Updated" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData("firstName", 100)]
+    [InlineData("middleName", 100)]
+    [InlineData("lastName", 100)]
+    [InlineData("street", 100)]
+    [InlineData("postalCode", 10)]
+    [InlineData("city", 100)]
+    [InlineData("countryCode", 3)]
+    [InlineData("email", 254)]
+    [InlineData("phone", 50)]
+    [InlineData("courseOfStudy", 100)]
+    [InlineData("motivation", 1000)]
+    [InlineData("iban", 50)]
+    [InlineData("bic", 20)]
+    public async Task Update_FieldLongerThanLimit_BadRequest(string field, int limit)
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(PendingSelfEnrollmentStatus.PENDING);
+        JsonObject body = new()
+        {
+            [field] = field == "email" ? new string('a', limit) + "@test.de" : new string('a', limit + 1)
+        };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/pending-self-enrollments/{pending.Id}", body);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Update_FieldAtLimit_Succeeds()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(PendingSelfEnrollmentStatus.PENDING);
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/pending-self-enrollments/{pending.Id}",
+            new PendingSelfEnrollmentUpdateRequest { Street = new string('a', 100), Motivation = new string('a', 1000) });
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

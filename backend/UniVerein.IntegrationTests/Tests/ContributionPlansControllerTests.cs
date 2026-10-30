@@ -180,13 +180,11 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Theory]
-    [InlineData(UserRole.USER)]
-    [InlineData(UserRole.FINANCIAL_MANAGER)]
-    public async Task CreateContributionPlan_Forbidden(UserRole role)
+    [Fact]
+    public async Task CreateContributionPlan_Forbidden_WhenUser()
     {
         // Arrange
-        HttpClient client = CreateClient(role);
+        HttpClient client = CreateClient(UserRole.USER);
 
         // Act
         HttpResponseMessage response =
@@ -255,11 +253,13 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         result!.MoreInfo.ShouldBe("Contribution plan with same name and amount already exists. Try a other name or amount.");
     }
 
-    [Fact]
-    public async Task CreateContribution_WithValidData_ReturnsCreated()
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task CreateContribution_WithValidData_ReturnsCreated(UserRole role)
     {
         // Arrange
-        HttpClient client = CreateAdminClient();
+        HttpClient client = CreateClient(role);
         ContributionPlanRequest payload = CreateContributionPlanRequest();
 
         // Act
@@ -321,13 +321,11 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Theory]
-    [InlineData(UserRole.USER)]
-    [InlineData(UserRole.FINANCIAL_MANAGER)]
-    public async Task UpdateContributionPlan_Forbidden(UserRole role)
+    [Fact]
+    public async Task UpdateContributionPlan_Forbidden_WhenUser()
     {
         // Arrange
-        HttpClient client = CreateClient(role);
+        HttpClient client = CreateClient(UserRole.USER);
 
         // Act
         HttpResponseMessage response = await client.PatchAsJsonAsync($"/contribution-plans/{Guid.NewGuid()}",
@@ -439,10 +437,12 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         result!.MoreInfo.ShouldBe("Contribution plan with same name and amount already exists. Try a other name or amount.");
     }
 
-    [Fact]
-    public async Task UpdateContributionPlan_Success()
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task UpdateContributionPlan_Success(UserRole role)
     {
-        HttpClient client = CreateAdminClient();
+        HttpClient client = CreateClient(role);
         ContributionPlanEntity contributionPlanEntity = await CreateContributionPlanEntity();
         ContributionPlanUpdateRequest contributionPlanRequest = CreateContributionPlanUpdateRequest();
 
@@ -484,13 +484,11 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Theory]
-    [InlineData(UserRole.USER)]
-    [InlineData(UserRole.FINANCIAL_MANAGER)]
-    public async Task DeleteContributionPlan_Forbidden(UserRole role)
+    [Fact]
+    public async Task DeleteContributionPlan_Forbidden_WhenUser()
     {
         // Arrange
-        HttpClient client = CreateClient(role);
+        HttpClient client = CreateClient(UserRole.USER);
 
         // Act
         HttpResponseMessage response = await client.DeleteAsync($"/contribution-plans/{Guid.NewGuid()}");
@@ -536,10 +534,12 @@ public class ContributionPlansControllerTests : IntegrationTestBase
         result!.ErrorMessage.ShouldBe("Failed request validation");
     }
 
-    [Fact]
-    public async Task DeleteContributionPlan_AsAdmin_ReturnsOk()
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task DeleteContributionPlan_AsAdminOrFinancialManager_ReturnsOk(UserRole role)
     {
-        HttpClient client = CreateAdminClient();
+        HttpClient client = CreateClient(role);
         ContributionPlanEntity contributionPlanEntity = await CreateContributionPlanEntity();
 
         // Act

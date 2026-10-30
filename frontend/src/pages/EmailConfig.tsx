@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import SendIcon from '@mui/icons-material/Send';
-import { api } from '../api';
+import { api, apiFile } from '../api';
 import { UUIDTypes } from 'uuid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useConfirm } from '../hooks/useConfirm';
@@ -128,7 +128,7 @@ export default function EmailConfig() {
       newErrors.username = t('pages.emailConfig.validation.usernameTooLong');
     }
 
-    if (!config.password.trim() && config.id === undefined) {
+    if (!config.password.trim()) {
       newErrors.password = t('pages.emailConfig.validation.passwordEmpty');
     } else if (config.password.length > 50) {
       newErrors.password = t('pages.emailConfig.validation.passwordTooLong');
@@ -211,14 +211,35 @@ export default function EmailConfig() {
     setTestLoading(true);
 
     try {
-      await api('/mail/test', { method: 'POST', body: JSON.stringify({ email: testEmail }) });
+      const res = await apiFile('/mail/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: testEmail }),
+      });
+      if (!res.ok) {
+        const error = await res.json().catch(() => null);
+        throw new Error(error?.errorCode ?? 'API Error');
+      }
       setConfigDeleteOrUpdate({
         status: 'success',
         message: t('pages.emailConfig.snackbar.testSuccess'),
       });
       setApiError(null);
-    } catch {
-      setApiError(t('pages.emailConfig.apiError.testSendFailed'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      switch (message) {
+        case 'MAIL_TLS_UNAVAILABLE':
+          setApiError(t('pages.emailConfig.apiError.tlsUnavailable'));
+          break;
+        case 'MAIL_CONNECTION_FAILED':
+          setApiError(t('pages.emailConfig.apiError.connectionFailed'));
+          break;
+        case 'MAIL_AUTH_FAILED':
+          setApiError(t('pages.emailConfig.apiError.authFailed'));
+          break;
+        default:
+          setApiError(t('pages.emailConfig.apiError.testSendFailed'));
+      }
       setConfigDeleteOrUpdate({
         status: 'error',
         message: t('pages.emailConfig.snackbar.testError'),
@@ -382,14 +403,10 @@ export default function EmailConfig() {
             </Grid>
             <Grid size={12}>
               <TextField
-                label={
-                  config.id !== undefined
-                    ? t('pages.emailConfig.fields.password.labelKeep')
-                    : t('pages.emailConfig.fields.password.label')
-                }
+                label={t('pages.emailConfig.fields.password.label')}
                 type="password"
                 fullWidth
-                required={config.id === undefined}
+                required
                 value={config.password}
                 onChange={(e) => setConfig({ ...config, password: e.target.value })}
                 error={!!errors.password}

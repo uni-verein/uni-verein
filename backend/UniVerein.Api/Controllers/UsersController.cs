@@ -31,13 +31,16 @@ public class UsersController : ControllerBase
     private readonly CryptoService _cryptoService;
     private readonly TimeProvider _timeProvider;
     private readonly AuditService _auditService;
+    private readonly JwtService _jwt;
 
-    public UsersController(AppDbContext db, CryptoService cryptoService, TimeProvider timeProvider, AuditService auditService)
+    public UsersController(AppDbContext db, CryptoService cryptoService, TimeProvider timeProvider, AuditService auditService,
+        JwtService jwt)
     {
         _db = db;
         _cryptoService = cryptoService;
         _timeProvider = timeProvider;
         _auditService = auditService;
+        _jwt = jwt;
     }
 
     [Authorize(Roles = nameof(UserRole.ADMIN))]
@@ -50,7 +53,8 @@ public class UsersController : ControllerBase
             Id = u.Id,
             Username = u.Username,
             Email = _cryptoService.Decrypt(u.Email) ?? string.Empty,
-            Role = u.Role
+            Role = u.Role,
+            TwoFactorEnabled = u.TotpEnabled
         }).ToList();
 
         return Ok(new UserResults()
@@ -79,7 +83,8 @@ public class UsersController : ControllerBase
             Id = userEntity.Id,
             Username = userEntity.Username,
             Email = _cryptoService.Decrypt(userEntity.Email) ?? string.Empty,
-            Role = userEntity.Role
+            Role = userEntity.Role,
+            TwoFactorEnabled = userEntity.TotpEnabled
         });
     }
 
@@ -190,6 +195,7 @@ public class UsersController : ControllerBase
                     moreInfo: "Password length must be greater than 9 or less 51 characters."));
 
             user.PasswordHash = CryptoService.HashPassword(request.Password);
+            user.SessionVersion++;
             changedFields.Add("password");
         }
 
@@ -206,6 +212,9 @@ public class UsersController : ControllerBase
 
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
+        if (changedFields.Contains("password") && IsCurrentUser(id))
+            _jwt.IssueSession(HttpContext, user);
+
         await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(UserEntity),
             new { UserId = user.Id, user.Username, ChangedFields = changedFields, OldRole = oldRole, NewRole = user.Role });
         Log.Information("UsersController: UpdateAsync -> User {UserId} updated by {ActorId}, changed fields: {ChangedFields}, role: {OldRole} -> {NewRole}.",
@@ -215,7 +224,8 @@ public class UsersController : ControllerBase
             Id = user.Id,
             Username = user.Username,
             Email = _cryptoService.Decrypt(user.Email) ?? string.Empty,
-            Role = user.Role
+            Role = user.Role,
+            TwoFactorEnabled = user.TotpEnabled
         });
     }
 

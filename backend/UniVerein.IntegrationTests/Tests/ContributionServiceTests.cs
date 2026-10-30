@@ -40,35 +40,18 @@ public class ContributionServiceTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task DeletePaidContributions_SuccessAsync()
+    public async Task GenerateDueContributions_KeepsOldPaidContributions()
     {
         // Arrange
-        await CreateContributionEntityAsync(paid: DateTimeOffset.UtcNow.AddDays(-14).AddSeconds(-1));
-        await CreateContributionEntityAsync(paid: DateTimeOffset.UtcNow.AddDays(-14).AddSeconds(-1));
-        ContributionService contributionService = GetService<ContributionService>();
+        Factory.FakeTime.SetUtcNow(new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero));
+        await CreateContributionEntityAsync(paid: DateTimeOffset.UtcNow.AddDays(-400));
+        await CreateContributionEntityAsync(paid: DateTimeOffset.UtcNow.AddDays(-15));
+        ContributionService contributionService = new ContributionService(GetService<AppDbContext>(), Factory.FakeTime);
 
         // Act
-        await contributionService.DeletePaidContributions();
+        await contributionService.GenerateDueContributions();
 
-        // Arrange
-        await WithDbContext(async db =>
-        {
-            (await db.Contributions.Where(x => x.DeletedAt == null).CountAsync()).ShouldBe(0);
-        });
-    }
-
-    [Fact]
-    public async Task DeleteNoPaidContributionsWhereMarkedPaidOnTheLast14Days_SuccessAsync()
-    {
-        // Arrange
-        await CreateContributionEntityAsync(paid: DateTimeOffset.UtcNow.AddDays(-14).AddSeconds(1));
-        await CreateContributionEntityAsync(paid: DateTimeOffset.UtcNow.AddDays(-14).AddSeconds(1));
-        ContributionService contributionService = GetService<ContributionService>();
-
-        // Act
-        await contributionService.DeletePaidContributions();
-
-        // Arrange
+        // Assert
         await WithDbContext(async db =>
         {
             (await db.Contributions.Where(x => x.DeletedAt == null).CountAsync()).ShouldBe(2);

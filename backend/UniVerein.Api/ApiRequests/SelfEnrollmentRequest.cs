@@ -30,26 +30,32 @@ public class SelfEnrollmentRequest
     public DateTimeOffset Birthday { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(100)]
     [JsonPropertyName("street")]
     public required string Street { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(10)]
     [JsonPropertyName("postalCode")]
     public required string PostalCode { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(100)]
     [JsonPropertyName("city")]
     public required string City { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(3)]
     [JsonPropertyName("countryCode")]
     public required string CountryCode { get; set; }
 
     [Required(AllowEmptyStrings = false)]
     [EmailAddress]
+    [MaxLength(254)]
     [JsonPropertyName("email")]
     public required string Email { get; set; }
 
+    [MaxLength(50)]
     [JsonPropertyName("phone")]
     public string Phone { get; set; } = string.Empty;
 
@@ -67,6 +73,7 @@ public class SelfEnrollmentRequest
     [JsonPropertyName("academicDegree")]
     public AcademicDegree? AcademicDegree { get; set; }
 
+    [MaxLength(100)]
     [JsonPropertyName("courseOfStudy")]
     public string CourseOfStudy { get; set; } = string.Empty;
 
@@ -74,14 +81,17 @@ public class SelfEnrollmentRequest
     // the applicant pick their own MemberCategoryId (removed below). A reviewer reads this and assigns
     // the category themselves before approving (see PendingEnrollmentForm.tsx).
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(1000)]
     [JsonPropertyName("motivation")]
     public required string Motivation { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(50)]
     [JsonPropertyName("iban")]
     public required string IBAN { get; set; }
 
     [Required(AllowEmptyStrings = false)]
+    [MaxLength(20)]
     [JsonPropertyName("bic")]
     public required string Bic { get; set; }
 

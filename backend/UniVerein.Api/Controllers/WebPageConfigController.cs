@@ -12,6 +12,7 @@ using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 namespace UniVerein.Api.Controllers;
@@ -21,10 +22,12 @@ namespace UniVerein.Api.Controllers;
 public class WebPageConfigController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IConfiguration _configuration;
 
-    public WebPageConfigController(AppDbContext db)
+    public WebPageConfigController(AppDbContext db, IConfiguration configuration)
     {
         _db = db;
+        _configuration = configuration;
     }
 
     [AllowAnonymous]
@@ -42,7 +45,8 @@ public class WebPageConfigController : ControllerBase
             Id = webPageConfig.Id,
             PageName = webPageConfig.PageName,
             Logo = webPageConfig.Logo,
-            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled
+            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled,
+            Demo = DemoMode.IsEnabled(_configuration)
         };
 
         return Ok(result);
@@ -96,7 +100,8 @@ public class WebPageConfigController : ControllerBase
             Id = webPageConfig.Id,
             PageName = webPageConfig.PageName,
             Logo = webPageConfig.Logo,
-            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled
+            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled,
+            Demo = DemoMode.IsEnabled(_configuration)
         });
     }
 

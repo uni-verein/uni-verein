@@ -30,6 +30,18 @@ public class GlobalExceptionHandler : IExceptionHandler
                 ErrorResultTranslation = baseException.ErrorResultTranslation
             }, cancellationToken);
         }
+        else if (exception is BadHttpRequestException { StatusCode: >= 400 and < 500 } badRequest)
+        {
+            httpContext.Response.StatusCode = badRequest.StatusCode;
+            await httpContext.Response.WriteAsJsonAsync(new ErrorDetailsResult
+            {
+                ErrorCode = ApiErrorCodes.FAILED_REQUEST_VALIDATION,
+                StatusCode = badRequest.StatusCode,
+                ErrorMessage = badRequest.StatusCode == StatusCodes.Status413PayloadTooLarge
+                    ? "Request body too large."
+                    : "Bad request."
+            }, cancellationToken);
+        }
         else
         {
             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -52,6 +64,11 @@ public class GlobalExceptionHandler : IExceptionHandler
         if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
         {
             Log.Information("GlobalExceptionHandler: {Method} {Path} was cancelled by the client.", method, path);
+        }
+        else if (exception is BadHttpRequestException { StatusCode: >= 400 and < 500 } badRequest)
+        {
+            Log.Warning("GlobalExceptionHandler: {Method} {Path} was rejected with {StatusCode}: {Reason}",
+                method, path, badRequest.StatusCode, badRequest.Message);
         }
         else if (exception is BaseHttpException { StatusCode: < 500 } baseException)
         {

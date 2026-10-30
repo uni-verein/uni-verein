@@ -1,14 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import { Role, SidebarSettings, TestContext } from '../src/types';
 
 const createdUserIds = new Set<string>();
 const backend = new BackendClient();
 
 async function openDashboard(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
@@ -292,9 +290,36 @@ test.describe('Dashboard – Sidebar-Texte and Navigation', () => {
       await tc.teardown();
     });
 
-    test('FinancialManager shows no settings.', async ({ page }) => {
+    test('FinancialManager sees only the finance settings.', async ({ page }) => {
       const tc = makeTestContext();
       await tc.setup(Role.FINANCIAL_MANAGER);
+      await openDashboard(page, tc.get().token);
+      await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+
+      for (const label of [
+        'Beitragstarifverwaltung',
+        'Einnahmekategorien verwalten',
+        'Belegkategorien verwalten',
+      ]) {
+        await expect(page.getByRole('button', { name: label, exact: true })).toBeVisible();
+      }
+      for (const label of [
+        'Nutzerverwaltung',
+        'Email konfigurieren',
+        'Externe Links konfigurieren',
+        'Mitgliederkategorien verwalten',
+        'Kalenderkategorien verwalten',
+        'Bankverbindung konfigurieren',
+        'Webseiteneinstellungen',
+      ]) {
+        await expect(page.getByRole('button', { name: label, exact: true })).not.toBeVisible();
+      }
+      await tc.teardown();
+    });
+
+    test('User shows no settings.', async ({ page }) => {
+      const tc = makeTestContext();
+      await tc.setup(Role.USER);
       await openDashboard(page, tc.get().token);
       await expect(
         page.getByRole('button', { name: 'Einstellungen', exact: true }),

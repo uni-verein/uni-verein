@@ -1,6 +1,6 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-10-26
+Generated automatically on 2026-10-29
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -8,9 +8,14 @@ Generated automatically on 2026-10-26
 | AngleSharp.Css | 1.0.2 | MIT |
 | BouncyCastle.Cryptography | 2.7.0 | MIT |
 | Castle.Core | 5.2.1 | Apache-2.0 |
+| ClosedXML | 0.105.1 | MIT |
+| ClosedXML.Parser | 2.0.0 | MIT |
 | CsvHelper | 33.1.0 | MS-PL OR Apache-2.0 |
 | DiffEngine | 11.3.0 | MIT |
+| DocumentFormat.OpenXml | 3.1.1 | MIT |
+| DocumentFormat.OpenXml.Framework | 3.1.1 | MIT |
 | EmptyFiles | 4.4.0 | MIT |
+| ExcelNumberFormat | 1.1.0 | MIT |
 | HtmlSanitizer | 9.2.1039 | MIT |
 | Humanizer.Core | 2.14.1 | MIT |
 | Ical.Net | 5.2.3 | MIT |
@@ -109,8 +114,11 @@ Generated automatically on 2026-10-26
 | NodaTime | 3.2.2 | Apache-2.0 |
 | Npgsql | 9.0.3 | PostgreSQL |
 | Npgsql.EntityFrameworkCore.PostgreSQL | 9.0.4 | PostgreSQL |
+| Otp.NET | 1.4.1 | LICENSE.txt |
 | Pomelo.EntityFrameworkCore.MySql | 9.0.0 | MIT |
 | Portable.System.DateTimeOnly | 9.0.0 | MIT |
+| QuestPDF | 2026.9.1 | LICENSE.md |
+| RBush.Signed | 4.0.0 | MIT |
 | SQLite | 3.53.4 | LICENSE.txt |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.13 | Apache-2.0 |
 | SQLitePCLRaw.config.e_sqlite3 | 3.0.5 | Apache-2.0 |
@@ -133,10 +141,11 @@ Generated automatically on 2026-10-26
 | Serilog.Sinks.Debug | 3.0.0 | Apache-2.0 |
 | Serilog.Sinks.File | 7.0.0 | Apache-2.0 |
 | Shouldly | 4.3.0 | BSD-3-Clause |
+| SixLabors.Fonts | 1.0.0 | Apache-2.0 |
 | SmtpServer | 11.1.0 | LICENSE |
 | String.Similarity | 3.0.0 |  |
 | System.AppContext | 4.3.0 | MS-EULA |
-| System.Buffers | 4.3.0 | MS-EULA |
+| System.Buffers | 4.5.1 | MIT |
 | System.CodeDom | 6.0.0 | MIT |
 | System.Collections | 4.3.0 | MS-EULA |
 | System.Collections.Concurrent | 4.3.0 | MS-EULA |
@@ -168,18 +177,19 @@ Generated automatically on 2026-10-26
 | System.IO.Compression.ZipFile | 4.3.0 | MS-EULA |
 | System.IO.FileSystem | 4.3.0 | MS-EULA |
 | System.IO.FileSystem.Primitives | 4.3.0 | MS-EULA |
+| System.IO.Packaging | 8.0.1 | MIT |
 | System.IO.Pipelines | 9.0.21 | MIT |
 | System.IO.UnmanagedMemoryStream | 4.3.0 | MS-EULA |
 | System.IdentityModel.Tokens.Jwt | 8.19.2 | MIT |
 | System.Linq | 4.3.0 | MS-EULA |
 | System.Linq.Expressions | 4.3.0 | MS-EULA |
 | System.Management | 6.0.1 | MIT |
-| System.Memory | 4.5.0 | MIT |
+| System.Memory | 4.5.4 | MIT |
 | System.Net.Http | 4.3.0 | MS-EULA |
 | System.Net.Primitives | 4.3.0 | MS-EULA |
 | System.Net.ServerSentEvents | 9.0.21 | MIT |
 | System.Net.Sockets | 4.3.0 | MS-EULA |
-| System.Numerics.Vectors | 4.4.0 | MIT |
+| System.Numerics.Vectors | 4.5.0 | MIT |
 | System.ObjectModel | 4.3.0 | MS-EULA |
 | System.Reflection | 4.3.0 | MS-EULA |
 | System.Reflection.Emit | 4.3.0 | MS-EULA |
@@ -221,7 +231,7 @@ Generated automatically on 2026-10-26
 | System.Threading | 4.3.0 | MS-EULA |
 | System.Threading.Channels | 8.0.0 | MIT |
 | System.Threading.Tasks | 4.3.0 | MS-EULA |
-| System.Threading.Tasks.Extensions | 4.5.4 | MIT |
+| System.Threading.Tasks.Extensions | 4.3.0 | MS-EULA |
 | System.Threading.Thread | 4.3.0 | MS-EULA |
 | System.Threading.Timer | 4.3.0 | MS-EULA |
 | System.ValueTuple | 4.6.2 | MIT |

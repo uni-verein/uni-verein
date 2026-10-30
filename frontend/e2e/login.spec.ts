@@ -76,6 +76,30 @@ test.describe('Login as admin', () => {
     });
     await expect(page.getByText('ADMIN', { exact: true })).toBeVisible();
   });
+
+  test('keeps the session in an httpOnly cookie, not in the localStorage', async ({ page }) => {
+    await page.goto('http://localhost/');
+    await page.getByRole('textbox', { name: 'Benutzername' }).fill(tc.get().username);
+    await page.getByRole('textbox', { name: 'Passwort' }).fill(tc.get().password);
+    await page.getByRole('button', { name: 'Anmelden' }).click();
+    await expect(page.getByRole('button', { name: 'Abmelden', exact: true })).toBeVisible({
+      timeout: 8000,
+    });
+
+    expect(await page.evaluate(() => localStorage.getItem('token'))).toBeNull();
+    expect(await page.evaluate(() => document.cookie)).not.toContain('uv_auth');
+    const cookie = (await page.context().cookies()).find((c) => c.name === 'uv_auth');
+    expect(cookie?.httpOnly).toBe(true);
+
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Abmelden', exact: true })).toBeVisible({
+      timeout: 8000,
+    });
+
+    await page.getByRole('button', { name: 'Abmelden', exact: true }).click();
+    await expect(page.locator('form')).toBeVisible();
+    expect((await page.context().cookies()).find((c) => c.name === 'uv_auth')).toBeUndefined();
+  });
 });
 
 test.describe('Login as user', () => {

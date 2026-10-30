@@ -120,6 +120,11 @@ run right away, that's expected. In the meantime, please run `npm run lint`, `np
 typecheck`, `npm run format:check` (frontend) and `dotnet build`/`dotnet test` (backend)
 locally before opening your PR (see [Development Setup](#-development-setup) below).
 
+The same applies to Dependabot's weekly dependency PR: it is not labelled automatically,
+because the pipeline installs the new versions next to the application secrets. A
+maintainer looks at the bumped packages first and then adds `ready-for-ci`. Dependabot
+only proposes versions that are at least 7 days old.
+
 ---
 
 ## 🛠️ Development Setup
@@ -201,7 +206,7 @@ install/update flow documented in `README.md`.
 | `docker-compose.yml` | Builds backend + frontend from source, Postgres, nginx proxy, fake-SMTP                                               | ✅ Yes (use this to run the app)          |
 | `docker-compose-prod-image.yml` | Production stack using pre-built images from GHCR                                                                     | ❌ No                                     |
 | `docker-compose-prod.yml` | Production stack, builds from source instead of pulling images                                                        | ❌ No                                     |
-| `docker-compose-demo.yml` | Powers the public demo site, restores a demo database on a schedule                                                   | ❌ No                                     |
+| `docker-compose-demo.yml` | Powers the public demo site from published images (`VERSION` in `.env`), generates sample data and resets it nightly, fake-SMTP at `/mail/` | ❌ No                                     |
 | `docker-compose-update.yml` | One-shot updater that walks an existing installation through version upgrades                                         | ❌ No                                     |
 
 ## 🎨 Style Guides
@@ -287,7 +292,8 @@ not see member data, so follow these rules for every new log statement:
 - Levels: `Information` for successful actions and job runs, `Warning` for expected failures
   (wrong password, validation errors, 4xx), `Error` for unexpected failures.
 - Do not lower the `Microsoft` log level override in `appsettings.json` the framework logs full
-  request URLs, including `access_token` and `key` query parameters, at `Information`.
+  request URLs, including `key` query parameters, at `Information`. Never accept tokens or secrets
+  in the query string.
 
 ---
 

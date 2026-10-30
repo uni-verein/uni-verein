@@ -1,10 +1,9 @@
 using System;
-using System.Linq;
 using UniVerein.Api;
+using UniVerein.Api.Extensions;
 using UniVerein.Api.Services;
+using UniVerein.Api.Services.Demo;
 using UniVerein.DAL.Data;
-using UniVerein.DAL.Entities;
-using UniVerein.DAL.Entities.Enums;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -58,47 +57,13 @@ try
         {
             db.Database.Migrate();
             Log.Information("Database migrations applied.");
-            Guid id = Guid.Parse(AdminUserId);
-            if (!db.Users.IgnoreQueryFilters().Any())
+            if (DemoMode.IsResetEnabled(app.Configuration))
             {
-                db.Users.Add(new UserEntity
-                {
-                    Id = id,
-                    PasswordHash = CryptoService.HashPassword("admin123"),
-                    Username = "Admin",
-                    Role = UserRole.ADMIN
-                });
-                db.SaveChanges();
-                Log.Information("Seeding: Default admin user {UserId} created. Change its password after the first login.", id);
+                await scope.ServiceProvider.GetRequiredService<DemoDataService>().ResetAsync();
             }
-
-            bool contributionPlanExists = db.ContributionPlans.Any();
-            if (!contributionPlanExists)
+            else
             {
-                db.ContributionPlans.Add(new ContributionPlanEntity()
-                {
-                    Id = Guid.Parse(ContributionPlanDefaultId),
-                    Name = "Default",
-                    Amount = 12,
-                    Interval = Interval.YEARLY,
-                });
-                db.SaveChanges();
-                Log.Information("Seeding: Default contribution plan created.");
-            }
-
-            foreach ((string id, string name) category in DefaultMemberCategories)
-            {
-                if (!db.MemberCategories.IgnoreQueryFilters().Any(x => x.Id == Guid.Parse(category.id)))
-                {
-                    db.MemberCategories.Add(new MemberCategoryEntity()
-                    {
-                        Id = Guid.Parse(category.id),
-                        Category = category.name,
-                        Name = category.name
-                    });
-                    db.SaveChanges();
-                    Log.Information("Seeding: Default member category {CategoryName} created.", category.name);
-                }
+                DefaultDataSeeder.Seed(db);
             }
         }
     }
@@ -123,7 +88,7 @@ public partial class Program
 {
     private const string ConsoleOutputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}";
 
-    private const string AdminUserId = "08de9405-ed5b-4a92-84e0-c7458221447f";
+    public const string AdminUserId = "08de9405-ed5b-4a92-84e0-c7458221447f";
     public const string ContributionPlanDefaultId = "46481ead-eb3c-4977-a3dc-805af9bd2e8c";
 
     public const string MemberCategoriesStudent = "bbd21be1-4d05-437f-ae76-f65b66290438";

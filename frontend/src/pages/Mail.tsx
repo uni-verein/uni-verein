@@ -48,18 +48,11 @@ export default function Mail() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [editorContent, setEditorContent] = useState('');
 
-  const getAccessToken = (): string => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    return token;
-  };
-
   useEffect(() => {
     const conn: HubConnection = new signalR.HubConnectionBuilder()
       .withUrl('/emailProgress', {
-        accessTokenFactory: getAccessToken,
+        // Authenticated by the session cookie, the header is needed for the negotiate POST.
+        headers: { 'X-UV-CSRF': '1' },
       })
       .withAutomaticReconnect()
       .build();

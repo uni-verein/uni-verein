@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
@@ -22,6 +24,11 @@ namespace UniVerein.IntegrationTests.Tests;
 public class ReceiptCategoriesControllerTests : IntegrationTestBase
 {
     private readonly AppDbContext _db;
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public ReceiptCategoriesControllerTests(UniVereinWebApplicationFactory factory)
         : base(factory)
@@ -70,7 +77,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.GetAsync("/receipt-categories");
-        ReceiptCategoryResults? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResults>();
+        ReceiptCategoryResults? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResults>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -83,13 +90,11 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
     // POST /receipt-categories
     // ---------------------------------------------------------------
 
-    [Theory]
-    [InlineData(UserRole.USER)]
-    [InlineData(UserRole.FINANCIAL_MANAGER)]
-    public async Task CreateAsync_Forbidden_WhenNotAdmin(UserRole role)
+    [Fact]
+    public async Task CreateAsync_Forbidden_WhenUser()
     {
         // Arrange
-        HttpClient client = CreateClient(role);
+        HttpClient client = CreateClient(UserRole.USER);
 
         // Act
         HttpResponseMessage response =
@@ -99,16 +104,18 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    [Fact]
-    public async Task CreateAsync_Success_Admin()
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task CreateAsync_Success(UserRole role)
     {
         // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(role);
 
         // Act
         HttpResponseMessage response =
             await client.PostAsJsonAsync("/receipt-categories", new ReceiptCategoryRequest { Name = "Eat" });
-        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>();
+        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -140,7 +147,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response =
             await client.PostAsJsonAsync("/receipt-categories", new ReceiptCategoryRequest { Name = tooLong });
-        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -158,7 +165,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response =
             await client.PostAsJsonAsync("/receipt-categories", new ReceiptCategoryRequest { Name = "Eat" });
-        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -176,7 +183,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         // Act
         HttpResponseMessage response =
             await client.PostAsJsonAsync("/receipt-categories", new ReceiptCategoryRequest { Name = "Eat" });
-        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>();
+        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -191,13 +198,11 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
     // DELETE /receipt-categories/{id}
     // ---------------------------------------------------------------
 
-    [Theory]
-    [InlineData(UserRole.USER)]
-    [InlineData(UserRole.FINANCIAL_MANAGER)]
-    public async Task DeleteAsync_Forbidden_WhenNotAdmin(UserRole role)
+    [Fact]
+    public async Task DeleteAsync_Forbidden_WhenUser()
     {
         // Arrange
-        HttpClient client = CreateClient(role);
+        HttpClient client = CreateClient(UserRole.USER);
 
         // Act
         HttpResponseMessage response = await client.DeleteAsync($"/receipt-categories/{Guid.NewGuid()}");
@@ -214,7 +219,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.DeleteAsync($"/receipt-categories/{Guid.NewGuid()}");
-        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -222,11 +227,13 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         result.ErrorCode.ShouldBe(ApiErrorCodes.RESOURCE_NOT_FOUND);
     }
 
-    [Fact]
-    public async Task DeleteAsync_Success_WhenUnused()
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task DeleteAsync_Success_WhenUnused(UserRole role)
     {
         // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
+        HttpClient client = CreateClient(role);
         ReceiptCategoryEntity category = await CreateReceiptCategoryAsync("Eat");
 
         // Act
@@ -259,7 +266,7 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response = await client.DeleteAsync($"/receipt-categories/{category.Id}");
-        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(JsonOptions);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -312,5 +319,124 @@ public class ReceiptCategoriesControllerTests : IntegrationTestBase
         });
 
         return category;
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithTaxArea_StoresTaxArea()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/receipt-categories",
+            new ReceiptCategoryRequest { Name = "Kiosk", TaxArea = TaxArea.COMMERCIAL_OPERATION }, JsonOptions);
+        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result.ShouldNotBeNull();
+        result.TaxArea.ShouldBe(TaxArea.COMMERCIAL_OPERATION);
+        (await _db.ReceiptCategories.SingleAsync()).TaxArea.ShouldBe(TaxArea.COMMERCIAL_OPERATION);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithoutTaxArea_DefaultsToIdeell()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/receipt-categories", new ReceiptCategoryRequest { Name = "Kiosk" });
+        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result.ShouldNotBeNull();
+        result.TaxArea.ShouldBe(TaxArea.NON_PROFIT);
+    }
+
+    [Theory]
+    [InlineData(UserRole.ADMIN)]
+    [InlineData(UserRole.FINANCIAL_MANAGER)]
+    public async Task UpdateAsync_ChangesNameAndTaxArea(UserRole role)
+    {
+        // Arrange
+        ReceiptCategoryEntity category = new() { Id = Guid.NewGuid(), Name = "Kiosk" };
+        await _db.ReceiptCategories.AddAsync(category);
+        await _db.SaveChangesAsync();
+        HttpClient client = CreateClient(role);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/receipt-categories/{category.Id}",
+            new ReceiptCategoryRequest { Name = " Fest ", TaxArea = TaxArea.PURPOSE_RELATED_OPERATION }, JsonOptions);
+        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe("Fest");
+        result.TaxArea.ShouldBe(TaxArea.PURPOSE_RELATED_OPERATION);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithoutTaxArea_KeepsTaxArea()
+    {
+        // Arrange
+        ReceiptCategoryEntity category = new() { Id = Guid.NewGuid(), Name = "Kiosk", TaxArea = TaxArea.PURPOSE_RELATED_OPERATION };
+        await _db.ReceiptCategories.AddAsync(category);
+        await _db.SaveChangesAsync();
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/receipt-categories/{category.Id}", new ReceiptCategoryRequest { Name = "Fest" });
+        ReceiptCategoryResult? result = await response.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.TaxArea.ShouldBe(TaxArea.PURPOSE_RELATED_OPERATION);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_DuplicateName_ReturnsConflict()
+    {
+        // Arrange
+        ReceiptCategoryEntity first = new() { Id = Guid.NewGuid(), Name = "Kiosk" };
+        ReceiptCategoryEntity second = new() { Id = Guid.NewGuid(), Name = "Fest" };
+        await _db.ReceiptCategories.AddRangeAsync(first, second);
+        await _db.SaveChangesAsync();
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/receipt-categories/{second.Id}", new ReceiptCategoryRequest { Name = "Kiosk" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_UnknownCategory_ReturnsNotFound()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/receipt-categories/{Guid.NewGuid()}", new ReceiptCategoryRequest { Name = "Fest" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_User_ReturnsForbidden()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/receipt-categories/{Guid.NewGuid()}", new ReceiptCategoryRequest { Name = "Fest" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 }

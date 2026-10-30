@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import { Role } from '../src/types';
 
 // Matches the `background.default` values configured in src/App.tsx for each palette mode.
@@ -17,9 +17,7 @@ async function themeModeStorage(page: Page) {
 }
 
 async function openDashboard(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByRole('button', { name: /Abmelden/i })).toBeVisible({ timeout: 8000 });
