@@ -1,5 +1,4 @@
 import { AcademicDegree, TaskWithinTheClub } from './types';
-import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 export function formatIBAN(value: string) {
   return value
@@ -69,19 +68,6 @@ export function validateBIC(bic: string) {
 
   return bicRegex.test(clean);
 }
-
-export const isTokenValid = (token: string) => {
-  if (!token) return false;
-
-  try {
-    const decoded: JwtPayload = jwtDecode(token);
-    if (decoded.exp == undefined) return false;
-
-    return decoded.exp > Date.now() / 1000;
-  } catch {
-    return false;
-  }
-};
 
 export const TASK_WITHIN_THE_CLUB_LABELS: Record<TaskWithinTheClub, string> = {
   [TaskWithinTheClub.MEMBER]: 'member',

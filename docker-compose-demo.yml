@@ -1,6 +1,19 @@
 version: "3.9"
 
 services:
+  demo-init:
+    image: alpine:3
+    restart: "no"
+    # The backend runs as the unprivileged user "app" (uid 1654), docker creates bind mounts as root.
+    command: >
+      sh -c '
+        mkdir -p /data/postgres /data/receipts /data/logs &&
+        chown -R 1654:1654 /data/receipts /data/logs'
+    volumes:
+      - ${DEMO_DATA_PATH:-./demo-data}:/data
+    security_opt:
+      - no-new-privileges:true
+
   db:
     image: postgres:17-alpine
     restart: always
@@ -9,7 +22,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - db_data_pg:/var/lib/postgresql/data
+      - ${DEMO_DATA_PATH:-./demo-data}/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
@@ -18,50 +31,26 @@ services:
       start_period: 30s
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
 
-  db-restore:
-    image: postgres:17-alpine
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: always
+    environment:
+      # Served below /mail/ by the proxy (see nginx.conf).
+      MP_WEBROOT: /mail/
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MP_MAX_MESSAGES: "500"
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
-    command: >
-      sh -c '
-        echo "=== Initial restore on startup ==="
-        psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1 < /dump/uni_verein_db.sql
-        if [ $$? -ne 0 ]; then
-          echo "ERROR: Initial restore failed!"
-        else
-          echo "Initial restore completed successfully"
-        fi
-
-        echo "=== Waiting for next restore at 03:00 ==="
-        while true; do
-          CURRENT_TIME=$$(date +%H:%M)
-          if [ "$$CURRENT_TIME" = "03:00" ]; then
-            echo "=== Nightly restore started ==="
-            psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1 < /dump/uni_verein_db.sql
-            if [ $$? -ne 0 ]; then
-              echo "ERROR: Nightly restore failed!"
-            else
-              echo "Nightly restore completed successfully"
-            fi
-            sleep 60
-          fi
-          sleep 30
-        done'
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_DB: ${DB_NAME}
-      PGPASSWORD: ${DB_PASSWORD}
-    volumes:
-      - /mnt/demo-dump:/dump
-    depends_on:
-      db:
-        condition: service_healthy
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/uni-verein/univerein-backend:${VERSION:?Set VERSION in .env}
     restart: always
     environment:
       ConnectionStrings__Default: Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
@@ -73,24 +62,24 @@ services:
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
       Version: ${VERSION}
+      Demo__Enabled: "true"
     volumes:
-      - ./logs:/app/logs
-      - ./receipts:/app/receipts
+      - ${DEMO_DATA_PATH:-./demo-data}/logs:/app/logs
+      - ${DEMO_DATA_PATH:-./demo-data}/receipts:/app/receipts
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
     depends_on:
+      demo-init:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_APP_VERSION=${VERSION}
-        - VITE_APP_DEMO=true
+    image: ghcr.io/uni-verein/univerein-frontend:${VERSION}
     restart: always
     cap_drop:
       - ALL
@@ -124,6 +113,3 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
-
-volumes:
-  db_data_pg:

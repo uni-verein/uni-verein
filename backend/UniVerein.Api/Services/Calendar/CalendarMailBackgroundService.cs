@@ -60,14 +60,14 @@ public class CalendarMailBackgroundService : BackgroundService
 
     private async Task SendAsync(List<CalendarMailJob> jobs)
     {
-        List<PendingMail> pending = [];
+        List<CalendarPendingMail> pending = [];
         foreach (CalendarMailJob job in jobs)
         {
             try
             {
                 List<(Guid UserId, string Email)> recipients = await ResolveRecipientsWithRetryAsync(job);
                 pending.AddRange(recipients.Select(r =>
-                    new PendingMail(r.UserId, job.SettingType, new Recipient { Email = r.Email }, job.Request)));
+                    new CalendarPendingMail(r.UserId, job.SettingType, new Recipient { Email = r.Email }, job.Request)));
             }
             catch (Exception ex)
             {
@@ -84,7 +84,7 @@ public class CalendarMailBackgroundService : BackgroundService
         List<EmailResult> results = await mailService.SendBatchAsync(
             pending.Select(p => (p.Recipient, p.Request)).ToList());
 
-        foreach ((PendingMail mail, EmailResult result) in pending.Zip(results))
+        foreach ((CalendarPendingMail mail, EmailResult result) in pending.Zip(results))
         {
             if (result.Success)
                 Log.Information("CalendarMailBackgroundService: Sent '{SettingType}' mail to user {UserId}.", mail.SettingType, mail.UserId);
@@ -136,6 +136,4 @@ public class CalendarMailBackgroundService : BackgroundService
             .Where(r => !string.IsNullOrWhiteSpace(r.Email))
             .ToList();
     }
-
-    private record PendingMail(Guid UserId, UserSettingType SettingType, Recipient Recipient, EmailRequest Request);
 }

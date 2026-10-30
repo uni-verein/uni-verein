@@ -20,9 +20,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using UniVerein.Api.Services.Demo;
 using UniVerein.Api.Services.Firmware;
 using UniVerein.Api.Services.Calendar;
-using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Http;
 using IPNetwork = System.Net.IPNetwork;
 
@@ -42,6 +42,7 @@ namespace UniVerein.Api
             services.AddSignalR();
             services.AddSingleton(TimeProvider.System);
             services.AddSingleton<LoginAttemptTracker>();
+            services.AddSingleton<AccountLockoutTracker>();
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -63,6 +64,7 @@ namespace UniVerein.Api
             services.AddScoped<CryptoService>();
             services.AddScoped<SepaService>();
             services.AddScoped<JwtService>();
+            services.AddScoped<TwoFactorService>();
             services.AddScoped<MailService>();
             services.AddScoped<ContributionService>();
             services.AddScoped<AuditService>();
@@ -70,6 +72,14 @@ namespace UniVerein.Api
             services.AddScoped<BackupService>();
             services.AddScoped<ContributionService>();
             services.AddScoped<ReceiptService>();
+            services.AddScoped<IncomeService>();
+            services.AddScoped<FinanceAnalyticsService>();
+            services.AddScoped<ClubIdentityService>();
+            services.AddScoped<AcknowledgementService>();
+            services.AddScoped<BookingNumberService>();
+            services.AddScoped<EurExportService>();
+            services.AddSingleton<EurWorkbookWriter>();
+            services.AddSingleton<AcknowledgementPdfService>();
             services.AddScoped<ReceiptNotificationService>();
             services.AddScoped<ReferenceDataService>();
             services.AddScoped<PendingSelfEnrollmentService>();
@@ -77,6 +87,10 @@ namespace UniVerein.Api
             services.AddScoped<CalendarNotificationService>();
             services.AddScoped<CalendarReminderService>();
             services.AddSingleton<CalendarMailQueue>();
+
+            services.AddScoped<DemoDataService>();
+            if (DemoMode.IsResetEnabled(_configuration))
+                services.AddHostedService<DemoResetBackgroundService>();
 
             services.AddHostedService<ContributionBackgroundService>();
             services.AddHttpClient<FirmwareService>();
@@ -103,15 +117,11 @@ namespace UniVerein.Api
                     {
                         OnMessageReceived = context =>
                         {
-                            StringValues accessToken = context.Request.Query["access_token"];
-                            PathString path = context.HttpContext.Request.Path;
-
-                            if (!string.IsNullOrEmpty(accessToken) &&
-                                (path.StartsWithSegments("/emailProgress") ||
-                                 path.StartsWithSegments("/receipts/export") ||
-                                 path.StartsWithSegments("/backup")))
+                            if (!context.Request.Headers.ContainsKey("Authorization") &&
+                                AuthCookie.TryRead(context.Request, out string cookieToken) &&
+                                (AuthCookie.IsSafeMethod(context.Request) || AuthCookie.HasCsrfHeader(context.Request)))
                             {
-                                context.Token = accessToken;
+                                context.Token = cookieToken;
                             }
 
                             return Task.CompletedTask;
@@ -120,19 +130,22 @@ namespace UniVerein.Api
                         {
                             string? userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                             string? roleClaim = context.Principal?.FindFirst(ClaimTypes.Role)?.Value;
+                            string? sessionVersionClaim = context.Principal?.FindFirst(JwtService.SessionVersionClaim)?.Value;
                             bool valid = false;
                             if (Guid.TryParse(userIdClaim, out Guid userId) &&
-                                Enum.TryParse(roleClaim, out UserRole role) && Enum.IsDefined(role))
+                                Enum.TryParse(roleClaim, out UserRole role) && Enum.IsDefined(role) &&
+                                int.TryParse(sessionVersionClaim, out int sessionVersion))
                             {
                                 AppDbContext db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-                                valid = await db.Users.AnyAsync(u => u.Id == userId && u.Role == role);
+                                valid = await db.Users.AnyAsync(u =>
+                                    u.Id == userId && u.Role == role && u.SessionVersion == sessionVersion);
                             }
 
                             if (!valid)
                             {
-                                Log.Warning("Startup: Rejected token of unknown, deleted or changed user {UserId} on {Method} {Path}.",
+                                Log.Warning("Startup: Rejected token of unknown, deleted or changed user or revoked session {UserId} on {Method} {Path}.",
                                     userId, context.Request.Method, RequestLogSanitizer.Redact(context.Request.Path));
-                                context.Fail("The user of this token does not exist or has another role.");
+                                context.Fail("The user of this token does not exist, has another role or the session was revoked.");
                             }
                         },
                         OnAuthenticationFailed = context =>

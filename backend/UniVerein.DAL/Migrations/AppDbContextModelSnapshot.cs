@@ -63,6 +63,63 @@ namespace UniVerein.DAL.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.BookingNumberEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ContributionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("contribution_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("IncomeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("income_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid?>("ReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("receipt_id");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributionId")
+                        .IsUnique();
+
+                    b.HasIndex("IncomeId")
+                        .IsUnique();
+
+                    b.HasIndex("ReceiptId")
+                        .IsUnique();
+
+                    b.HasIndex("Year", "Kind", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("BookingNumbers");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.CalendarCategoryEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -423,6 +480,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid");
 
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_date");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MemberId");
@@ -517,6 +578,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("street_name_and_number");
 
+                    b.Property<string>("TaxNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("tax_number");
+
                     b.HasKey("Id");
 
                     b.ToTable("CreditorConfigs");
@@ -594,6 +659,89 @@ namespace UniVerein.DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("FirmwareVersionNotifications");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.IncomeCategoryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("TaxArea")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("NON_PROFIT")
+                        .HasColumnName("tax_area");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IncomeCategories");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.IncomeEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime>("IncomeDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("income_date");
+
+                    b.Property<DateTimeOffset?>("Paid")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid");
+
+                    b.Property<string>("Payer")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("payer");
+
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Incomes");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.LinkSettingsEntity", b =>
@@ -939,6 +1087,82 @@ namespace UniVerein.DAL.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.PaymentAcknowledgementEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<Guid?>("ContributionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("contribution_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("IncomeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("income_id");
+
+                    b.Property<string>("IssuerAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("issuer_address");
+
+                    b.Property<string>("IssuerName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("issuer_name");
+
+                    b.Property<DateTimeOffset>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("PayerAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("payer_address");
+
+                    b.Property<string>("PayerName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("payer_name");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("purpose");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributionId")
+                        .IsUnique();
+
+                    b.HasIndex("IncomeId")
+                        .IsUnique();
+
+                    b.HasIndex("Year", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("PaymentAcknowledgements");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.PendingSelfEnrollmentEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1116,6 +1340,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<string>("TaxArea")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("NON_PROFIT")
+                        .HasColumnName("tax_area");
+
                     b.HasKey("Id");
 
                     b.ToTable("ReceiptCategories");
@@ -1151,6 +1382,10 @@ namespace UniVerein.DAL.Migrations
                     b.Property<DateTimeOffset?>("Paid")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid");
+
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_date");
 
                     b.Property<string>("PaymentMethod")
                         .HasColumnType("text")
@@ -1287,6 +1522,22 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("role");
 
+                    b.Property<int>("SessionVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("session_version");
+
+                    b.Property<bool>("TotpEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("totp_enabled");
+
+                    b.Property<long?>("TotpLastUsedStep")
+                        .HasColumnType("bigint")
+                        .HasColumnName("totp_last_used_step");
+
+                    b.Property<string>("TotpSecret")
+                        .HasColumnType("text")
+                        .HasColumnName("totp_secret");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1296,6 +1547,41 @@ namespace UniVerein.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.UserRecoveryCodeEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CodeHash");
+
+                    b.ToTable("UserRecoveryCodes");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.UserSettingEntity", b =>
@@ -1480,6 +1766,15 @@ namespace UniVerein.DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.IncomeEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.IncomeCategoryEntity", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.MemberEntity", b =>
                 {
                     b.HasOne("UniVerein.DAL.Entities.ContributionPlanEntity", "ContributionPlan")
@@ -1547,6 +1842,17 @@ namespace UniVerein.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("Receipt");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.UserRecoveryCodeEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.UserSettingEntity", b =>

@@ -1,14 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import { Role, TestUser } from '../src/types';
 
 const createdUserIds = new Set<string>();
 const backend = new BackendClient();
 
 async function openDashboard(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
@@ -198,5 +196,43 @@ test.describe('Contribution plan config page', () => {
       await expect(page.getByRole('heading', { name: 'Bestätigung' })).toBeVisible();
       await page.getByRole('button', { name: 'Löschen' }).click();
     });
+  });
+});
+
+test.describe('Contribution plan config page as financial manager', () => {
+  const tc = makeTestContextOnlyUser();
+  test.beforeEach(async () => {
+    await tc.setup(Role.FINANCIAL_MANAGER);
+  });
+  test.afterEach(async () => {
+    await tc.teardown();
+  });
+
+  test('Create and delete contribution plan', async ({ page }) => {
+    await backend.deleteAllContributionPlans();
+    await openDashboard(page, tc.get().token);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Beitragstarifverwaltung', exact: true }).click();
+    await page.getByRole('button', { name: 'Neuer Beitragstarif' }).click();
+    await page.getByRole('textbox', { name: 'Name' }).fill('Finanztarif');
+    await page.getByRole('textbox', { name: 'Betrag (€)' }).fill('4000');
+    await page.getByRole('combobox').click();
+    await page.getByRole('option', { name: 'Monatlich' }).click();
+    await page.getByRole('button', { name: 'Speichern' }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Beitragsplan erfolgreich erstellt.' }),
+    ).toBeVisible();
+
+    await page
+      .getByRole('row', { name: 'Finanztarif 4000 Monatlich' })
+      .getByLabel('Löschen')
+      .click();
+    await page.getByRole('button', { name: 'Löschen' }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Beitragsplan erfolgreich gelöscht.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Finanztarif' })).not.toBeVisible();
   });
 });

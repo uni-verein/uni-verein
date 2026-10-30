@@ -5,6 +5,9 @@ logs
 # Receipt images (local bind-mounted volume)
 /receipts
 
+# Data of the demo stack (docker-compose-demo.yml)
+/demo-data
+
 # Addresses of a reverse proxy in front of the stack (local, see README)
 /trusted-proxies
 npm-debug.log*

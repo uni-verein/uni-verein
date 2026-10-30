@@ -218,7 +218,8 @@
         "description": "Beschreibung",
         "files": "Dateien",
         "noFiles": "Keine Dateien vorhanden.",
-        "scanning": "Beleg wird gescannt…"
+        "scanning": "Beleg wird gescannt…",
+        "previewUnavailable": "Vorschau nicht verfügbar"
       },
       "buttons": {
         "addFiles": "Dateien hinzufügen",
@@ -231,12 +232,38 @@
       },
       "validation": {
         "amountInvalid": "Betrag muss größer als 0 sein.",
+        "amountTooLarge": "Betrag darf höchstens 1.000.000 € betragen.",
         "receiptDateRequired": "Belegdatum ist ein Pflichtfeld."
       },
       "alerts": {
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-        "fileTooLarge": "Eine PDF-Datei darf höchstens 10 MB groß sein."
+        "fileTooLarge": "Eine PDF-Datei darf höchstens 10 MB groß sein.",
+        "pdfUnreadable": "Die PDF-Datei konnte nicht gelesen werden."
       }
+    },
+    "incomeForm": {
+      "titleCreate": "Einnahme erfassen",
+      "titleEdit": "Einnahme bearbeiten",
+      "fields": {
+        "type": "Art",
+        "payer": "Zahler / Quelle",
+        "payerPlaceholder": "z. B. Firma, Person oder Veranstaltung",
+        "amount": "Betrag (€)",
+        "date": "Fällig / erhalten am",
+        "description": "Beschreibung",
+        "alreadyReceived": "Betrag ist bereits eingegangen",
+        "paymentDate": "Zahlungsdatum"
+      },
+      "validation": {
+        "payerRequired": "Zahler / Quelle ist erforderlich.",
+        "amountPositive": "Betrag muss größer als 0 sein.",
+        "amountTooLarge": "Betrag darf höchstens 1.000.000 € betragen.",
+        "dateRequired": "Datum ist erforderlich."
+      },
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "noCategories": "Es gibt noch keine Einnahmekategorie. Ein Admin kann sie unter Einstellungen → Einnahmekategorien verwalten anlegen (z. B. „Spenden“)."
     },
     "markReceiptPaidDialog": {
       "title": "Beleg als bezahlt markieren",
@@ -244,7 +271,15 @@
       "confirm": "Als bezahlt markieren",
       "cancel": "Abbrechen",
       "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-      "alreadyPaid": "Dieser Beleg wurde bereits als bezahlt markiert."
+      "alreadyPaid": "Dieser Beleg wurde bereits als bezahlt markiert.",
+      "paymentDate": "Zahlungsdatum"
+    },
+    "paymentDateDialog": {
+      "title": "Zahlung buchen",
+      "message": "An welchem Tag ist das Geld eingegangen? Das Datum bestimmt das Steuerjahr und die Reihenfolge in der EÜR.",
+      "label": "Zahlungsdatum",
+      "confirm": "Als bezahlt markieren",
+      "cancel": "Abbrechen"
     },
     "calendarEventForm": {
       "title": {
@@ -478,6 +513,14 @@
         "createFailed": "Abo-Link konnte nicht erstellt werden.",
         "revokeFailed": "Abo-Link konnte nicht widerrufen werden."
       }
+    },
+    "taxArea": {
+      "label": "Steuerlicher Bereich",
+      "hint": "Bestimmt, in welchem Block der Einnahmen-Überschuss-Rechnung die Kategorie erscheint.",
+      "NON_PROFIT": "Ideeller Bereich",
+      "ASSET_MANAGEMENT": "Vermögensverwaltung",
+      "PURPOSE_RELATED_OPERATION": "Zweckbetrieb",
+      "COMMERCIAL_OPERATION": "Wirtschaftlicher Geschäftsbetrieb"
     }
   },
   "pages": {
@@ -722,29 +765,68 @@
         "deleteButton": "Löschen"
       }
     },
-    "contributions": {
-      "title": "Mitgliedsbeiträge",
-      "description": "Übersicht aller Beitragsforderungen und deren Zahlungsstatus.",
-      "openDemands": "Offene Forderungen ({{count}} Posten)",
+    "income": {
+      "title": "Einnahmen",
+      "description": "Mitgliedsbeiträge aus dem SEPA Export und alle weiteren Einnahmen des Vereins an einem Ort.",
+      "year": {
+        "label": "Jahr",
+        "all": "Alle Jahre",
+        "custom": "Eigener Zeitraum"
+      },
+      "tabs": {
+        "label": "Art der Einnahme",
+        "all": "Alle",
+        "membership": "Mitgliedsbeiträge"
+      },
+      "kind": {
+        "MEMBERSHIP": "Mitgliedsbeitrag"
+      },
+      "source": {
+        "CONTRIBUTION": "SEPA Export",
+        "MANUAL": "Manuell erfasst"
+      },
+      "kpi": {
+        "open": "Offene Forderungen ({{count}} Posten)",
+        "received": "{{count}} Zahlungen erhalten",
+        "membership": "Mitgliedsbeiträge · {{share}} % der Eingänge",
+        "other": "Weitere Einnahmen aus Kategorien"
+      },
+      "distribution": {
+        "title": "Eingegangen nach Art",
+        "total": "Gesamt: {{amount}}"
+      },
       "filter": {
-        "searchName": "Name suchen",
+        "search": "Suchen",
+        "searchMember": "Mitglied suchen",
+        "memberNumber": "Mitgliedsnummer",
         "status": "Beitragsstatus",
         "all": "Alle",
         "unpaid": "Offen",
-        "paid": "Bezahlt",
-        "resetFilter": "Filter zurücksetzen",
         "membershipStatus": "Mitgliedsstatus",
         "allMembershipStatus": "Alle",
-        "showDeleted": "Gelöschte anzeigen"
+        "paid": "Bezahlt",
+        "dateFrom": "Von",
+        "dateTo": "Bis",
+        "allTime": "Alle Zeiten",
+        "showDeleted": "Gelöschte anzeigen",
+        "resetFilter": "Filter zurücksetzen"
+      },
+      "hint": {
+        "contributions": "Fällige Beiträge kommen automatisch aus dem SEPA Export: Monatstarife am 1. jedes Monats, Jahrestarife am 01.01. Mit „Zahlung erhalten“ wird ein Beitrag erledigt, „Zahlung offen“ macht das rückgängig – das geht nicht mehr, sobald eine Quittung ausgestellt wurde. Erledigte Beiträge bleiben dauerhaft erhalten."
       },
       "table": {
-        "memberNumber": "Nr.",
-        "member": "Mitglied",
-        "membershipStatus": "Mitgliedsstatus",
-        "amount": "Betrag",
         "dueDate": "Fällig am",
+        "bookingNumber": "Beleg-Nr.",
+        "paymentDate": "Zahlungsdatum",
+        "payer": "Zahler",
+        "kind": "Art",
+        "source": "Quelle",
+        "description": "Beschreibung",
+        "amount": "Betrag",
         "status": "Status",
+        "payment": "Zahlung",
         "action": "Aktion",
+        "empty": "Keine Einnahmen gefunden.",
         "rowsPerPage": "Zeilen pro Seite:"
       },
       "status": {
@@ -752,23 +834,37 @@
         "open": "Offen"
       },
       "button": {
+        "create": "Einnahme erfassen",
+        "refresh": "Aktualisieren",
         "markAsPaid": "Zahlung erhalten",
         "markAsUnPaid": "Zahlung offen",
+        "edit": "Bearbeiten",
         "delete": "Löschen",
-        "restore": "Wiederherstellen"
+        "restore": "Wiederherstellen",
+        "acknowledgement": "Quittung erzeugen",
+        "acknowledgementDownload": "Quittung {{number}} herunterladen"
+      },
+      "tooltip": {
+        "reopenBlocked": "Für diesen Eintrag wurde bereits eine Quittung ausgestellt."
       },
       "confirmDialog": {
-        "deleteQuestion": "Diesen offenen Beitrag wirklich endgültig löschen? Er wird aus der Liste entfernt.",
-        "delete": "Endgültig löschen",
-        "restoreQuestion": "Diesen Beitrag wirklich wiederherstellen?",
+        "deleteQuestion": "Diesen offenen Posten wirklich löschen? Er wird aus der Liste entfernt.",
+        "delete": "Löschen",
+        "restoreQuestion": "Diesen Posten wirklich wiederherstellen?",
         "restore": "Wiederherstellen"
       },
       "responseMessages": {
-        "deleted": "Beitrag wurde gelöscht.",
-        "deleteError": "Beitrag konnte nicht gelöscht werden. Nur offene Beiträge können gelöscht werden.",
-        "restored": "Beitrag wurde wiederhergestellt.",
-        "restoreError": "Beitrag konnte nicht wiederhergestellt werden."
-      }
+        "created": "Einnahme wurde erfasst.",
+        "updated": "Einnahme wurde gespeichert.",
+        "deleted": "Eintrag wurde gelöscht.",
+        "deleteError": "Eintrag konnte nicht gelöscht werden. Nur offene Einträge können gelöscht werden.",
+        "restored": "Eintrag wurde wiederhergestellt.",
+        "restoreError": "Eintrag konnte nicht wiederhergestellt werden.",
+        "acknowledgementCreated": "Quittung wurde erzeugt.",
+        "acknowledgementError": "Quittung konnte nicht erzeugt werden.",
+        "paymentError": "Die Zahlung konnte nicht gebucht werden. Das Zahlungsdatum muss im Jahr der bereits vergebenen Belegnummer liegen."
+      },
+      "acknowledgementNumber": "Quittung {{number}}"
     },
     "creditorConfig": {
       "title": "Bankverbindung konfigurieren",
@@ -802,6 +898,10 @@
         },
         "countryCode": {
           "label": "Ländercode"
+        },
+        "taxNumber": {
+          "label": "Steuernummer",
+          "placeholder": "00/000/00000"
         }
       },
       "buttons": {
@@ -823,7 +923,8 @@
         "postCodeMaxLength": "PLZ darf maximal 10 Zeichen lang sein.",
         "cityRequired": "Stadt darf nicht leer sein.",
         "cityMaxLength": "Stadt darf maximal 50 Zeichen lang sein.",
-        "countryCodeRequired": "Ländercode muss ausgewählt sein."
+        "countryCodeRequired": "Ländercode muss ausgewählt sein.",
+        "taxNumberMaxLength": "Steuernummer darf maximal 50 Zeichen lang sein."
       },
       "snackbar": {
         "saveSuccess": "Speichern erfolgreich.",
@@ -939,8 +1040,7 @@
           "helperText": "Wird den Empfängern als Absender angezeigt. Leer = Adresse."
         },
         "password": {
-          "label": "Passwort",
-          "labelKeep": "Passwort (leer lassen zum Behalten)"
+          "label": "Passwort (bei jedem Speichern erneut eingeben)"
         }
       },
       "validation": {
@@ -980,7 +1080,10 @@
       "apiError": {
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "deleteFailed": "Einstellungen konnten nicht gelöscht werden. Bitte erneut versuchen.",
-        "testSendFailed": "Testmail konnte nicht gesendet werden. Bitte erneut versuchen."
+        "testSendFailed": "Testmail konnte nicht gesendet werden. Bitte erneut versuchen.",
+        "connectionFailed": "Der Mailserver ist nicht erreichbar. Bitte SMTP-Host und Port prüfen.",
+        "authFailed": "Die Anmeldung am Mailserver ist fehlgeschlagen. Bitte Benutzername und Passwort prüfen.",
+        "tlsUnavailable": "Der Mailserver bietet keine verschlüsselte Verbindung an oder das Zertifikat wird nicht akzeptiert. Das Passwort wurde nicht gesendet. Bitte Port 465 (SSL/TLS) oder 587 (STARTTLS) und einen Server mit gültigem Zertifikat verwenden."
       },
       "testMode": {
         "title": "Testmodus",
@@ -1061,6 +1164,15 @@
       "loginError": "Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Daten.",
       "toManyLoginError": "Zu viele fehlerhafte Anmeldeversuche. Warte {{seconds}} Sekunden, um es erneut zu versuchen.",
       "offline": "Du bist offline. Bitte überprüfe deine Internetverbindung.",
+      "twoFactor": {
+        "hint": "Gib den 6-stelligen Code aus deiner Authenticator-App ein.",
+        "code": "Code",
+        "recoveryHint": "Alternativ kannst du einen Wiederherstellungscode verwenden.",
+        "blockedRecoveryHint": "Codes aus der App sind gerade gesperrt. Mit einem Wiederherstellungscode kannst du dich trotzdem anmelden.",
+        "verify": "Bestätigen",
+        "back": "Zurück",
+        "error": "Der Code ist falsch oder abgelaufen."
+      },
       "forcePasswordChange": {
         "title": "Passwort ändern",
         "description": "Du verwendest das Standardpasswort. Bitte lege aus Sicherheitsgründen ein neues Passwort fest, bevor du fortfährst.",
@@ -1082,7 +1194,9 @@
         "login": "Demo-Zugangsdaten",
         "admin": "Admin: Admin / admin12345678",
         "user": "Nutzer: User / user12345678",
-        "finance": "Finanzverwalter: Finance / finance1234"
+        "finance": "Finanzverwalter: Finance / finance1234",
+        "mail": "E-Mails werden nicht zugestellt. Du kannst sie im Test-Postfach lesen:",
+        "mailLink": "Test-Postfach öffnen"
       },
       "showPassword": "Passwort anzeigen",
       "hidePassword": "Passwort verbergen"
@@ -1209,6 +1323,7 @@
         "generalConfig": "Webseiteneinstellungen",
         "profileSettings": "Profileinstellungen",
         "receiptCategoryConfig": "Belegkategorien verwalten",
+        "incomeCategoryConfig": "Einnahmekategorien verwalten",
         "calendarCategoryConfig": "Kalenderkategorien verwalten"
       },
       "pageNames": {
@@ -1218,14 +1333,14 @@
         "broadcastEmailShort": "Mail",
         "sepa": "SEPA Export",
         "sepaShort": "SEPA",
-        "contributions": "Beiträge",
-        "contributionsShort": "Beiträge",
+        "income": "Einnahmen",
+        "incomeShort": "Einnahmen",
         "audit": "Audit",
         "backup": "Backup",
         "receipts": "Belege",
         "receiptsShort": "Belege",
-        "receiptAnalytics": "Belegauswertung",
-        "receiptAnalyticsShort": "Auswertung",
+        "financeAnalytics": "Finanzauswertung",
+        "financeAnalyticsShort": "Auswertung",
         "calendar": "Kalender",
         "calendarShort": "Kalender"
       },
@@ -1344,7 +1459,8 @@
       },
       "tooltip": {
         "edit": "Bearbeiten",
-        "delete": "Löschen"
+        "delete": "Löschen",
+        "resetTwoFactor": "Zwei-Faktor-Authentifizierung zurücksetzen"
       },
       "dialog": {
         "titleCreate": "Neuer Nutzer",
@@ -1378,6 +1494,8 @@
         "updateSuccess": "Nutzeränderungen erfolgreich gespeichert.",
         "createSuccess": "Nutzer erfolgreich erstellt.",
         "deleteSuccess": "Nutzer erfolgreich gelöscht.",
+        "resetTwoFactorSuccess": "Zwei-Faktor-Authentifizierung zurückgesetzt.",
+        "resetTwoFactorFailed": "Zurücksetzen fehlgeschlagen. Bitte erneut versuchen.",
         "usernameDuplicate": "Nutzername existiert bereits.",
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen."
@@ -1391,11 +1509,42 @@
       },
       "confirm": {
         "deleteMessage": "Nutzer wirklich löschen?",
-        "deleteButton": "Löschen"
+        "deleteButton": "Löschen",
+        "resetTwoFactorMessage": "Zwei-Faktor-Authentifizierung dieses Nutzers wirklich zurücksetzen? Der Nutzer kann sich danach wieder nur mit dem Passwort anmelden.",
+        "resetTwoFactorButton": "Zurücksetzen"
       },
       "tabs": {
         "profile": "Profil",
-        "notifications": "Benachrichtigungen"
+        "notifications": "Benachrichtigungen",
+        "security": "Sicherheit"
+      },
+      "security": {
+        "title": "Zwei-Faktor-Authentifizierung",
+        "description": "Schütze dein Konto zusätzlich mit einem Code aus einer Authenticator-App (z. B. Google Authenticator, Aegis oder Bitwarden).",
+        "statusOn": "Aktiv",
+        "statusOff": "Nicht aktiv",
+        "enable": "Aktivieren",
+        "disable": "Deaktivieren",
+        "passwordTitle": "Passwort bestätigen",
+        "passwordHint": "Gib zur Sicherheit noch einmal dein Passwort ein, bevor die Zwei-Faktor-Authentifizierung eingerichtet wird.",
+        "passwordWrong": "Das Passwort ist falsch.",
+        "passwordContinue": "Weiter",
+        "scanHint": "Scanne den QR-Code mit deiner Authenticator-App und gib danach den angezeigten 6-stelligen Code ein.",
+        "manualKey": "Oder gib diesen Schlüssel manuell ein:",
+        "code": "6-stelliger Code",
+        "codeOrRecovery": "Code oder Wiederherstellungscode",
+        "confirm": "Bestätigen und aktivieren",
+        "loadFailed": "Der Status konnte nicht geladen werden.",
+        "setupFailed": "Die Einrichtung konnte nicht gestartet werden.",
+        "codeWrong": "Der Code ist falsch. Bitte erneut versuchen.",
+        "disableTitle": "Zwei-Faktor-Authentifizierung deaktivieren",
+        "disableHint": "Zur Bestätigung werden dein Passwort und ein aktueller Code (oder ein Wiederherstellungscode) benötigt.",
+        "disableFailed": "Deaktivieren fehlgeschlagen. Passwort oder Code sind falsch.",
+        "disabled": "Zwei-Faktor-Authentifizierung deaktiviert.",
+        "recoveryTitle": "Wiederherstellungscodes",
+        "recoveryHint": "Bewahre diese Codes sicher auf. Jeder Code funktioniert nur einmal und ersetzt die App, falls du dein Gerät verlierst. Sie werden nicht noch einmal angezeigt.",
+        "copy": "Kopieren",
+        "recoverySaved": "Ich habe sie gespeichert"
       },
       "notificationSettings": {
         "title": "Benachrichtigungseinstellungen",
@@ -1432,6 +1581,7 @@
         "colAmount": "Betrag",
         "colCategory": "Kategorie",
         "colVendor": "Händler",
+        "colBookingNumber": "Beleg-Nr.",
         "colStatus": "Status",
         "colSubmittedBy": "Eingereicht von",
         "colActions": "Aktionen",
@@ -1478,16 +1628,19 @@
       "newButton": "Neue Belegkategorie",
       "table": {
         "name": "Name",
-        "actions": "Aktionen"
+        "actions": "Aktionen",
+        "taxArea": "Steuerlicher Bereich"
       },
       "tooltip": {
-        "delete": "Löschen"
+        "delete": "Löschen",
+        "edit": "Bearbeiten"
       },
       "dialog": {
         "titleCreate": "Neue Belegkategorie",
         "nameLabel": "Name",
         "cancel": "Abbrechen",
-        "save": "Speichern"
+        "save": "Speichern",
+        "titleEdit": "Belegkategorie bearbeiten"
       },
       "validation": {
         "nameEmpty": "Name darf nicht leer sein.",
@@ -1499,29 +1652,108 @@
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "deleteSuccess": "Belegkategorie erfolgreich gelöscht.",
         "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
-        "deleteFailedInUse": "Belegkategorie kann nicht gelöscht werden, da sie einem Beleg zugewiesen ist."
+        "deleteFailedInUse": "Belegkategorie kann nicht gelöscht werden, da sie einem Beleg zugewiesen ist.",
+        "updateSuccess": "Belegkategorie erfolgreich gespeichert."
       },
       "apiError": {
         "createExists": "Belegkategorie kann nicht erstellt werden. Belegkategorie existiert bereits.",
         "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
-        "deleteFailedInUse": "Belegkategorie kann nicht gelöscht werden, da sie einem Beleg zugewiesen ist."
+        "deleteFailedInUse": "Belegkategorie kann nicht gelöscht werden, da sie einem Beleg zugewiesen ist.",
+        "updateExists": "Belegkategorie kann nicht gespeichert werden. Eine Belegkategorie mit diesem Namen existiert bereits."
       },
       "confirm": {
         "deleteMessage": "Belegkategorie wirklich löschen?",
         "deleteButton": "Löschen"
       }
     },
-    "receiptAnalytics": {
-      "title": "Belegauswertung",
+    "incomeCategoryConfig": {
+      "title": "Einnahmekategorien verwalten",
+      "description": "Jede Kategorie erscheint als eigener Reiter im Bereich Einnahmen (z. B. Spenden, Sponsoring oder Veranstaltungen). Mitgliedsbeiträge sind fest vorgegeben.",
+      "newButton": "Neue Einnahmekategorie",
+      "table": {
+        "name": "Name",
+        "actions": "Aktionen",
+        "taxArea": "Steuerlicher Bereich"
+      },
+      "tooltip": {
+        "delete": "Löschen",
+        "edit": "Bearbeiten"
+      },
+      "dialog": {
+        "titleCreate": "Neue Einnahmekategorie",
+        "nameLabel": "Name",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "titleEdit": "Einnahmekategorie bearbeiten"
+      },
+      "validation": {
+        "nameEmpty": "Name darf nicht leer sein.",
+        "nameTooLong": "Name darf maximal 50 Zeichen lang sein."
+      },
+      "snackbar": {
+        "createSuccess": "Einnahmekategorie erfolgreich erstellt.",
+        "createExists": "Einnahmekategorie existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteSuccess": "Einnahmekategorie erfolgreich gelöscht.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedInUse": "Einnahmekategorie kann nicht gelöscht werden, da ihr Einnahmen zugewiesen sind.",
+        "updateSuccess": "Einnahmekategorie erfolgreich gespeichert."
+      },
+      "apiError": {
+        "createExists": "Einnahmekategorie kann nicht erstellt werden. Einnahmekategorie existiert bereits.",
+        "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailed": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+        "deleteFailedInUse": "Einnahmekategorie kann nicht gelöscht werden, da ihr Einnahmen zugewiesen sind.",
+        "updateExists": "Einnahmekategorie kann nicht gespeichert werden. Eine Einnahmekategorie mit diesem Namen existiert bereits."
+      },
+      "confirm": {
+        "deleteMessage": "Einnahmekategorie wirklich löschen?",
+        "deleteButton": "Löschen"
+      }
+    },
+    "financeAnalytics": {
+      "title": "Finanzauswertung",
       "year": "Jahr",
-      "byMonth": "Ausgaben pro Monat ({{year}})",
-      "byCategory": "Ausgaben pro Kategorie ({{year}})",
-      "byYear": "Ausgaben pro Jahr",
-      "amountLabel": "Betrag (€)",
       "total": "Gesamt",
       "noData": "Keine Daten vorhanden.",
       "noCategory": "Ohne Kategorie",
+      "membership": "Mitgliedsbeiträge",
+      "loadError": "Die Finanzauswertung konnte nicht geladen werden.",
+      "tabs": {
+        "overview": "Übersicht",
+        "income": "Einnahmen",
+        "expenses": "Ausgaben",
+        "categories": "Kategorien"
+      },
+      "kpi": {
+        "income": "Einnahmen",
+        "expenses": "Ausgaben (Belege)",
+        "balance": "Saldo",
+        "membershipShare": "Anteil Mitgliedsbeiträge an den Einnahmen"
+      },
+      "takeaway": {
+        "surplus": "Überschuss von {{amount}} im Jahr {{year}}.",
+        "deficit": "Fehlbetrag von {{amount}} im Jahr {{year}}.",
+        "balanced": "Einnahmen und Ausgaben sind im Jahr {{year}} ausgeglichen.",
+        "membershipShare": "{{share}} der Einnahmen stammen aus Mitgliedsbeiträgen."
+      },
+      "compareByMonth": "Einnahmen und Ausgaben pro Monat ({{year}})",
+      "compareByYear": "Einnahmen und Ausgaben pro Jahr",
+      "incomeByMonth": "Einnahmen pro Monat ({{year}})",
+      "incomeByCategory": "Einnahmen pro Kategorie ({{year}})",
+      "expenseByMonth": "Ausgaben pro Monat ({{year}})",
+      "expenseByCategory": "Ausgaben pro Kategorie ({{year}})",
+      "table": {
+        "search": "Kategorie suchen",
+        "category": "Kategorie",
+        "type": "Art",
+        "income": "Einnahme",
+        "expense": "Ausgabe",
+        "total": "Summe",
+        "share": "Anteil",
+        "monthlyAverage": "Ø Monat"
+      },
       "months": {
         "jan": "Jan",
         "feb": "Feb",
@@ -1535,6 +1767,12 @@
         "oct": "Okt",
         "nov": "Nov",
         "dec": "Dez"
+      },
+      "exportEur": {
+        "button": "EÜR exportieren",
+        "tooltip": "Einnahmen-Überschuss-Rechnung {{year}} als Excel-Datei (.xlsx) herunterladen",
+        "success": "EÜR {{year}} wurde exportiert.",
+        "error": "Der Export ist fehlgeschlagen. Bitte erneut versuchen."
       }
     },
     "calendar": {

@@ -367,6 +367,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.firstName}
                   helperText={errors.firstName ?? `${detail.firstName.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -378,6 +379,7 @@ export default function PendingEnrollmentForm({
                   onChange={handleChange('middleName')}
                   error={!!errors.middleName}
                   helperText={errors.middleName ?? `${detail.middleName.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -390,6 +392,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.lastName}
                   helperText={errors.lastName ?? `${detail.lastName.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -428,6 +431,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.street}
                   helperText={errors.street ?? `${detail.street.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -440,6 +444,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.postalCode}
                   helperText={errors.postalCode ?? `${detail.postalCode.length}/10`}
+                  slotProps={{ htmlInput: { maxLength: 10 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -452,6 +457,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.city}
                   helperText={errors.city ?? `${detail.city.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -484,6 +490,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.email}
                   helperText={errors.email ?? `${detail.email.length}/50`}
+                  slotProps={{ htmlInput: { maxLength: 50 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -493,6 +500,7 @@ export default function PendingEnrollmentForm({
                   variant="outlined"
                   value={detail.phone}
                   onChange={handleChange('phone')}
+                  slotProps={{ htmlInput: { maxLength: 50 } }}
                 />
               </Grid>
               <Grid size={6}>
@@ -597,6 +605,7 @@ export default function PendingEnrollmentForm({
                   onChange={handleChange('courseOfStudy')}
                   error={!!errors.courseOfStudy}
                   helperText={errors.courseOfStudy ?? `${detail.courseOfStudy.length}/100`}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
                 />
               </Grid>
               <Grid size={12}>
@@ -611,6 +620,7 @@ export default function PendingEnrollmentForm({
                   required
                   error={!!errors.motivation}
                   helperText={errors.motivation ?? `${detail.motivation.length}/1000`}
+                  slotProps={{ htmlInput: { maxLength: 1000 } }}
                 />
               </Grid>
               <Grid size={12}>
@@ -654,6 +664,7 @@ export default function PendingEnrollmentForm({
                   value={formatIBAN(detail.iban ?? '')}
                   onChange={handleIbanChange}
                   onFocus={(e) => isMaskedIBAN(detail.iban) && e.target.select()}
+                  slotProps={{ htmlInput: { maxLength: 50 } }}
                   error={errors.iban !== undefined}
                   helperText={
                     errors.iban ??
@@ -671,6 +682,7 @@ export default function PendingEnrollmentForm({
                   placeholder="DEUTDEXXX"
                   value={detail.bic}
                   onChange={handleBicChange}
+                  slotProps={{ htmlInput: { maxLength: 20 } }}
                   error={errors.bic !== undefined}
                   helperText={errors.bic}
                 />

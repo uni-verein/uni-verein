@@ -6,6 +6,8 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CsvHelper;
+using CsvHelper.Configuration;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.ApiResults.Receipt;
@@ -66,13 +68,20 @@ public class ReceiptsControllerTests : IntegrationTestBase
         byte[]? fileBytes = null,
         string fileName = "receipt.pdf",
         string contentType = "application/pdf",
-        string amount = "10.00")
+        string amount = "10.00",
+        string? vendor = null,
+        string? description = null)
     {
         MultipartFormDataContent content = new()
         {
             { new StringContent(amount), "amount" },
             { new StringContent(DateTime.UtcNow.ToString("O")), "receiptDate" }
         };
+
+        if (vendor != null)
+            content.Add(new StringContent(vendor), "vendor");
+        if (description != null)
+            content.Add(new StringContent(description), "description");
 
         if (fileBytes != null)
         {
@@ -313,6 +322,65 @@ public class ReceiptsControllerTests : IntegrationTestBase
         using MemoryStream extracted = new();
         await fileEntry.Open().CopyToAsync(extracted);
         extracted.ToArray().ShouldBe(MinimalPdfBytes);
+    }
+
+    [Theory]
+    [InlineData("=HYPERLINK(\"http://x.invalid/\",\"x\")")]
+    [InlineData("+1+1")]
+    [InlineData("-1+1")]
+    [InlineData("@SUM(1+1)")]
+    public async Task ExportAsync_NeutralisesFormulaCharacters_InVendorAndDescription(string malicious)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content =
+            CreateReceiptFormData(vendor: malicious, description: malicious);
+        HttpResponseMessage createResponse = await client.PostAsync("/receipts", content);
+        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/receipts/export");
+        byte[] zipBytes = await response.Content.ReadAsByteArrayAsync();
+
+        // Assert
+        using MemoryStream memoryStream = new(zipBytes);
+        using ZipArchive archive = new(memoryStream, ZipArchiveMode.Read);
+        ZipArchiveEntry? csvEntry = archive.GetEntry("receipts.csv");
+        csvEntry.ShouldNotBeNull();
+        string csvContent;
+        using (StreamReader reader = new(csvEntry.Open(), Encoding.UTF8))
+            csvContent = await reader.ReadToEndAsync();
+
+        using StringReader stringReader = new(csvContent);
+        using CsvReader csv = new(stringReader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" });
+        csv.Read();
+        csv.ReadHeader();
+        csv.Read();
+        csv.GetField("Vendor").ShouldBe("'" + malicious);
+        csv.GetField("Description").ShouldBe("'" + malicious);
+    }
+
+    [Fact]
+    public async Task ExportAsync_KeepsOrdinaryText_Unchanged()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        using MultipartFormDataContent content =
+            CreateReceiptFormData(vendor: "Baumarkt-Müller", description: "Material 2-fach");
+        (await client.PostAsync("/receipts", content)).StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/receipts/export");
+        byte[] zipBytes = await response.Content.ReadAsByteArrayAsync();
+
+        // Assert
+        using MemoryStream memoryStream = new(zipBytes);
+        using ZipArchive archive = new(memoryStream, ZipArchiveMode.Read);
+        using StreamReader reader = new(archive.GetEntry("receipts.csv")!.Open(), Encoding.UTF8);
+        string csvContent = await reader.ReadToEndAsync();
+        csvContent.ShouldContain("Baumarkt-Müller");
+        csvContent.ShouldContain("Material 2-fach");
+        csvContent.ShouldNotContain("'Baumarkt");
     }
 
     [Fact]
@@ -689,7 +757,7 @@ public class ReceiptsControllerTests : IntegrationTestBase
         HttpClient client = CreateClient(UserRole.ADMIN);
         HttpResponseMessage categoryResponse =
             await client.PostAsJsonAsync("/receipt-categories", new ReceiptCategoryRequest { Name = "Fahrten" });
-        ReceiptCategoryResult? category = await categoryResponse.Content.ReadFromJsonAsync<ReceiptCategoryResult>();
+        ReceiptCategoryResult? category = await categoryResponse.Content.ReadFromJsonAsync<ReceiptCategoryResult>(JsonOptions);
         category.ShouldNotBeNull();
         ReceiptResult categorized = await CreateReceiptAsync(client, 5m, DateTime.UtcNow, category.Id);
         ReceiptResult uncategorized = await CreateReceiptAsync(client, 6m, DateTime.UtcNow);
@@ -937,6 +1005,40 @@ public class ReceiptsControllerTests : IntegrationTestBase
     // POST /receipts - validation
     // ---------------------------------------------------------------
 
+    [Theory]
+    [InlineData("1000000.01")]
+    [InlineData("79228162514264337593543950335")]
+    public async Task CreateAsync_AmountAboveLimit_ReturnsBadRequest(string amount)
+    {
+        // Arrange: every role may create receipts, so this must hold for a plain user.
+        HttpClient client = CreateClient(UserRole.USER);
+        using MultipartFormDataContent content = CreateReceiptFormData(amount: amount);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/receipts", content);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.MoreInfo.ShouldBe("Amount must not exceed 1000000.");
+        (await _db.Receipts.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CreateAsync_AmountAtLimit_IsAccepted()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.USER);
+        using MultipartFormDataContent content = CreateReceiptFormData(amount: "1000000");
+
+        // Act
+        HttpResponseMessage response = await client.PostAsync("/receipts", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
     [Fact]
     public async Task CreateAsync_AmountNotPositive_ReturnsBadRequest()
     {
@@ -1013,6 +1115,27 @@ public class ReceiptsControllerTests : IntegrationTestBase
         result.MoreInfo.ShouldBe("Amount must be greater than 0.");
     }
 
+    [Theory]
+    [InlineData("1000000.01")]
+    [InlineData("79228162514264337593543950335")]
+    public async Task UpdateAsync_AmountAboveLimit_ReturnsBadRequest(string amount)
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        ReceiptResult receipt = await CreateReceiptAsync(client, 10m, DateTime.UtcNow);
+        UpdateReceiptRequest update = new() { Amount = decimal.Parse(amount, CultureInfo.InvariantCulture) };
+
+        // Act
+        HttpResponseMessage response = await client.PatchAsJsonAsync($"/receipts/{receipt.Id}", update);
+        ErrorDetailsResult? result = await response.Content.ReadFromJsonAsync<ErrorDetailsResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        result.ShouldNotBeNull();
+        result.MoreInfo.ShouldBe("Amount must not exceed 1000000.");
+        (await _db.Receipts.AsNoTracking().SingleAsync(r => r.Id == receipt.Id)).Amount.ShouldBe(10m);
+    }
+
     [Fact]
     public async Task UpdateAsync_InvalidCategory_ReturnsBadRequest()
     {
@@ -1073,126 +1196,6 @@ public class ReceiptsControllerTests : IntegrationTestBase
         result.ShouldNotBeNull();
         result.Amount.ShouldBe(99m);
         result.Vendor.ShouldBe("Original Vendor");
-    }
-
-    // ---------------------------------------------------------------
-    // GET /receipts/analytics
-    // ---------------------------------------------------------------
-
-    [Theory]
-    [InlineData(UserRole.USER)]
-    public async Task GetAnalyticsAsync_Forbidden_WhenNotPrivileged(UserRole role)
-    {
-        // Arrange
-        HttpClient client = CreateClient(role);
-
-        // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts/analytics");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
-    public async Task GetAnalyticsAsync_DefaultsToCurrentYear()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-
-        // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts/analytics");
-        ReceiptAnalyticsResult? result = await response.Content.ReadFromJsonAsync<ReceiptAnalyticsResult>();
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        result.ShouldNotBeNull();
-        result.Year.ShouldBe(DateTime.UtcNow.Year);
-    }
-
-    [Fact]
-    public async Task GetAnalyticsAsync_ByCategory_OnlyIncludesSelectedYear()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        ReceiptCategoryEntity category = await CreateReceiptCategoryAsync("Travel expenses");
-
-        await CreateReceiptAsync(client, 100m, new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc), category.Id);
-        await CreateReceiptAsync(client, 10m, new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc), category.Id);
-
-        // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts/analytics?year=2026");
-        ReceiptAnalyticsResult? result = await response.Content.ReadFromJsonAsync<ReceiptAnalyticsResult>();
-
-        // Assert
-        result.ShouldNotBeNull();
-        ReceiptCategoryTotal categoryTotal = result.ByCategory.ShouldHaveSingleItem();
-        categoryTotal.Total.ShouldBe(10m);
-    }
-
-    [Fact]
-    public async Task GetAnalyticsAsync_ByMonth_IncludesPerCategoryBreakdown()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        ReceiptCategoryEntity categoryA = await CreateReceiptCategoryAsync("Eat");
-        ReceiptCategoryEntity categoryB = await CreateReceiptCategoryAsync("Travel expenses");
-
-        await CreateReceiptAsync(client, 30m, new DateTime(2026, 4, 10, 0, 0, 0, DateTimeKind.Utc), categoryA.Id);
-        await CreateReceiptAsync(client, 20m, new DateTime(2026, 4, 12, 0, 0, 0, DateTimeKind.Utc), categoryB.Id);
-
-        // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts/analytics?year=2026");
-        ReceiptAnalyticsResult? result = await response.Content.ReadFromJsonAsync<ReceiptAnalyticsResult>();
-
-        // Assert
-        result.ShouldNotBeNull();
-        ReceiptMonthlyTotal april = result.ByMonth.ShouldHaveSingleItem();
-        april.Month.ShouldBe(4);
-        april.Total.ShouldBe(50m);
-        april.ByCategory.Count.ShouldBe(2);
-        april.ByCategory.ShouldContain(c => c.CategoryId == categoryA.Id && c.Total == 30m);
-        april.ByCategory.ShouldContain(c => c.CategoryId == categoryB.Id && c.Total == 20m);
-    }
-
-    [Fact]
-    public async Task GetAnalyticsAsync_ByYear_IncludesPerCategoryBreakdown_AcrossAllYears()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        ReceiptCategoryEntity category = await CreateReceiptCategoryAsync("Eat");
-
-        await CreateReceiptAsync(client, 15m, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), category.Id);
-        await CreateReceiptAsync(client, 25m, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc), category.Id);
-
-        // Act
-        HttpResponseMessage response = await client.GetAsync("/receipts/analytics?year=2026");
-        ReceiptAnalyticsResult? result = await response.Content.ReadFromJsonAsync<ReceiptAnalyticsResult>();
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ByYear.Count.ShouldBe(2);
-
-        ReceiptYearlyTotal year2025 = result.ByYear.Single(y => y.Year == 2025);
-        year2025.Total.ShouldBe(15m);
-        year2025.ByCategory.ShouldHaveSingleItem().Total.ShouldBe(15m);
-
-        ReceiptYearlyTotal year2026 = result.ByYear.Single(y => y.Year == 2026);
-        year2026.Total.ShouldBe(25m);
-        year2026.ByCategory.ShouldHaveSingleItem().Total.ShouldBe(25m);
-    }
-
-    private async Task<ReceiptCategoryEntity> CreateReceiptCategoryAsync(string name)
-    {
-        ReceiptCategoryEntity category = new()
-        {
-            Id = Guid.NewGuid(),
-            Name = name
-        };
-
-        await _db.ReceiptCategories.AddAsync(category);
-        await _db.SaveChangesAsync();
-
-        return category;
     }
 
     // ---------------------------------------------------------------

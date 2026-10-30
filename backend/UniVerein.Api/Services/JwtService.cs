@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using UniVerein.Api.Security;
 using UniVerein.DAL.Entities;
 using Microsoft.Extensions.Configuration;
 
@@ -11,6 +13,9 @@ namespace UniVerein.Api.Services;
 
 public class JwtService
 {
+    public static readonly TimeSpan Lifetime = TimeSpan.FromHours(8);
+    public const string SessionVersionClaim = "session_version";
+
     private readonly IConfiguration _config;
 
     public JwtService(IConfiguration config)
@@ -30,12 +35,20 @@ public class JwtService
             {
                 new Claim(ClaimTypes.NameIdentifier, userEntity.Id.ToString()),
                 new Claim(ClaimTypes.Name, userEntity.Username),
-                new Claim(ClaimTypes.Role, userEntity.Role.ToString())
+                new Claim(ClaimTypes.Role, userEntity.Role.ToString()),
+                new Claim(SessionVersionClaim, userEntity.SessionVersion.ToString(), ClaimValueTypes.Integer32)
             },
-            expires: DateTime.Now.AddHours(8),
+            expires: DateTime.UtcNow.Add(Lifetime),
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public string IssueSession(HttpContext context, UserEntity userEntity)
+    {
+        string token = CreateToken(userEntity);
+        AuthCookie.Append(context, token, DateTimeOffset.UtcNow.Add(Lifetime));
+        return token;
     }
 }

@@ -28,4 +28,7 @@ public class CreditorConfigEntity : BaseEntity
 
     [Column("country_code")]
     public required string CountryCode { get; set; }
+
+    [Column("tax_number")]
+    public string? TaxNumber { get; set; }
 }

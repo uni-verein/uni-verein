@@ -224,6 +224,45 @@ public class CreditorConfigControllerTests : IntegrationTestBase
         });
     }
 
+    [Fact]
+    public async Task UpdateCreditorConfig_TaxNumber_IsTrimmedAndReturned()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        CreditorConfigRequest request = CreateCreditorConfigRequest();
+        request.TaxNumber = " 00/000/00000 ";
+
+        // Act
+        HttpResponseMessage putResponse = await client.PutAsJsonAsync("/creditor-config", request);
+        CreditorConfigResult? putResult = await putResponse.Content.ReadFromJsonAsync<CreditorConfigResult>();
+        CreditorConfigResult? getResult = await client.GetFromJsonAsync<CreditorConfigResult>("/creditor-config");
+
+        // Assert
+        putResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        putResult.ShouldNotBeNull();
+        putResult.TaxNumber.ShouldBe("00/000/00000");
+        getResult.ShouldNotBeNull();
+        getResult.TaxNumber.ShouldBe("00/000/00000");
+    }
+
+    [Fact]
+    public async Task UpdateCreditorConfig_BlankTaxNumber_IsStoredAsNull()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        CreditorConfigRequest request = CreateCreditorConfigRequest();
+        request.TaxNumber = "   ";
+
+        // Act
+        HttpResponseMessage response = await client.PutAsJsonAsync("/creditor-config", request);
+        CreditorConfigResult? result = await response.Content.ReadFromJsonAsync<CreditorConfigResult>();
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.TaxNumber.ShouldBeNull();
+    }
+
     // ---------------------------------------------------------------
     // DELETE /api/members/{id}
     // ---------------------------------------------------------------

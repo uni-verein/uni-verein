@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.10.0] UV-29, UV-60, UV-64, UV-65, UV-66, UV-67, UV-68, UV-70
+
+### Added
+- UV-65: The membership fees page is now the income page "Einnahmen". The "Mitgliedsbeiträge" tab shows the SEPA fees, every further tab is a configurable income category ("Einnahmekategorien verwalten", e.g. "Spenden"). Admins and financial managers can add, edit, mark as paid, delete and (admins) restore incomes. Summary cards and a date range filter (default: current year) were added; the page works without a bank connection.
+- UV-65: Payment acknowledgements ("Quittung"): a PDF with a consecutive number (`YYYY-NNNN`) for every paid fee or income. It is stored as issued, afterwards the payment can no longer be changed.
+- UV-65: EÜR export as spreadsheet (`GET /finance/eur?year=YYYY`, from 2020, admins and financial managers, button on the "Finanzauswertung" page) with the sheets "EÜR", "Stammdaten", "Journal", "Beitragsnachweis" and "Hinweise". The tax checks use the limits of the exported year (45,000 € until 2025, 50,000 € / 50,000 € / 100,000 € from 2026). Opening balances and the cash/bank reconciliation are empty cells to fill in by hand.
+- UV-65: Income and receipt categories have a tax area ("Steuerlicher Bereich", editable by admins and financial managers), the bank connection settings an optional "Steuernummer". **The migration sets all existing categories to "Ideeller Bereich", assign the areas before the first export.**
+- UV-66: Demo: `docker-compose-demo.yml` builds nothing and needs no SQL dump. `VERSION` in `.env` selects the published images, `DEMO_DATA_PATH` is the data folder. With `Demo__Enabled=true` the backend wipes database and receipt files at every start and nightly at 03:00 UTC and generates sample data relative to the current date. Mails are caught by Mailpit at `/mail/`.
+- UV-66: `GET /web-page-config` returns `demo`, so the published frontend image shows the demo hint without a `VITE_APP_DEMO` build.
+- UV-67: Two-factor authentication (TOTP) under "Profileinstellungen" → "Sicherheit", with QR code and 10 recovery codes. With 2FA enabled `POST /auth/login` returns a challenge instead of a session, `POST /auth/login/2fa` completes the login. Wrong codes are locked out per address and per account (recovery codes still work during a lock). Admins can reset the 2FA of a user (`DELETE /users/{id}/2fa`). The secret is stored encrypted, optional setting `TwoFactor__Issuer`. Not available in demo mode; there is no recovery if the only admin loses device and recovery codes.
+- UV-67: Logging out, changing the password and changing the 2FA end the sessions on all other devices (new column `Users.session_version`). **Everybody has to log in once again after the update.**
+- UV-68: Stable booking numbers: `E-YYYY-NNNN` for fees and incomes, `A-YYYY-NNNN` for receipts, assigned when booked as paid, never changed or reused. Payments get an explicit payment date (default: today); EÜR, finance analytics and income summaries use it. `POST /contributions/{id}` and `POST /income/{id}` now take `{ "paid", "paymentDate" }` in the body instead of the query parameter `paid` (**API clients must send the body**), `POST /receipts/{id}/pay` and `POST /income` accept an optional `paymentDate`. Existing paid entries keep the date they were reported with before, so earlier figures do not move.
+
+### Fixed
+- UV-64: Backup restore: an uploaded SQL file can no longer run shell commands in the backend container (`psql` runs in restricted mode, needs PostgreSQL 17.6 or later and refuses the restore otherwise).
+- UV-64: Demo mode on the server: backup download and restore answer 403 `DEMO_MODE_DISABLED`. Before, the demo mode only existed in the frontend, so anyone could use the admin-only restore.
+- UV-64: Self-enrollment: all text fields have a maximum length and `POST /self-enrollment` rejects bodies above 32 KB. Requests above a body size limit (also receipt uploads) are answered with 413 instead of 500.
+- UV-64: Receipt and income amounts are limited to 1,000,000. Before, receipts near the maximum decimal value made the finance analytics fail with HTTP 500. Amounts already stored above the limit are not changed.
+- UV-64: CSV exports (receipts ZIP and member export) neutralise spreadsheet formulas (fields starting with `=`, `+`, `-`, `@`).
+- UV-64: Receipt PDF preview: pages are rendered with a limited size, so a PDF with a huge page can no longer exhaust the browser. A tile that cannot be rendered shows a placeholder with the link to the original.
+- UV-64: Mail settings: the SMTP/IMAP password must be entered again on every save, so the stored password cannot be redirected to another mail host.
+- UV-65: Demo mode: the wipe of the database now needs an explicit `Demo__Enabled` of `true`, `1`, `yes` or `on`. Before, any other value (e.g. `disabled`) would have wiped a production database.
+- UV-65: Income summaries assign paid amounts to the period by payment date, paid incomes without a category are no longer left out.
+- UV-65: A deleted contribution can no longer be marked as paid.
+
+### Changed
+- UV-29: The login token is kept in an httpOnly cookie (`uv_auth`) instead of the `localStorage`, so injected scripts can no longer read it. Cookie requests that change data carry the header `X-UV-CSRF`; `Authorization: Bearer` keeps working. New endpoints `GET /auth/me` and `POST /auth/logout`. `?access_token=` on `/backup`, `/receipts/export` and `/emailProgress` is no longer accepted (**API clients must send `Authorization: Bearer`**). **Everybody has to log in once again, and `nginx.conf` must be updated together with the images** (`X-Forwarded-Proto`).
+- UV-60: The "Finanzauswertung" replaces the receipt analytics and compares income and expenses (overview, by month and category, category table). Only paid entries count, each in the month of its payment date, so the balance matches the EÜR. **Open receipts no longer appear in the expenses until they are paid.** Only admins and financial managers can open it. `GET /receipts/analytics` is replaced by `GET /finance/analytics`.
+- UV-64: Mail settings: an encrypted connection (SSL enabled) is enforced (TLS on ports 465/993, STARTTLS otherwise). Before, the mailbox password could be sent in cleartext when STARTTLS was missing. **Mail servers without encryption no longer work with SSL enabled.** The test mail reports why it failed.
+- UV-65: Paid fees are no longer deleted automatically after 14 days. Fees already removed this way are restored by the migration.
+- UV-70: Financial managers can open "Beitragstarifverwaltung", "Einnahmekategorien verwalten" and "Belegkategorien verwalten" (the "Einstellungen" menu shows only these three entries for them) and create, edit and delete contribution plans, income categories and receipt categories like admins. `POST`, `PUT`/`PATCH` and `DELETE` on `/contribution-plans`, `/income-categories` and `/receipt-categories` are no longer admin-only.
+
 ## [1.9.1] UV-8, UV-10, UV-55, UV-57, UV-61, UV-63
 
 ### Added

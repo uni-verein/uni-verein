@@ -31,10 +31,9 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 
-import { api } from '../api';
+import { api, Session } from '../api';
 import { Role } from '../types';
 import { useTranslation } from 'react-i18next';
-import { UUIDTypes } from 'uuid';
 import { SidebarContent } from '../components/SidebarContent';
 import { LanguageToggle } from '../components/LanguageToggle';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -44,7 +43,7 @@ import { NotificationBell } from '../components/NotificationBell';
 const Members = lazy(() => import('./Members'));
 const Mail = lazy(() => import('./Mail'));
 const Sepa = lazy(() => import('./Sepa'));
-const Contributions = lazy(() => import('./Contributions'));
+const Income = lazy(() => import('./Income'));
 const UserManagement = lazy(() => import('./UserManagement'));
 const EmailConfig = lazy(() => import('./EmailConfig'));
 const ContributionPlanConfig = lazy(() => import('./ContributionPlanConfig'));
@@ -56,7 +55,8 @@ const GeneralConfig = lazy(() => import('./GeneralConfig'));
 const MemberCategoryConfig = lazy(() => import('./MemberCategoryConfig'));
 const Receipts = lazy(() => import('./Receipts'));
 const ReceiptCategoryConfig = lazy(() => import('./ReceiptCategoryConfig'));
-const ReceiptAnalytics = lazy(() => import('./ReceiptAnalytics'));
+const IncomeCategoryConfig = lazy(() => import('./IncomeCategoryConfig'));
+const FinanceAnalytics = lazy(() => import('./FinanceAnalytics'));
 const Calendar = lazy(() => import('./Calendar'));
 const CalendarCategoryConfig = lazy(() => import('./CalendarCategoryConfig'));
 
@@ -64,35 +64,20 @@ const drawerWidthExpanded = 280;
 const drawerWidthCollapsed = 64;
 const bottomNavHeight = 56;
 
-function readUserFromToken(): { id: UUIDTypes | undefined; name: string; role: string | Role } {
-  const empty = { id: undefined, name: '', role: '' };
-  const tokenString = localStorage.getItem('token');
-  if (!tokenString) return empty;
-
-  try {
-    const payload = JSON.parse(atob(tokenString.split('.')[1]));
-    return {
-      name: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
-      role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
-      id: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
-    };
-  } catch (e) {
-    console.error('Token parse error', e);
-    return empty;
-  }
-}
-
 export default function Dashboard({
+  user,
   onLogout,
   pageName,
   logo,
 }: {
+  user: Session;
   onLogout?: () => void;
   pageName: string;
   logo: string;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
+  const isNarrow = useMediaQuery(theme.breakpoints.down('md'), { noSsr: true });
 
   // Links in calendar mails point to /?page=calendar&event=<id>.
   const [deepLink] = useState(() => {
@@ -104,18 +89,13 @@ export default function Dashboard({
     id: string;
     nonce: number;
   } | null>(deepLink.eventId ? { id: deepLink.eventId, nonce: 0 } : null);
-  const [user] = useState<{
-    id: UUIDTypes | undefined;
-    name: string;
-    role: string | Role;
-  }>(readUserFromToken);
   const [openSettings, setOpenSettings] = useState(false);
   const [sideBarSettings, setSideBarSettings] = useState({
     showMail: false,
     showSepa: false,
     links: [],
   });
-  const [collapsed, setCollapsed] = useState(isMobile);
+  const [collapsed, setCollapsed] = useState(isNarrow);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [firmwareUpdate, setFirmwareUpdate] = useState<{
     newFirmwareAvailable: boolean;
@@ -146,8 +126,8 @@ export default function Dashboard({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCollapsed(isMobile);
-  }, [isMobile]);
+    setCollapsed(isNarrow);
+  }, [isNarrow]);
 
   useEffect(() => {
     if (collapsed) {
@@ -240,9 +220,9 @@ export default function Dashboard({
       roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
     {
-      id: 'contributions',
-      label: t('pages.dashboard.pageNames.contributions'),
-      shortLabel: t('pages.dashboard.pageNames.contributionsShort'),
+      id: 'income',
+      label: t('pages.dashboard.pageNames.income'),
+      shortLabel: t('pages.dashboard.pageNames.incomeShort'),
       icon: <EuroIcon />,
       roles: [Role.ADMIN, Role.USER, Role.FINANCIAL_MANAGER],
     },
@@ -254,9 +234,9 @@ export default function Dashboard({
       roles: [Role.USER, Role.ADMIN, Role.FINANCIAL_MANAGER],
     },
     {
-      id: 'receipt-analytics',
-      label: t('pages.dashboard.pageNames.receiptAnalytics'),
-      shortLabel: t('pages.dashboard.pageNames.receiptAnalyticsShort'),
+      id: 'finance-analytics',
+      label: t('pages.dashboard.pageNames.financeAnalytics'),
+      shortLabel: t('pages.dashboard.pageNames.financeAnalyticsShort'),
       icon: <QueryStatsIcon />,
       roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
       hideInBottomNav: true,
@@ -277,7 +257,6 @@ export default function Dashboard({
       case 'mail':
         return sideBarSettings?.showMail ?? false;
       case 'sepa':
-      case 'contributions':
         return sideBarSettings?.showSepa ?? false;
       default:
         return true;
@@ -323,10 +302,10 @@ export default function Dashboard({
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 0.5 : 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: isNarrow ? 0.5 : 2 }}>
             <NotificationBell firmwareUpdate={firmwareUpdate} onOpenEvent={openCalendarEvent} />
 
-            {isMobile ? (
+            {isNarrow ? (
               <Tooltip title={themeModeLabel} arrow>
                 <IconButton color="inherit" onClick={cycleThemeMode} aria-label={themeModeLabel}>
                   {themeModeIcon}
@@ -340,11 +319,11 @@ export default function Dashboard({
               </Tooltip>
             )}
 
-            <LanguageToggle isMobile={isMobile} />
+            <LanguageToggle isMobile={isNarrow} />
 
-            {!isMobile && <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />}
+            {!isNarrow && <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />}
 
-            {isMobile ? (
+            {isNarrow ? (
               <Tooltip title={t('pages.dashboard.logout')} arrow>
                 <IconButton
                   color="error"
@@ -454,9 +433,9 @@ export default function Dashboard({
                 {page === 'members' && <Members role={user.role} />}
                 {page === 'mail' && <Mail />}
                 {page === 'sepa' && <Sepa />}
-                {page === 'contributions' && <Contributions role={user.role} />}
+                {page === 'income' && <Income role={user.role} />}
                 {page === 'receipts' && <Receipts role={user.role} userId={user.id} />}
-                {page === 'receipt-analytics' && <ReceiptAnalytics />}
+                {page === 'finance-analytics' && <FinanceAnalytics />}
                 {page === 'calendar' && (
                   <Calendar
                     userId={user.id}
@@ -478,6 +457,7 @@ export default function Dashboard({
                 {page === 'general-config' && <GeneralConfig />}
                 {page === 'member-category-config' && <MemberCategoryConfig />}
                 {page === 'receipt-category-config' && <ReceiptCategoryConfig />}
+                {page === 'income-category-config' && <IncomeCategoryConfig />}
               </Suspense>
             </ErrorBoundary>
           </Paper>

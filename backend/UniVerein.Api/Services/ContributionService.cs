@@ -21,24 +21,6 @@ public class ContributionService
         _timeProvider = timeProvider;
     }
 
-    public async Task DeletePaidContributions()
-    {
-        DateTimeOffset deleteDate = DateTimeOffset.UtcNow.AddDays(-14);
-
-        List<ContributionEntity> contributions = await _db.Contributions
-            .Where(x => x.DeletedAt == null && x.Paid != null && x.Paid <= deleteDate)
-            .ToListAsync();
-
-        if (!contributions.Any())
-            return;
-
-        contributions.ForEach(x => x.DeletedAt = DateTimeOffset.UtcNow);
-
-        await _db.SaveChangesAsync();
-        Log.Information("ContributionService: DeletePaidContributions -> {Count} paid contributions older than 14 days soft-deleted.",
-            contributions.Count);
-    }
-
     public async Task GenerateDueContributions()
     {
         DateTimeOffset today = _timeProvider.GetUtcNow();

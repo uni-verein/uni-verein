@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-10-26
+Generated automatically on 2026-10-30
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -456,7 +456,6 @@ Generated automatically on 2026-10-26
 | json5@2.2.3 | - | MIT |
 | jsonfile@6.2.1 | - | MIT |
 | jsonpointer@5.0.1 | - | MIT |
-| jwt-decode@4.0.0 | - | MIT |
 | keyv@5.6.0 | - | MIT |
 | leven@3.1.0 | - | MIT |
 | levn@0.4.1 | - | MIT |
@@ -525,6 +524,7 @@ Generated automatically on 2026-10-26
 | psl@1.15.0 | - | MIT |
 | punycode@2.3.1 | - | MIT |
 | qified@0.10.1 | - | MIT |
+| qrcode.react@4.2.0 | - | ISC |
 | quansync@1.0.0 | - | MIT |
 | querystringify@2.2.0 | - | MIT |
 | react-dom@18.3.1 | - | MIT |

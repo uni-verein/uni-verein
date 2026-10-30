@@ -38,6 +38,7 @@ import {
   RECEIPT_MAX_PDF_BYTES,
   renderPdfFirstPageToBlob,
 } from '../../utils/pdfProcessing';
+import { MAX_AMOUNT } from '../../utils/moneyLimits';
 import { runReceiptOcr } from '../../utils/receiptOcr';
 import { useIsPwaInstalled } from '../../hooks/useIsPwaInstalled';
 
@@ -46,6 +47,7 @@ interface PreviewFile {
   name: string;
   isPdf: boolean;
   originalUrl?: string;
+  previewFailed?: boolean;
 }
 
 interface PendingFile {
@@ -120,23 +122,41 @@ export default function ReceiptForm({
     const loadFiles = async () => {
       const loaded: PreviewFile[] = [];
       for (const file of receipt.files) {
-        const res = await apiFile(`/receipts/${receipt.id}/files/${file.id}`);
-        if (res.ok) {
+        try {
+          const res = await apiFile(`/receipts/${receipt.id}/files/${file.id}`);
+          if (!res.ok) continue;
+
           const blob = await res.blob();
           const isPdf = file.contentType === 'application/pdf';
-          const previewBlob = isPdf ? await renderPdfFirstPageToBlob(blob) : blob;
-          const url = URL.createObjectURL(previewBlob);
           const originalUrl = isPdf ? URL.createObjectURL(blob) : undefined;
-          objectUrls.push(url);
-
           if (originalUrl) objectUrls.push(originalUrl);
-          loaded.push({ url, name: `${file.position + 1}`, isPdf, originalUrl });
+
+          let previewBlob: Blob | null = blob;
+          if (isPdf) {
+            try {
+              previewBlob = await renderPdfFirstPageToBlob(blob);
+            } catch {
+              previewBlob = null;
+            }
+          }
+
+          const url = previewBlob ? URL.createObjectURL(previewBlob) : originalUrl!;
+          if (previewBlob) objectUrls.push(url);
+          loaded.push({
+            url,
+            name: `${file.position + 1}`,
+            isPdf,
+            originalUrl,
+            previewFailed: previewBlob === null,
+          });
+        } catch {
+          // The file could not be fetched, the remaining attachments are still shown.
         }
       }
       setExistingPreviews(loaded);
     };
 
-    loadFiles();
+    void loadFiles();
     return () => objectUrls.forEach((u) => URL.revokeObjectURL(u));
   }, [mode, receipt]);
 
@@ -146,6 +166,8 @@ export default function ReceiptForm({
 
     if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       newErrors.amount = t('components.receiptForm.validation.amountInvalid');
+    } else if (numericAmount > MAX_AMOUNT) {
+      newErrors.amount = t('components.receiptForm.validation.amountTooLarge');
     }
 
     if (!receiptDate) {
@@ -170,7 +192,13 @@ export default function ReceiptForm({
           continue;
         }
         const uploadBlob: Blob = pdf ? file : await compressImageFile(file);
-        const previewBlob = pdf ? await renderPdfFirstPageToBlob(uploadBlob) : uploadBlob;
+        let previewBlob: Blob;
+        try {
+          previewBlob = pdf ? await renderPdfFirstPageToBlob(uploadBlob) : uploadBlob;
+        } catch {
+          setApiError(t('components.receiptForm.alerts.pdfUnreadable'));
+          continue;
+        }
         setFiles((prev) => [
           ...prev,
           { blob: uploadBlob, name: file.name, isPdf: pdf, previewBlob },
@@ -446,13 +474,37 @@ export default function ReceiptForm({
                     cursor: 'pointer',
                   }}
                 >
-                  <Box
-                    component="img"
-                    src={preview.url}
-                    alt={preview.name}
-                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  {preview.isPdf && (
+                  {preview.previewFailed ? (
+                    <Box
+                      role="img"
+                      aria-label={preview.name}
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 0.5,
+                        p: 0.5,
+                        textAlign: 'center',
+                        color: 'text.secondary',
+                      }}
+                    >
+                      <PictureAsPdfIcon />
+                      <Typography variant="caption" sx={{ lineHeight: 1.2 }}>
+                        {t('components.receiptForm.fields.previewUnavailable')}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box
+                      component="img"
+                      src={preview.url}
+                      alt={preview.name}
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  )}
+                  {preview.isPdf && !preview.previewFailed && (
                     <PictureAsPdfIcon
                       fontSize="small"
                       sx={{
@@ -528,18 +580,24 @@ export default function ReceiptForm({
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 0 }}>
-          <Box
-            component="img"
-            src={lightboxFile?.url}
-            alt={lightboxFile?.name}
-            sx={{
-              maxWidth: '100%',
-              maxHeight: '85vh',
-              objectFit: 'contain',
-              display: 'block',
-              mx: 'auto',
-            }}
-          />
+          {lightboxFile?.previewFailed ? (
+            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+              {t('components.receiptForm.fields.previewUnavailable')}
+            </Typography>
+          ) : (
+            <Box
+              component="img"
+              src={lightboxFile?.url}
+              alt={lightboxFile?.name}
+              sx={{
+                maxWidth: '100%',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                display: 'block',
+                mx: 'auto',
+              }}
+            />
+          )}
           {lightboxFile?.isPdf && lightboxFile.originalUrl && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
               <Button

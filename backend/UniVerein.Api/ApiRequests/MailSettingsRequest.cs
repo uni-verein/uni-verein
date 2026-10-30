@@ -25,7 +25,7 @@ public class MailSettingsRequest
     [JsonPropertyName("username")]
     public required string Username { get; set; }
 
-    [Required(AllowEmptyStrings = true)]
+    [Required]
     [JsonPropertyName("password")]
     public required string Password { get; set; }
 

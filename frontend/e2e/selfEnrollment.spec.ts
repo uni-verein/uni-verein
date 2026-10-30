@@ -1,5 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
-import { APP_BASE, BackendClient } from './BackendClient';
+import { APP_BASE, authenticate, BackendClient } from './BackendClient';
 import { generateIBAN } from './utils';
 import { Role } from '../src/types';
 
@@ -7,9 +7,7 @@ const backend = new BackendClient();
 const createdUserIds = new Set<string>();
 
 async function openDashboard(page: Page, token: string, pageName = 'Test web page') {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByText(pageName)).toBeVisible({ timeout: 8000 });

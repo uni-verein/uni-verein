@@ -156,12 +156,74 @@ export function SidebarContent({
       case 'mail':
         return sideBarSettings?.showMail ?? false;
       case 'sepa':
-      case 'contributions':
         return sideBarSettings?.showSepa ?? false;
       default:
         return true;
     }
   };
+
+  const settingsItems = [
+    {
+      id: 'users',
+      icon: <PeopleAltIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.userManagement'),
+      roles: [Role.ADMIN],
+    },
+    {
+      id: 'email-config',
+      icon: <EmailIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.emailConfig'),
+      roles: [Role.ADMIN],
+    },
+    {
+      id: 'link-config',
+      icon: <FolderIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.linkConfig'),
+      roles: [Role.ADMIN],
+    },
+    {
+      id: 'contribution-plan-config',
+      icon: <EuroIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.contributionPlanConfig'),
+      roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
+    },
+    {
+      id: 'member-category-config',
+      icon: <GroupIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.memberCategoryConfig'),
+      roles: [Role.ADMIN],
+    },
+    {
+      id: 'income-category-config',
+      icon: <EuroIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.incomeCategoryConfig'),
+      roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
+    },
+    {
+      id: 'receipt-category-config',
+      icon: <ReceiptLongIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.receiptCategoryConfig'),
+      roles: [Role.ADMIN, Role.FINANCIAL_MANAGER],
+    },
+    {
+      id: 'calendar-category-config',
+      icon: <CalendarMonthIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.calendarCategoryConfig'),
+      roles: [Role.ADMIN],
+    },
+    {
+      id: 'creditor-config',
+      icon: <AccountBalanceIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.creditorConfig'),
+      roles: [Role.ADMIN],
+    },
+    {
+      id: 'general-config',
+      icon: <WebIcon fontSize="small" />,
+      label: t('pages.dashboard.settings.generalConfig'),
+      roles: [Role.ADMIN],
+    },
+  ].filter((item) => item.roles.includes(user.role as Role));
 
   return (
     <>
@@ -355,7 +417,7 @@ export function SidebarContent({
           </>
         )}
 
-        {user.role === Role.ADMIN && (
+        {settingsItems.length > 0 && (
           <>
             <ListItem disablePadding>
               <Tooltip
@@ -392,53 +454,7 @@ export function SidebarContent({
 
             <Collapse in={openSettings && !collapsedView} timeout="auto" unmountOnExit>
               <List component="div" disablePadding sx={{ pl: 3 }}>
-                {[
-                  {
-                    id: 'users',
-                    icon: <PeopleAltIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.userManagement'),
-                  },
-                  {
-                    id: 'email-config',
-                    icon: <EmailIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.emailConfig'),
-                  },
-                  {
-                    id: 'link-config',
-                    icon: <FolderIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.linkConfig'),
-                  },
-                  {
-                    id: 'contribution-plan-config',
-                    icon: <EuroIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.contributionPlanConfig'),
-                  },
-                  {
-                    id: 'member-category-config',
-                    icon: <GroupIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.memberCategoryConfig'),
-                  },
-                  {
-                    id: 'receipt-category-config',
-                    icon: <ReceiptLongIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.receiptCategoryConfig'),
-                  },
-                  {
-                    id: 'calendar-category-config',
-                    icon: <CalendarMonthIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.calendarCategoryConfig'),
-                  },
-                  {
-                    id: 'creditor-config',
-                    icon: <AccountBalanceIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.creditorConfig'),
-                  },
-                  {
-                    id: 'general-config',
-                    icon: <WebIcon fontSize="small" />,
-                    label: t('pages.dashboard.settings.generalConfig'),
-                  },
-                ].map((item) => (
+                {settingsItems.map((item) => (
                   <ListItemButton
                     key={item.id}
                     onClick={() => onPageChange(item.id)}

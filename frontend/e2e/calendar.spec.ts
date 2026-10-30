@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import { CalendarEventVisibility, CalendarParticipantRole, Role, TestUser } from '../src/types';
 
 const backend = new BackendClient();
@@ -22,9 +22,7 @@ async function newUser(role: Role): Promise<{ user: TestUser; token: string }> {
 }
 
 async function openCalendar(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
   await page.goto(`${APP_BASE}/?page=calendar`);
   await expect(page.getByRole('heading', { name: 'Kalender', exact: true })).toBeVisible({
     timeout: 8000,

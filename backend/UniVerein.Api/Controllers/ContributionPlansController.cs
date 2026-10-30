@@ -47,7 +47,7 @@ public class ContributionPlansController : ControllerBase
         });
     }
 
-    [Authorize(Roles = nameof(UserRole.ADMIN))]
+    [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
     [HttpPost]
     public async Task<ActionResult<ContributionPlanResult>> CreateAsync([FromBody] ContributionPlanRequest request)
     {
@@ -98,7 +98,7 @@ public class ContributionPlansController : ControllerBase
         });
     }
 
-    [Authorize(Roles = nameof(UserRole.ADMIN))]
+    [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
     [HttpPatch("{id}")]
     public async Task<ActionResult<ContributionPlanResult>> UpdateAsync([FromRoute] Guid id, [FromBody] ContributionPlanUpdateRequest request)
     {
@@ -168,7 +168,7 @@ public class ContributionPlansController : ControllerBase
         });
     }
 
-    [Authorize(Roles = nameof(UserRole.ADMIN))]
+    [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
     {

@@ -234,8 +234,7 @@ public class MailController : ControllerBase
             mailSetting.ImapServer = request.ImapServer.Trim();
             mailSetting.ImapPort = request.ImapPort;
             mailSetting.Username = request.Username.Trim();
-            if (!string.IsNullOrWhiteSpace(request.Password))
-                mailSetting.Password = _crypto.Encrypt(request.Password);
+            mailSetting.Password = _crypto.Encrypt(request.Password);
             mailSetting.FromMail = request.FromMail.Trim();
             mailSetting.FromName = request.FromName?.Trim() ?? string.Empty;
             mailSetting.EnableSsl = request.EnableSsl ?? true;
@@ -255,7 +254,7 @@ public class MailController : ControllerBase
             mailSetting.FromMail,
             mailSetting.FromName,
             mailSetting.EnableSsl,
-            PasswordChanged = !string.IsNullOrWhiteSpace(request.Password)
+            PasswordChanged = true
         });
 
         Log.Information("MailController: UpdateAsync -> Mail settings {MailSettingsId} updated by {ActorId}.",

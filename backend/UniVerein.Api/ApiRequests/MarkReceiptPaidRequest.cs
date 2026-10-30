@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using UniVerein.DAL.Entities.Enums;
 
@@ -7,4 +8,7 @@ public class MarkReceiptPaidRequest
 {
     [JsonPropertyName("paymentMethod")]
     public ReceiptPaymentMethod? PaymentMethod { get; set; }
+
+    [JsonPropertyName("paymentDate")]
+    public DateTime? PaymentDate { get; set; }
 }

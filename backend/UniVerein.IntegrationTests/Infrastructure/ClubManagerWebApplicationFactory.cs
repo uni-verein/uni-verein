@@ -15,8 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using System.Net;
-using Microsoft.AspNetCore.Builder;
 using Xunit;
 
 namespace UniVerein.IntegrationTests.Infrastructure;
@@ -105,11 +103,13 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
         AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         scope.ServiceProvider.GetRequiredService<LoginAttemptTracker>().Clear();
+        scope.ServiceProvider.GetRequiredService<AccountLockoutTracker>().Clear();
 
         db.AuditLogs.RemoveRange(db.AuditLogs.IgnoreQueryFilters());
         db.Notifications.RemoveRange(db.Notifications.IgnoreQueryFilters());
         db.CalendarReminderLogs.RemoveRange(db.CalendarReminderLogs.IgnoreQueryFilters());
         db.CalendarFeedTokens.RemoveRange(db.CalendarFeedTokens.IgnoreQueryFilters());
+        db.UserRecoveryCodes.RemoveRange(db.UserRecoveryCodes.IgnoreQueryFilters());
         db.CalendarSettings.RemoveRange(db.CalendarSettings.IgnoreQueryFilters());
         db.CalendarEventSubscriptions.RemoveRange(db.CalendarEventSubscriptions.IgnoreQueryFilters());
         db.CalendarEventParticipants.RemoveRange(db.CalendarEventParticipants.IgnoreQueryFilters());
@@ -160,27 +160,6 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
             }
 
             await db.SaveChangesAsync();
-        }
-    }
-
-    // The test server has no network peer. Production always sits behind the nginx container (optionally behind Caddy
-    // in front of it), which hands the client address over in X-Real-IP, so tests act as that proxy and the real
-    // forwarded-header handling of the API decides what the client address is.
-    private sealed class ReverseProxyPeerStartupFilter : IStartupFilter
-    {
-        public static readonly IPAddress ProxyAddress = IPAddress.Parse("172.18.0.2");
-
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
-        {
-            return app =>
-            {
-                app.Use((context, nextMiddleware) =>
-                {
-                    context.Connection.RemoteIpAddress ??= ProxyAddress;
-                    return nextMiddleware(context);
-                });
-                next(app);
-            };
         }
     }
 

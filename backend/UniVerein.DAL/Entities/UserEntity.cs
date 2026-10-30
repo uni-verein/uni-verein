@@ -30,4 +30,16 @@ public class UserEntity : BaseEntity
 
     [Column("last_failed_login_attempt")]
     public DateTimeOffset? LastFailedLoginAttempt { get; set; }
+
+    [Column("totp_secret")]
+    public string? TotpSecret { get; set; }
+
+    [Column("totp_enabled")]
+    public bool TotpEnabled { get; set; }
+
+    [Column("totp_last_used_step")]
+    public long? TotpLastUsedStep { get; set; }
+
+    [Column("session_version")]
+    public int SessionVersion { get; set; }
 }

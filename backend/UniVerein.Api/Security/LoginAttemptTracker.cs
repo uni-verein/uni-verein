@@ -15,7 +15,7 @@ public class LoginAttemptTracker
     private const int MaxEntries = 50_000;
 
     private readonly TimeProvider _timeProvider;
-    private readonly ConcurrentDictionary<string, Attempt> _attempts = new();
+    private readonly ConcurrentDictionary<string, LoginAttempt> _attempts = new();
     private DateTimeOffset _nextPurge = DateTimeOffset.MinValue;
 
     public LoginAttemptTracker(TimeProvider timeProvider)
@@ -23,12 +23,10 @@ public class LoginAttemptTracker
         _timeProvider = timeProvider;
     }
 
-    private sealed record Attempt(int FailedAttempts, DateTimeOffset LastFailedAttempt, DateTimeOffset? BlockedUntil);
-
-    public TimeSpan? GetRemainingLockout(string username, string clientIp)
+    public TimeSpan? GetRemainingLockout(string username, string clientIp, LoginAttemptScope scope = LoginAttemptScope.Login)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
-        if (_attempts.TryGetValue(BuildKey(username, clientIp), out Attempt? attempt)
+        if (_attempts.TryGetValue(BuildKey(username, clientIp, scope), out LoginAttempt? attempt)
             && attempt.BlockedUntil.HasValue && attempt.BlockedUntil.Value > now)
         {
             return attempt.BlockedUntil.Value - now;
@@ -37,12 +35,12 @@ public class LoginAttemptTracker
         return null;
     }
 
-    public void RegisterFailure(string username, string clientIp)
+    public void RegisterFailure(string username, string clientIp, LoginAttemptScope scope = LoginAttemptScope.Login)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
         PurgeExpired(now);
 
-        string key = BuildKey(username, clientIp);
+        string key = BuildKey(username, clientIp, scope);
         if (_attempts.Count >= MaxEntries && !_attempts.ContainsKey(key))
         {
             Log.Warning("LoginAttemptTracker: RegisterFailure -> Tracking table is full, failed login is not tracked.");
@@ -55,9 +53,9 @@ public class LoginAttemptTracker
             (_, existing) => NextAttempt(existing.FailedAttempts, existing.LastFailedAttempt, now));
     }
 
-    public void Reset(string username, string clientIp)
+    public void Reset(string username, string clientIp, LoginAttemptScope scope = LoginAttemptScope.Login)
     {
-        _attempts.TryRemove(BuildKey(username, clientIp), out _);
+        _attempts.TryRemove(BuildKey(username, clientIp, scope), out _);
     }
 
     public void Clear()
@@ -65,10 +63,10 @@ public class LoginAttemptTracker
         _attempts.Clear();
     }
 
-    private static Attempt NextAttempt(int failedAttempts, DateTimeOffset? lastFailedAttempt, DateTimeOffset now)
+    private static LoginAttempt NextAttempt(int failedAttempts, DateTimeOffset? lastFailedAttempt, DateTimeOffset now)
     {
         int effective = LoginGuard.GetEffectiveFailedAttempts(failedAttempts, lastFailedAttempt, now) + 1;
-        return new Attempt(effective, now, LoginGuard.GetLockoutReleaseTime(effective, now));
+        return new LoginAttempt(effective, now, LoginGuard.GetLockoutReleaseTime(effective, now));
     }
 
     private void PurgeExpired(DateTimeOffset now)
@@ -77,20 +75,20 @@ public class LoginAttemptTracker
             return;
 
         _nextPurge = now.AddSeconds(LoginGuard.LockoutWindowSeconds);
-        foreach (KeyValuePair<string, Attempt> entry in _attempts.Where(x => IsExpired(x.Value, now)))
+        foreach (KeyValuePair<string, LoginAttempt> entry in _attempts.Where(x => IsExpired(x.Value, now)))
             _attempts.TryRemove(entry);
     }
 
-    private static bool IsExpired(Attempt attempt, DateTimeOffset now)
+    private static bool IsExpired(LoginAttempt attempt, DateTimeOffset now)
     {
         return (now - attempt.LastFailedAttempt).TotalSeconds > LoginGuard.LockoutWindowSeconds
                && (!attempt.BlockedUntil.HasValue || attempt.BlockedUntil.Value <= now);
     }
 
-    private static string BuildKey(string username, string clientIp)
+    private static string BuildKey(string username, string clientIp, LoginAttemptScope scope)
     {
         string usernameHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(username)));
-        return $"{NormalizeClientIp(clientIp)}|{usernameHash}";
+        return $"{NormalizeClientIp(clientIp)}|{scope}|{usernameHash}";
     }
 
     // A single IPv6 subscriber gets at least a /64, so every address of it counts as the same client.

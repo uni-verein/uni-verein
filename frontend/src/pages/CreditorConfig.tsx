@@ -52,6 +52,7 @@ export default function CreditorConfig() {
     postCode?: string;
     cityName?: string;
     countryCode?: string;
+    taxNumber?: string;
   }>({});
 
   const [config, setConfig] = useState({
@@ -64,6 +65,7 @@ export default function CreditorConfig() {
     postCode: '',
     cityName: '',
     countryCode: '',
+    taxNumber: '',
   });
 
   const loadConfig = useCallback(async () => {
@@ -71,7 +73,7 @@ export default function CreditorConfig() {
     try {
       const data = await api('/creditor-config');
       if (data) {
-        setConfig(data);
+        setConfig({ ...data, taxNumber: data.taxNumber ?? '' });
       }
     } catch {
       setConfig({
@@ -84,6 +86,7 @@ export default function CreditorConfig() {
         postCode: '',
         cityName: '',
         countryCode: '',
+        taxNumber: '',
       });
     } finally {
       setFetching(false);
@@ -105,6 +108,7 @@ export default function CreditorConfig() {
       postCode?: string;
       cityName?: string;
       countryCode?: string;
+      taxNumber?: string;
     } = {};
 
     if (!config.name.trim()) {
@@ -149,6 +153,10 @@ export default function CreditorConfig() {
 
     if (!config.countryCode.trim()) {
       newErrors.countryCode = t('pages.creditorConfig.validation.countryCodeRequired');
+    }
+
+    if (config.taxNumber.length > 50) {
+      newErrors.taxNumber = t('pages.creditorConfig.validation.taxNumberMaxLength');
     }
 
     setErrors(newErrors);
@@ -381,6 +389,17 @@ export default function CreditorConfig() {
                   </MenuItem>
                 ))}
               </TextField>
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label={t('pages.creditorConfig.fields.taxNumber.label')}
+                fullWidth
+                placeholder={t('pages.creditorConfig.fields.taxNumber.placeholder')}
+                value={config.taxNumber}
+                onChange={(e) => setConfig({ ...config, taxNumber: e.target.value })}
+                error={errors.taxNumber !== undefined}
+                helperText={errors.taxNumber ?? `${config.taxNumber.length}/50`}
+              />
             </Grid>
 
             <Grid size={12} sx={{ mt: 2 }}>

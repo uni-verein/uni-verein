@@ -10,6 +10,10 @@ import {
   TextField,
 } from '@mui/material';
 import EuroIcon from '@mui/icons-material/Euro';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api';
 import { Receipt, ReceiptPaymentMethod } from '../../types';
@@ -25,6 +29,7 @@ export function MarkReceiptPaidDialog({
 }) {
   const { t } = useTranslation();
   const [paymentMethod, setPaymentMethod] = useState<string>(receipt.paymentMethod ?? '');
+  const [paymentDate, setPaymentDate] = useState<Dayjs | null>(dayjs());
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const methodAlreadySet = !!receipt.paymentMethod;
@@ -37,6 +42,7 @@ export function MarkReceiptPaidDialog({
         method: 'POST',
         body: JSON.stringify({
           paymentMethod: methodAlreadySet ? null : paymentMethod || null,
+          paymentDate: paymentDate?.format('YYYY-MM-DD'),
         }),
       });
       if (result === 409) {
@@ -91,6 +97,16 @@ export function MarkReceiptPaidDialog({
           </MenuItem>
         </TextField>
 
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+          <DatePicker
+            label={t('components.markReceiptPaidDialog.paymentDate')}
+            format="DD.MM.YYYY"
+            value={paymentDate}
+            onChange={(v) => setPaymentDate(v)}
+            slotProps={{ textField: { fullWidth: true, required: true, sx: { mt: 2 } } }}
+          />
+        </LocalizationProvider>
+
         {apiError && (
           <Alert severity="error" onClose={() => setApiError(null)} sx={{ mt: 2 }}>
             {apiError}
@@ -105,7 +121,12 @@ export function MarkReceiptPaidDialog({
           variant="contained"
           color="success"
           startIcon={<EuroIcon />}
-          disabled={saving || (!methodAlreadySet && !paymentMethod)}
+          disabled={
+            saving ||
+            (!methodAlreadySet && !paymentMethod) ||
+            !paymentDate ||
+            !paymentDate.isValid()
+          }
           onClick={confirm}
         >
           {t('components.markReceiptPaidDialog.confirm')}

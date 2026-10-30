@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Extensions;
@@ -29,11 +30,16 @@ public class ContributionsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly AuditService _auditService;
+    private readonly BookingNumberService _bookingNumberService;
+    private readonly TimeProvider _timeProvider;
 
-    public ContributionsController(AppDbContext db, AuditService auditService)
+    public ContributionsController(AppDbContext db, AuditService auditService, BookingNumberService bookingNumberService,
+        TimeProvider timeProvider)
     {
         _db = db;
         _auditService = auditService;
+        _bookingNumberService = bookingNumberService;
+        _timeProvider = timeProvider;
     }
 
     [HttpGet("info")]
@@ -120,23 +126,53 @@ public class ContributionsController : ControllerBase
 
     [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]
     [HttpPost("{id}")]
-    public async Task<IActionResult> MarkAsPaidAsync([FromRoute] Guid id, [FromQuery] bool paid)
+    public async Task<IActionResult> MarkAsPaidAsync([FromRoute] Guid id, [FromBody] MarkPaidRequest request)
     {
-        ContributionEntity? contribution = await _db.Contributions.FindAsync(id);
+        ContributionEntity? contribution = await _db.Contributions.FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null);
         if (contribution == null)
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
                 errorMessage: "Contribution config not found.",
                 moreInfo: $"Contribution not found. Contribution with ID: {id} not found."));
 
-        contribution.Paid = paid ? DateTimeOffset.UtcNow : null;
-        _db.Contributions.Update(contribution);
-        await _db.SaveChangesAsync();
+        if (await _db.PaymentAcknowledgements.AnyAsync(x => x.ContributionId == id))
+            return Conflict(new ApiResults.ErrorResults.ConflictResult(errorCode: ApiErrorCodes.CONFLICT_RESOURCE_MODIFIED,
+                errorMessage: "Payment acknowledgement already issued.",
+                moreInfo: "An issued payment acknowledgement exists for this contribution, so its payment can no longer be changed or reopened."));
+
+        string? bookingNumber = null;
+        if (request.Paid)
+        {
+            DateTime effectivePaymentDate = IncomeService.ToUtcDate(request.PaymentDate ?? _timeProvider.GetUtcNow().UtcDateTime);
+            contribution.Paid = _timeProvider.GetUtcNow();
+            contribution.PaymentDate = effectivePaymentDate;
+            _db.Contributions.Update(contribution);
+
+            BookingNumberEntity? number = await _bookingNumberService.TryAssignContributionAsync(contribution, effectivePaymentDate);
+            if (number == null)
+                return BookingYearMismatch();
+
+            bookingNumber = number.Number;
+        }
+        else
+        {
+            contribution.Paid = null;
+            contribution.PaymentDate = null;
+            _db.Contributions.Update(contribution);
+            await _db.SaveChangesAsync();
+        }
+
         await _auditService.LogAsync(AuditLogActions.UPDATE, nameof(ContributionEntity),
-            new { ContributionId = id, contribution.MemberId, contribution.Amount, Paid = paid });
+            new { ContributionId = id, contribution.MemberId, contribution.Amount, Paid = request.Paid, contribution.PaymentDate, BookingNumber = bookingNumber });
         Log.Information("ContributionsController: MarkAsPaidAsync -> Contribution {ContributionId} of member {MemberId} marked as {State} by {ActorId}.",
-            id, contribution.MemberId, paid ? "paid" : "unpaid", HttpContext.GetActorId());
+            id, contribution.MemberId, request.Paid ? "paid" : "unpaid", HttpContext.GetActorId());
 
         return Ok();
+    }
+
+    private BadRequestObjectResult BookingYearMismatch()
+    {
+        return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+            moreInfo: "The payment date must be in the year of the booking number that was already assigned."));
     }
 
     [Authorize(Roles = $"{nameof(UserRole.ADMIN)},{nameof(UserRole.FINANCIAL_MANAGER)}")]

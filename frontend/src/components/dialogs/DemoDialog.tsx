@@ -1,4 +1,4 @@
-import { Box, Divider, Paper, Typography } from '@mui/material';
+import { Box, Divider, Link, Paper, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PersonIcon from '@mui/icons-material/Person';
@@ -71,6 +71,13 @@ export function DemoDialog() {
           </Box>
         ))}
       </Box>
+
+      <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.68)', mt: 2 }}>
+        {t('pages.login.demo.mail')}{' '}
+        <Link href="/mail/" target="_blank" rel="noopener noreferrer">
+          {t('pages.login.demo.mailLink')}
+        </Link>
+      </Typography>
     </Paper>
   );
 }

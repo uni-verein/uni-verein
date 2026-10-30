@@ -1,14 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
-import { BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE } from './BackendClient';
 import { Role, TestUser } from '../src/types';
 
 const createdUserIds = new Set<string>();
 const backend = new BackendClient();
 
 async function openDashboard(page: Page, token: string) {
-  await page.addInitScript((t) => {
-    localStorage.setItem('token', t);
-  }, token);
+  await authenticate(page, token);
 
   await page.goto(APP_BASE);
   await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
@@ -136,5 +134,42 @@ test.describe('Receipt category config page', () => {
         .first(),
     ).toBeVisible();
     await expect(page.getByRole('cell', { name: category.name })).toBeVisible();
+  });
+});
+
+test.describe('Receipt category config page as financial manager', () => {
+  const tc = makeTestContextOnlyUser();
+
+  test.beforeEach(async () => {
+    await backend.deleteAllReceipts();
+    await backend.deleteAllReceiptCategories();
+    await tc.setup(Role.FINANCIAL_MANAGER);
+  });
+  test.afterEach(async () => {
+    await tc.teardown();
+    await backend.deleteAllReceipts();
+    await backend.deleteAllReceiptCategories();
+  });
+
+  test('Create and delete receipt category', async ({ page }) => {
+    await openDashboard(page, tc.get().token);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Belegkategorien verwalten', exact: true }).click();
+    await page.getByRole('button', { name: 'Neue Belegkategorie' }).click();
+    await page.getByRole('textbox', { name: 'Name' }).fill('Büromaterial');
+    await page.getByRole('button', { name: 'Speichern' }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Belegkategorie erfolgreich erstellt.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Büromaterial' })).toBeVisible();
+
+    await page.getByRole('row', { name: 'Büromaterial' }).getByLabel('Löschen').click();
+    await page.getByRole('button', { name: 'Löschen', exact: true }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Belegkategorie erfolgreich gelöscht.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Büromaterial' })).not.toBeVisible();
   });
 });

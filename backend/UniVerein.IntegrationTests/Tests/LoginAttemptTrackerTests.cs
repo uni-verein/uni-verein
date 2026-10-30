@@ -29,6 +29,40 @@ public class LoginAttemptTrackerTests
         remaining.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData(LoginAttemptScope.TwoFactorLogin)]
+    [InlineData(LoginAttemptScope.TwoFactorSetup)]
+    [InlineData(LoginAttemptScope.TwoFactorEnable)]
+    [InlineData(LoginAttemptScope.TwoFactorDisable)]
+    public void GetRemainingLockout_FailuresInOneScope_DoNotLockOtherScopesOfTheSameName(LoginAttemptScope scope)
+    {
+        // Arrange
+        for (int i = 0; i < 3; i++)
+            _tracker.RegisterFailure("admin", "203.0.113.1", scope);
+
+        // Act
+        TimeSpan? inOwnScope = _tracker.GetRemainingLockout("admin", "203.0.113.1", scope);
+        TimeSpan? inLoginScope = _tracker.GetRemainingLockout("admin", "203.0.113.1");
+
+        // Assert
+        inOwnScope.ShouldNotBeNull();
+        inLoginScope.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Reset_InOneScope_KeepsTheLockoutOfAnotherScope()
+    {
+        // Arrange
+        for (int i = 0; i < 3; i++)
+            _tracker.RegisterFailure("admin", "203.0.113.1", LoginAttemptScope.TwoFactorDisable);
+
+        // Act
+        _tracker.Reset("admin", "203.0.113.1");
+
+        // Assert
+        _tracker.GetRemainingLockout("admin", "203.0.113.1", LoginAttemptScope.TwoFactorDisable).ShouldNotBeNull();
+    }
+
     [Fact]
     public void GetRemainingLockout_ThirdFailure_LocksForThirtySeconds()
     {

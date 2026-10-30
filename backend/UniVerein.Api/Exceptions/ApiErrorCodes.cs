@@ -9,4 +9,9 @@ public static class ApiErrorCodes
     public const string CONFLICT_RESOURCE_MODIFIED = "CONFLICT_RESOURCE_MODIFIED";
     public const string UNPROCESSABLE_ENTITY = "UNPROCESSABLE_ENTITY";
     public const string INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
+    public const string DEMO_MODE_DISABLED = "DEMO_MODE_DISABLED";
+    public const string MAIL_TLS_UNAVAILABLE = "MAIL_TLS_UNAVAILABLE";
+    public const string MAIL_CONNECTION_FAILED = "MAIL_CONNECTION_FAILED";
+    public const string MAIL_AUTH_FAILED = "MAIL_AUTH_FAILED";
+    public const string MAIL_SEND_FAILED = "MAIL_SEND_FAILED";
 }

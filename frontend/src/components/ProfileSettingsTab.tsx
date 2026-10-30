@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import LockResetIcon from '@mui/icons-material/LockReset';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { api } from '../api';
 import { Role, User, UserManagementProps } from '../types';
@@ -100,6 +101,32 @@ export function ProfileSettingsTab({
     }
   };
 
+  const handleResetTwoFactor = async (id: UUIDTypes) => {
+    setConfirmDialog({
+      message: t('pages.userManagement.confirm.resetTwoFactorMessage'),
+      buttonText: t('pages.userManagement.confirm.resetTwoFactorButton'),
+      confirmColor: 'error',
+    });
+    const confirmed = await confirm();
+    if (!confirmed) return;
+
+    try {
+      await api(`/users/${id}/2fa`, { method: 'DELETE' });
+      setUserCreateOrUpdate({
+        status: 'success',
+        message: t('pages.userManagement.snackbar.resetTwoFactorSuccess'),
+      });
+      await loadUsers();
+    } catch {
+      setUserCreateOrUpdate({
+        status: 'error',
+        message: t('pages.userManagement.snackbar.resetTwoFactorFailed'),
+      });
+    }
+  };
+
+  const canResetTwoFactor = (u: User) => !accountView && !!u.twoFactorEnabled && u.id !== userId;
+
   const getRoleTranslation = (role: Role): string => {
     switch (role) {
       case Role.ADMIN:
@@ -160,6 +187,17 @@ export function ProfileSettingsTab({
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
+                  {canResetTwoFactor(u) && (
+                    <Tooltip title={t('pages.userManagement.tooltip.resetTwoFactor')}>
+                      <IconButton
+                        onClick={() => handleResetTwoFactor(u.id)}
+                        color="warning"
+                        size="small"
+                      >
+                        <LockResetIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                   {!accountView && (
                     <Tooltip title={t('pages.userManagement.tooltip.delete')}>
                       <IconButton onClick={() => handleDelete(u.id)} color="error" size="small">
@@ -209,6 +247,13 @@ export function ProfileSettingsTab({
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
+                    {canResetTwoFactor(u) && (
+                      <Tooltip title={t('pages.userManagement.tooltip.resetTwoFactor')}>
+                        <IconButton onClick={() => handleResetTwoFactor(u.id)} color="warning">
+                          <LockResetIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     {!accountView && (
                       <Tooltip title={t('pages.userManagement.tooltip.delete')}>
                         <IconButton onClick={() => handleDelete(u.id)} color="error">

@@ -1,14 +1,19 @@
 using System.Net;
+using System.Reflection;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
+using UniVerein.Api.Controllers;
 using UniVerein.Api.Services;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 using UniVerein.IntegrationTests.Infrastructure;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -215,6 +220,77 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData("middleName", 100)]
+    [InlineData("lastName", 100)]
+    [InlineData("street", 100)]
+    [InlineData("postalCode", 10)]
+    [InlineData("city", 100)]
+    [InlineData("countryCode", 3)]
+    [InlineData("email", 254)]
+    [InlineData("phone", 50)]
+    [InlineData("courseOfStudy", 100)]
+    [InlineData("motivation", 1000)]
+    [InlineData("iban", 50)]
+    [InlineData("bic", 20)]
+    public async Task PostSelfEnrollment_FieldLongerThanLimit_BadRequest(string field, int limit)
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient client = CreateClient();
+        JsonObject body = JsonSerializer.SerializeToNode(CreateSelfEnrollmentRequest(), _jsonSerializerOptions)!
+            .AsObject();
+        body[field] = field == "email" ? new string('a', limit) + "@test.de" : new string('a', limit + 1);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", body);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await WithDbContext(async db => (await db.PendingSelfEnrollments.AnyAsync()).ShouldBeFalse());
+    }
+
+    [Fact]
+    public async Task PostSelfEnrollment_AllFieldsAtLimit_Created()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient client = CreateClient();
+        SelfEnrollmentRequest request = CreateSelfEnrollmentRequest();
+        request.FirstName = new string('a', 100);
+        request.MiddleName = new string('a', 100);
+        request.LastName = new string('a', 100);
+        request.Street = new string('a', 100);
+        request.PostalCode = new string('1', 10);
+        request.City = new string('a', 100);
+        request.CountryCode = "DEU";
+        request.Email = new string('a', 254 - "@test.de".Length) + "@test.de";
+        request.Phone = new string('1', 50);
+        request.CourseOfStudy = new string('a', 100);
+        request.Motivation = new string('a', 1000);
+        request.IBAN = new string('1', 50);
+        request.Bic = new string('A', 20);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public void PostSelfEnrollment_HasRequestSizeLimit()
+    {
+        // The in-memory test server does not enforce the limit (Kestrel does), so this guards that it stays in
+        // place: an anonymous caller must not be able to send the framework default of about 30 MB.
+        MethodInfo action = typeof(SelfEnrollmentController).GetMethod(nameof(SelfEnrollmentController.CreateAsync))!;
+
+        RequestSizeLimitAttribute? limit = action.GetCustomAttribute<RequestSizeLimitAttribute>();
+
+        limit.ShouldNotBeNull();
+        ((IRequestSizeLimitMetadata)limit).MaxRequestBodySize.ShouldBe(32 * 1024);
     }
 
     [Fact]

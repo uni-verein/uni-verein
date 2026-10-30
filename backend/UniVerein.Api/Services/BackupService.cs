@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
+using UniVerein.Api.Helper;
 using UniVerein.DAL.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +66,7 @@ public class BackupService
         {
             FileName = "psql",
             Arguments =
-                $"-h db -U {_config["ConnectionStrings:DbUser"]} -d {_config["ConnectionStrings:Database"]} -v ON_ERROR_STOP=1",
+                $"-X -h db -U {_config["ConnectionStrings:DbUser"]} -d {_config["ConnectionStrings:Database"]} -v ON_ERROR_STOP=1",
             RedirectStandardInput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -76,12 +77,23 @@ public class BackupService
         using Process process = new() { StartInfo = psi };
         process.Start();
 
-        await using (FileStream sqlStream = File.OpenRead(path))
+        try
         {
-            await sqlStream.CopyToAsync(process.StandardInput.BaseStream);
+            await using FileStream sqlStream = File.OpenRead(path);
+            await PsqlRestoreInput.CopyRestrictedAsync(sqlStream, process.StandardInput.BaseStream,
+                PsqlRestoreInput.CreateRestrictKey());
+        }
+        catch (IOException)
+        {
         }
 
-        process.StandardInput.Close();
+        try
+        {
+            process.StandardInput.Close();
+        }
+        catch (IOException)
+        {
+        }
 
         string errors = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();

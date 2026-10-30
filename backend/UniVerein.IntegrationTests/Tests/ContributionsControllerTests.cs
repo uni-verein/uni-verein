@@ -1,6 +1,7 @@
 using UniVerein.Api.Models.Enums;
 using System.Net;
 using System.Net.Http.Json;
+using UniVerein.Api.ApiRequests;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using UniVerein.Api.ApiResults;
@@ -486,7 +487,7 @@ public class ContributionsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response =
-            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}?paid=true", new { });
+            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}", new MarkPaidRequest { Paid = true });
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -500,7 +501,7 @@ public class ContributionsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response =
-            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}?paid=true", new { });
+            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}", new MarkPaidRequest { Paid = true });
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
@@ -516,7 +517,7 @@ public class ContributionsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response =
-            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}?paid=true", new { });
+            await client.PostAsJsonAsync($"/contributions/{Guid.NewGuid()}", new MarkPaidRequest { Paid = true });
         ErrorDetailsResult? result =
             await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
 
@@ -539,7 +540,7 @@ public class ContributionsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response =
-            await client.PostAsJsonAsync($"/contributions/{contribution.Id}?paid=true", new { });
+            await client.PostAsJsonAsync($"/contributions/{contribution.Id}", new MarkPaidRequest { Paid = true });
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -548,6 +549,27 @@ public class ContributionsControllerTests : IntegrationTestBase
             ContributionEntity? contributionEntity = await db.Contributions.FindAsync(contribution.Id);
             contributionEntity.ShouldNotBeNull();
             contributionEntity!.Paid.ShouldNotBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task MarkAsPaid_DeletedContribution_ReturnsNotFoundAndKeepsItOpen()
+    {
+        // Arrange
+        HttpClient client = CreateClient(UserRole.ADMIN);
+        (MemberEntity _, ContributionEntity contribution) = await CreateContributionEntity(deleted: true);
+
+        // Act
+        HttpResponseMessage response =
+            await client.PostAsJsonAsync($"/contributions/{contribution.Id}", new MarkPaidRequest { Paid = true });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await WithDbContext(async db =>
+        {
+            ContributionEntity? entity = await db.Contributions.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == contribution.Id);
+            entity!.Paid.ShouldBeNull();
+            (await db.BookingNumbers.AnyAsync(x => x.ContributionId == contribution.Id)).ShouldBeFalse();
         });
     }
 
@@ -562,7 +584,7 @@ public class ContributionsControllerTests : IntegrationTestBase
 
         // Act
         HttpResponseMessage response =
-            await client.PostAsJsonAsync($"/contributions/{contribution.Id}?paid={paid.ToString().ToLowerInvariant()}", new { });
+            await client.PostAsJsonAsync($"/contributions/{contribution.Id}", new MarkPaidRequest { Paid = paid });
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

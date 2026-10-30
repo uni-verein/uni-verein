@@ -1,23 +1,31 @@
 const API = '/api';
 
+const CSRF_HEADERS = { 'X-UV-CSRF': '1' };
+
+export type Session = {
+  id: string;
+  name: string;
+  role: string;
+};
+
 export async function apiFile(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token');
   return await fetch(`${API}${path}`, {
     ...options,
+    credentials: 'same-origin',
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...CSRF_HEADERS,
       ...(options.headers || {}),
     },
   });
 }
 
 export async function api(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token');
   const res = await fetch(`${API}${path}`, {
     ...options,
+    credentials: 'same-origin',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      ...CSRF_HEADERS,
       ...(options.headers || {}),
     },
   });
@@ -42,11 +50,19 @@ export async function api(path: string, options: RequestInit = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-export function authHeader() {
-  const token = localStorage.getItem('token');
-  return {
-    Authorization: `Bearer ${token}`,
-  };
+export async function fetchSession(): Promise<Session | null> {
+  const res = await fetch(`${API}/auth/me`, { credentials: 'same-origin' });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error('Session check failed');
+  return await res.json();
+}
+
+export async function logout() {
+  await fetch(`${API}/auth/logout`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: CSRF_HEADERS,
+  });
 }
 
 export async function login(username: string, password: string) {
@@ -54,5 +70,13 @@ export async function login(username: string, password: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
+  });
+}
+
+export async function loginTwoFactor(challenge: string, code: string) {
+  return await fetch(`${API}/auth/login/2fa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge, code }),
   });
 }

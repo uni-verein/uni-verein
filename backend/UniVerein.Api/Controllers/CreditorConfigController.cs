@@ -51,7 +51,8 @@ public class CreditorConfigController : ControllerBase
             StreetNameAndNumber = creditorConfig.StreetNameAndNumber,
             PostCode = creditorConfig.PostCode,
             CityName = creditorConfig.CityName,
-            CountryCode = creditorConfig.CountryCode
+            CountryCode = creditorConfig.CountryCode,
+            TaxNumber = creditorConfig.TaxNumber
         };
 
         return Ok(result);
@@ -72,7 +73,8 @@ public class CreditorConfigController : ControllerBase
                 StreetNameAndNumber = request.StreetNameAndNumber,
                 PostCode = request.PostCode,
                 CityName = request.CityName,
-                CountryCode = request.CountryCode
+                CountryCode = request.CountryCode,
+                TaxNumber = NormalizeTaxNumber(request.TaxNumber)
             };
             await _db.CreditorConfigs.AddAsync(creditorConfig);
         }
@@ -86,6 +88,7 @@ public class CreditorConfigController : ControllerBase
             creditorConfig.PostCode = request.PostCode;
             creditorConfig.CityName = request.CityName;
             creditorConfig.CountryCode = request.CountryCode;
+            creditorConfig.TaxNumber = NormalizeTaxNumber(request.TaxNumber);
             creditorConfig.DeletedAt = null;
             _db.CreditorConfigs.Update(creditorConfig);
         }
@@ -99,7 +102,8 @@ public class CreditorConfigController : ControllerBase
             creditorConfig.StreetNameAndNumber,
             creditorConfig.PostCode,
             creditorConfig.CityName,
-            creditorConfig.CountryCode
+            creditorConfig.CountryCode,
+            creditorConfig.TaxNumber
         });
         Log.Information("CreditorConfigController: UpdateAsync -> Creditor config {CreditorConfigId} saved by {ActorId}.",
             creditorConfig.Id, HttpContext.GetActorId());
@@ -114,7 +118,8 @@ public class CreditorConfigController : ControllerBase
             StreetNameAndNumber = creditorConfig.StreetNameAndNumber,
             PostCode = creditorConfig.PostCode,
             CityName = creditorConfig.CityName,
-            CountryCode = creditorConfig.CountryCode
+            CountryCode = creditorConfig.CountryCode,
+            TaxNumber = creditorConfig.TaxNumber
         };
         return Ok(result);
     }
@@ -136,5 +141,11 @@ public class CreditorConfigController : ControllerBase
         Log.Information("CreditorConfigController: DeleteAsync -> Creditor config {CreditorConfigId} deleted by {ActorId}.",
             id, HttpContext.GetActorId());
         return Ok();
+    }
+
+    private static string? NormalizeTaxNumber(string? taxNumber)
+    {
+        string? trimmed = taxNumber?.Trim();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 }
