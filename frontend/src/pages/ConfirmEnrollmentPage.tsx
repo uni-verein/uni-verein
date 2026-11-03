@@ -10,7 +10,7 @@ import {
   useTheme,
 } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import { usePageConfig } from '../hooks/usePageConfig';

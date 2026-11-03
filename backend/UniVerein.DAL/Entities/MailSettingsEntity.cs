@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("MailSettings")]
-public class MailSettingsEntity : BaseEntity
+public class MailSettingsEntity : TenantScopedEntity
 {
     [Column("smtp_server")]
     public string SmtpServer { get; set; } = string.Empty;

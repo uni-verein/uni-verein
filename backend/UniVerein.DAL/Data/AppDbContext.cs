@@ -14,14 +14,19 @@ namespace UniVerein.DAL.Data;
 public class AppDbContext : DbContext
 {
     private readonly TimeProvider _timeProvider;
+    private readonly ITenantProvider? _tenantProvider;
 
-    public AppDbContext(DbContextOptions<AppDbContext> o, TimeProvider timeProvider) : base(o)
+    public AppDbContext(DbContextOptions<AppDbContext> o, TimeProvider timeProvider, ITenantProvider? tenantProvider = null) : base(o)
     {
         _timeProvider = timeProvider;
+        _tenantProvider = tenantProvider;
     }
 
-    // Skips CreatedAt/DeletedAt auto-stamping below, so UniVerein.DbMigrator can preserve original timestamps.
     public bool SuppressAutoTimestamps { get; set; }
+
+    public Guid CurrentTenantId => _tenantProvider?.TenantId ?? TenantEntity.DefaultId;
+
+    public DbSet<TenantEntity> Tenants => Set<TenantEntity>();
 
     public DbSet<MemberEntity> Members => Set<MemberEntity>();
     public DbSet<UserEntity> Users => Set<UserEntity>();
@@ -54,6 +59,7 @@ public class AppDbContext : DbContext
     public DbSet<CalendarFeedTokenEntity> CalendarFeedTokens => Set<CalendarFeedTokenEntity>();
     public DbSet<CalendarSettingsEntity> CalendarSettings => Set<CalendarSettingsEntity>();
     public DbSet<UserRecoveryCodeEntity> UserRecoveryCodes => Set<UserRecoveryCodeEntity>();
+    public DbSet<UserDeviceEntity> UserDevices => Set<UserDeviceEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -65,7 +71,7 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         modelBuilder.Entity<UserEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
 
         modelBuilder.Entity<ContributionPlanEntity>()
@@ -73,7 +79,7 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         modelBuilder.Entity<ContributionPlanEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
 
         modelBuilder.Entity<MemberEntity>()
@@ -99,7 +105,7 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<MemberCategoryEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
 
         modelBuilder.Entity<FirmwareVersionEntity>()
@@ -138,7 +144,7 @@ public class AppDbContext : DbContext
             .HasDefaultValue(TaxArea.NON_PROFIT);
 
         modelBuilder.Entity<ReceiptCategoryEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
 
         modelBuilder.Entity<IncomeCategoryEntity>()
@@ -147,10 +153,10 @@ public class AppDbContext : DbContext
             .HasDefaultValue(TaxArea.NON_PROFIT);
 
         modelBuilder.Entity<IncomeCategoryEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
         modelBuilder.Entity<PaymentAcknowledgementEntity>()
-            .HasIndex(x => new { x.Year, x.Sequence })
+            .HasIndex(x => new { x.TenantId, x.Year, x.Sequence })
             .IsUnique();
 
         modelBuilder.Entity<PaymentAcknowledgementEntity>()
@@ -166,7 +172,7 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         modelBuilder.Entity<BookingNumberEntity>()
-            .HasIndex(x => new { x.Year, x.Kind, x.Sequence })
+            .HasIndex(x => new { x.TenantId, x.Year, x.Kind, x.Sequence })
             .IsUnique();
 
         modelBuilder.Entity<BookingNumberEntity>()
@@ -234,7 +240,7 @@ public class AppDbContext : DbContext
             .IsConcurrencyToken();
 
         modelBuilder.Entity<CalendarEventEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
         modelBuilder.Entity<CalendarEventEntity>()
             .HasIndex(x => new { x.StartAt, x.SeriesEndAt });
@@ -257,14 +263,14 @@ public class AppDbContext : DbContext
             .HasForeignKey(x => x.EventId);
 
         modelBuilder.Entity<CalendarCategoryEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
         modelBuilder.Entity<CalendarEventParticipantEntity>()
             .Property(x => x.Role)
             .HasConversion<string>();
 
         modelBuilder.Entity<CalendarEventParticipantEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
         modelBuilder.Entity<CalendarEventParticipantEntity>()
             .HasIndex(x => new { x.EventId, x.UserId });
@@ -281,7 +287,7 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         modelBuilder.Entity<CalendarEventSubscriptionEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
         modelBuilder.Entity<CalendarEventSubscriptionEntity>()
             .HasIndex(x => new { x.EventId, x.UserId });
@@ -303,7 +309,7 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         modelBuilder.Entity<NotificationEntity>()
-            .HasQueryFilter(x => x.DeletedAt == null);
+            .HasQueryFilter(nameof(QueryFilter.SOFT_DELETE), x => x.DeletedAt == null);
 
         modelBuilder.Entity<NotificationEntity>()
             .HasIndex(x => new { x.UserId, x.ReadAt });
@@ -329,6 +335,16 @@ public class AppDbContext : DbContext
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<UserDeviceEntity>()
+            .HasIndex(x => new { x.TenantId, x.UserId, x.TokenHash })
+            .IsUnique();
+
+        modelBuilder.Entity<UserDeviceEntity>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<CalendarFeedTokenEntity>()
             .HasIndex(x => x.TokenHash)
             .IsUnique();
@@ -339,6 +355,37 @@ public class AppDbContext : DbContext
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+
+        ConfigureTenant<AuditLogEntity>(modelBuilder);
+        ConfigureTenant<BookingNumberEntity>(modelBuilder);
+        ConfigureTenant<CalendarCategoryEntity>(modelBuilder);
+        ConfigureTenant<CalendarEventEntity>(modelBuilder);
+        ConfigureTenant<CalendarEventParticipantEntity>(modelBuilder);
+        ConfigureTenant<CalendarEventSubscriptionEntity>(modelBuilder);
+        ConfigureTenant<CalendarFeedTokenEntity>(modelBuilder);
+        ConfigureTenant<CalendarReminderLogEntity>(modelBuilder);
+        ConfigureTenant<CalendarSettingsEntity>(modelBuilder);
+        ConfigureTenant<ContributionEntity>(modelBuilder);
+        ConfigureTenant<ContributionPlanEntity>(modelBuilder);
+        ConfigureTenant<CreditorConfigEntity>(modelBuilder);
+        ConfigureTenant<IncomeCategoryEntity>(modelBuilder);
+        ConfigureTenant<IncomeEntity>(modelBuilder);
+        ConfigureTenant<LinkSettingsEntity>(modelBuilder);
+        ConfigureTenant<MailSettingsEntity>(modelBuilder);
+        ConfigureTenant<MemberCategoryEntity>(modelBuilder);
+        ConfigureTenant<MemberEntity>(modelBuilder);
+        ConfigureTenant<NotificationEntity>(modelBuilder);
+        ConfigureTenant<PaymentAcknowledgementEntity>(modelBuilder);
+        ConfigureTenant<PendingSelfEnrollmentEntity>(modelBuilder);
+        ConfigureTenant<ReceiptCategoryEntity>(modelBuilder);
+        ConfigureTenant<ReceiptEntity>(modelBuilder);
+        ConfigureTenant<ReceiptFileEntity>(modelBuilder);
+        ConfigureTenant<SepaExportEntity>(modelBuilder);
+        ConfigureTenant<UserDeviceEntity>(modelBuilder);
+        ConfigureTenant<UserEntity>(modelBuilder);
+        ConfigureTenant<UserRecoveryCodeEntity>(modelBuilder);
+        ConfigureTenant<UserSettingEntity>(modelBuilder);
+        ConfigureTenant<WebPageConfigEntity>(modelBuilder);
 
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
         {
@@ -369,11 +416,34 @@ public class AppDbContext : DbContext
         }
     }
 
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    private void ConfigureTenant<T>(ModelBuilder modelBuilder) where T : TenantScopedEntity
     {
-        if (SuppressAutoTimestamps)
-            return await base.SaveChangesAsync(cancellationToken);
+        modelBuilder.Entity<T>().HasQueryFilter(nameof(QueryFilter.TENANT), x => x.TenantId == CurrentTenantId);
+        modelBuilder.Entity<T>().HasIndex(x => x.TenantId);
+        modelBuilder.Entity<T>()
+            .HasOne<TenantEntity>()
+            .WithMany()
+            .HasForeignKey(x => x.TenantId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
 
+    private void StampTenant()
+    {
+        foreach (EntityEntry<TenantScopedEntity> entry in ChangeTracker.Entries<TenantScopedEntity>())
+        {
+            if (entry.State != EntityState.Added || entry.Entity.TenantId != Guid.Empty)
+                continue;
+
+            Guid tenantId = CurrentTenantId;
+            if (tenantId == Guid.Empty)
+                throw new InvalidOperationException("No tenant is resolved for this operation.");
+
+            entry.Entity.TenantId = tenantId;
+        }
+    }
+
+    private void StampTimestamps()
+    {
         IEnumerable<EntityEntry> entries = ChangeTracker
             .Entries()
             .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Deleted));
@@ -392,12 +462,27 @@ public class AppDbContext : DbContext
                 entity.DeletedAt = _timeProvider.GetUtcNow();
             }
         }
+    }
 
-        return await base.SaveChangesAsync();
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampTenant();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        StampTenant();
+
+        if (!SuppressAutoTimestamps)
+            StampTimestamps();
+
+        return await base.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<int> ForceSaveChangesAsync()
     {
+        StampTenant();
         int result = await base.SaveChangesAsync();
         ChangeTracker.Clear();
         return result;

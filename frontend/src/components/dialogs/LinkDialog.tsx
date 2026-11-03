@@ -136,22 +136,24 @@ export function LinkDialog({
             value={formData.icon}
             error={!!errors.icon}
             helperText={errors.icon}
-            inputProps={{ readOnly: true }}
             onClick={() => setOpenIconPicker(true)}
             sx={{ cursor: 'pointer' }}
-            InputProps={{
-              startAdornment: formData.icon ? (
-                <InputAdornment position="start">
-                  <DynamicIcon name={formData.icon} fontSize="small" color="action" />
-                </InputAdornment>
-              ) : null,
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setOpenIconPicker(true)} edge="end" size="small">
-                    <ImageSearchIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              htmlInput: { readOnly: true },
+              input: {
+                startAdornment: formData.icon ? (
+                  <InputAdornment position="start">
+                    <DynamicIcon name={formData.icon} fontSize="small" color="action" />
+                  </InputAdornment>
+                ) : null,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setOpenIconPicker(true)} edge="end" size="small">
+                      <ImageSearchIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </DialogContent>

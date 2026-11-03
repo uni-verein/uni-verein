@@ -5,14 +5,16 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PublicEnrollmentPage from './pages/PublicEnrollmentPage';
 import ConfirmEnrollmentPage from './pages/ConfirmEnrollmentPage';
+import SetupPage from './pages/SetupPage';
 
 const PublicCalendar = lazy(() => import('./pages/PublicCalendar'));
-import { fetchSession, logout, Session } from './api';
+import { fetchSession, fetchSetupStatus, logout, Session } from './api';
 import { usePageConfig } from './hooks/usePageConfig';
 import { useThemeMode } from './hooks/useThemeMode';
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [needsSetup, setNeedsSetup] = useState<boolean | undefined>(undefined);
   const { config, reloadConfig } = usePageConfig();
   const { resolvedMode } = useThemeMode();
 
@@ -90,6 +92,13 @@ export default function App() {
       .catch(() => {
         if (!cancelled) setSession(null);
       });
+    fetchSetupStatus()
+      .then((required) => {
+        if (!cancelled) setNeedsSetup(required);
+      })
+      .catch(() => {
+        if (!cancelled) setNeedsSetup(false);
+      });
     reloadConfig().catch(() => {});
 
     const interval = setInterval(() => {
@@ -118,6 +127,11 @@ export default function App() {
       .catch(() => setSession(null));
   };
 
+  const handleSetupDone = () => {
+    setNeedsSetup(false);
+    handleLoginSuccess();
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -130,7 +144,9 @@ export default function App() {
         <ConfirmEnrollmentPage />
       ) : window.location.pathname === '/enroll' ? (
         <PublicEnrollmentPage />
-      ) : session === undefined ? null : !session ? (
+      ) : session === undefined || needsSetup === undefined ? null : needsSetup && !session ? (
+        <SetupPage onDone={handleSetupDone} />
+      ) : !session ? (
         <Login onLogin={handleLoginSuccess} demo={demo} />
       ) : (
         <Dashboard

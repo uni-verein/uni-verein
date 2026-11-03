@@ -26,7 +26,9 @@ export const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:80/api';
 export const APP_BASE = process.env.APP_BASE_URL ?? 'http://localhost:80';
 export const PAPERCUT_BASE = process.env.PAPERCUT_BASE_URL ?? 'http://localhost:8080';
 const ADMIN_USER = process.env.TEST_ADMIN_USER ?? 'Admin';
-const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? 'admin123';
+const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? 'Playwright-Admin-1!';
+export const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'owner@example.org';
+const SETUP_TOKEN = process.env.TEST_SETUP_TOKEN ?? 'playwright-setup-token';
 
 export async function authenticate(page: Page, token: string) {
   await page
@@ -47,6 +49,20 @@ export class BackendClient {
 
   async init() {
     const ctx = await request.newContext({ baseURL: API_BASE });
+    const status = await ctx.get('/api/setup/status');
+    if (status.ok() && (await status.json()).needsSetup) {
+      const setup = await ctx.post('/api/setup', {
+        data: {
+          token: SETUP_TOKEN,
+          username: ADMIN_USER,
+          email: ADMIN_EMAIL,
+          password: ADMIN_PASS,
+        },
+      });
+      if (!setup.ok()) {
+        throw new Error(`Initial setup failed: ${setup.status()} ${await setup.text()}`);
+      }
+    }
     const res = await ctx.post('/api/auth/login', {
       data: { username: ADMIN_USER, password: ADMIN_PASS },
     });

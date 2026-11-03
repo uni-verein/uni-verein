@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("ReceiptFiles")]
-public class ReceiptFileEntity : BaseEntity
+public class ReceiptFileEntity : TenantScopedEntity
 {
     [Column("receipt_id")]
     public Guid ReceiptId { get; set; }

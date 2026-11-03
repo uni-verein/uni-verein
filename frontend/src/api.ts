@@ -57,6 +57,25 @@ export async function fetchSession(): Promise<Session | null> {
   return await res.json();
 }
 
+export async function fetchSetupStatus(): Promise<boolean> {
+  const res = await fetch(`${API}/setup/status`, { credentials: 'same-origin' });
+  if (!res.ok) throw new Error('Setup status check failed');
+  return (await res.json()).needsSetup === true;
+}
+
+export async function submitSetup(
+  token: string,
+  username: string,
+  email: string,
+  password: string,
+) {
+  return await fetch(`${API}/setup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, username, email, password }),
+  });
+}
+
 export async function logout() {
   await fetch(`${API}/auth/logout`, {
     method: 'POST',

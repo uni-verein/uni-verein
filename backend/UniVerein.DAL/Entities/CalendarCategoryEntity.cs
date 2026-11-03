@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("CalendarCategories")]
-public class CalendarCategoryEntity : BaseEntity
+public class CalendarCategoryEntity : TenantScopedEntity
 {
     [Column("name")]
     public required string Name { get; set; } = string.Empty;

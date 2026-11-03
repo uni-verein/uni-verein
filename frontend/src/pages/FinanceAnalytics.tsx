@@ -65,7 +65,7 @@ function ChartCard({
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
-        <Typography variant="subtitle1" fontWeight={600}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
         {total && (
@@ -147,7 +147,7 @@ export default function FinanceAnalytics() {
     const total = side === 'income' ? kpis.income : kpis.expenses;
     const totalLabel = `${t('pages.financeAnalytics.total')}: ${formatEuro(total)}`;
     return (
-      <Grid container spacing={3} alignItems="stretch">
+      <Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
         <Grid size={{ xs: 12, md: 7 }}>
           <ChartCard
             title={t(`pages.financeAnalytics.${side}ByMonth`, { year })}

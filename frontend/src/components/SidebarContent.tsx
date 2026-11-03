@@ -294,7 +294,7 @@ export function SidebarContent({
                   {!collapsedView && (
                     <ListItemText
                       primary={item.label}
-                      primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                      slotProps={{ primary: { sx: { fontSize: '0.9rem', fontWeight: 500 } } }}
                     />
                   )}
                 </ListItemButton>
@@ -338,7 +338,7 @@ export function SidebarContent({
                     {!collapsedView && (
                       <ListItemText
                         primary={linkEntry.name}
-                        primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                        slotProps={{ primary: { sx: { fontSize: '0.9rem', fontWeight: 500 } } }}
                       />
                     )}
                   </ListItemButton>
@@ -375,7 +375,7 @@ export function SidebarContent({
                   {!collapsedView && (
                     <ListItemText
                       primary={t('pages.dashboard.pageNames.audit')}
-                      primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                      slotProps={{ primary: { sx: { fontSize: '0.9rem', fontWeight: 500 } } }}
                     />
                   )}
                 </ListItemButton>
@@ -408,7 +408,7 @@ export function SidebarContent({
                   {!collapsedView && (
                     <ListItemText
                       primary={t('pages.dashboard.pageNames.backup')}
-                      primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                      slotProps={{ primary: { sx: { fontSize: '0.9rem', fontWeight: 500 } } }}
                     />
                   )}
                 </ListItemButton>

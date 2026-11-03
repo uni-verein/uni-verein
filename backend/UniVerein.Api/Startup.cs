@@ -6,6 +6,7 @@ using System.Threading.RateLimiting;
 using System.Threading.Tasks;
 using UniVerein.Api.Extensions;
 using UniVerein.Api.Security;
+using UniVerein.Api.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using UniVerein.Api.Services;
 using UniVerein.Api.Services.Sepa;
@@ -23,6 +24,7 @@ using Serilog;
 using UniVerein.Api.Services.Demo;
 using UniVerein.Api.Services.Firmware;
 using UniVerein.Api.Services.Calendar;
+using UniVerein.Api.Services.LoginNotification;
 using Microsoft.AspNetCore.Http;
 using IPNetwork = System.Net.IPNetwork;
 
@@ -61,10 +63,14 @@ namespace UniVerein.Api
                 });
             }
 
+            services.AddScoped<TenantContext>();
+            services.AddScoped<ITenantProvider>(sp => sp.GetRequiredService<TenantContext>());
             services.AddScoped<CryptoService>();
             services.AddScoped<SepaService>();
             services.AddScoped<JwtService>();
             services.AddScoped<TwoFactorService>();
+            services.AddScoped<DeviceTrackingService>();
+            services.AddSingleton<LoginNotificationQueue>();
             services.AddScoped<MailService>();
             services.AddScoped<ContributionService>();
             services.AddScoped<AuditService>();
@@ -97,6 +103,7 @@ namespace UniVerein.Api
             services.AddHostedService<FirmwareCheckBackgroundService>();
             services.AddHostedService<PendingSelfEnrollmentCleanupService>();
             services.AddHostedService<CalendarMailBackgroundService>();
+            services.AddHostedService<LoginNotificationBackgroundService>();
             services.AddHostedService<CalendarReminderBackgroundService>();
             services.AddHttpContextAccessor();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -137,7 +144,10 @@ namespace UniVerein.Api
                                 int.TryParse(sessionVersionClaim, out int sessionVersion))
                             {
                                 AppDbContext db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-                                valid = await db.Users.AnyAsync(u =>
+                                string? tenantClaim = context.Principal?.FindFirst(JwtService.TenantClaim)?.Value;
+                                bool tenantMatches = tenantClaim == null ||
+                                                     (Guid.TryParse(tenantClaim, out Guid tokenTenantId) && tokenTenantId == db.CurrentTenantId);
+                                valid = tenantMatches && await db.Users.AnyAsync(u =>
                                     u.Id == userId && u.Role == role && u.SessionVersion == sessionVersion);
                             }
 
@@ -220,6 +230,8 @@ namespace UniVerein.Api
                 AddIpRateLimitPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
                 AddIpRateLimitPolicy(options, "self-enrollment-confirm", "RateLimiting:SelfEnrollment:ConfirmPermitLimit", 10);
                 AddIpRateLimitPolicy(options, "auth-login", "RateLimiting:AuthLogin:PermitLimit", 20);
+                AddIpRateLimitPolicy(options, "setup", "RateLimiting:Setup:PermitLimit", 20);
+                AddIpRateLimitPolicy(options, "setup-status", "RateLimiting:SetupStatus:PermitLimit", 300);
                 // Calendar apps poll feeds regularly and many members may share one IP (e.g. a university network).
                 AddIpRateLimitPolicy(options, "calendar-feed", "RateLimiting:CalendarFeed:PermitLimit", 300);
                 AddIpRateLimitPolicy(options, "public-calendar", "RateLimiting:PublicCalendar:PermitLimit", 300);

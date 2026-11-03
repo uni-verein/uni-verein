@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UniVerein.Api.ApiRequests;
+using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
 
 namespace UniVerein.Api.Services.Calendar;
@@ -14,12 +15,15 @@ public class CalendarMailJob
     // The user whose action caused the mail, null for system mails like reminders.
     public Guid? ActorUserId { get; }
 
+    public Guid TenantId { get; }
+
     public CalendarMailJob(IReadOnlyCollection<Guid> userIds, UserSettingType settingType, EmailRequest request,
-        Guid? actorUserId = null)
+        Guid? actorUserId = null, Guid? tenantId = null)
     {
         UserIds = userIds;
         SettingType = settingType;
         Request = request;
         ActorUserId = actorUserId;
+        TenantId = tenantId ?? TenantEntity.DefaultId;
     }
 }

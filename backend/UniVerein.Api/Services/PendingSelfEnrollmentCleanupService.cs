@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using UniVerein.Api.Tenancy;
 
 namespace UniVerein.Api.Services;
 
@@ -30,15 +31,23 @@ public class PendingSelfEnrollmentCleanupService : BackgroundService
     {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            PendingSelfEnrollmentService service = scope.ServiceProvider.GetRequiredService<PendingSelfEnrollmentService>();
-
-            int removed = await service.CleanupExpiredAsync();
-            if (removed > 0)
-                Log.Information("PendingSelfEnrollmentCleanupService: Removed {Count} expired, unconfirmed self-enrollment submission(s).",
-                    removed);
-            else
-                Log.Debug("PendingSelfEnrollmentCleanupService: No expired self-enrollment submissions found.");
+            await _scopeFactory.ForEachTenantAsync(async services =>
+            {
+                try
+                {
+                    int removed = await services.GetRequiredService<PendingSelfEnrollmentService>().CleanupExpiredAsync();
+                    if (removed > 0)
+                        Log.Information("PendingSelfEnrollmentCleanupService: Removed {Count} expired, unconfirmed self-enrollment submission(s) of tenant {TenantId}.",
+                            removed, services.GetRequiredService<TenantContext>().TenantId);
+                    else
+                        Log.Debug("PendingSelfEnrollmentCleanupService: No expired self-enrollment submissions found.");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "PendingSelfEnrollmentCleanupService: Error while cleaning up expired self-enrollment submissions of tenant {TenantId}",
+                        services.GetRequiredService<TenantContext>().TenantId);
+                }
+            });
         }
         catch (Exception ex)
         {

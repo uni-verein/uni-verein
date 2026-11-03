@@ -6,7 +6,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("Receipts")]
-public class ReceiptEntity : BaseEntity
+public class ReceiptEntity : TenantScopedEntity
 {
     [Column("user_id")]
     public Guid UserId { get; set; }

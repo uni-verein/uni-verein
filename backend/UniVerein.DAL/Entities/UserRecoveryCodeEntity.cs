@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("UserRecoveryCodes")]
-public class UserRecoveryCodeEntity : BaseEntity
+public class UserRecoveryCodeEntity : TenantScopedEntity
 {
     [Column("user_id")]
     public Guid UserId { get; set; }

@@ -13,7 +13,7 @@ export function CalendarHeader({ title, actions }: { title: string; actions: Rea
         mb: 2,
       }}
     >
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" sx={{ fontWeight: 700 }}>
         {title}
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>{actions}</Box>

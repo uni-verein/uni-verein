@@ -72,7 +72,7 @@ export function AuditLogCard({ l }: { l: AuditLog }) {
               borderColor: 'primary.main',
             }}
           >
-            <Typography variant="caption" color="text.secondary" fontWeight="bold">
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
               {t('pages.audit.dataLabel')}
             </Typography>
             <Typography

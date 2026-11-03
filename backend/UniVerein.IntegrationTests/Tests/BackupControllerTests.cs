@@ -204,7 +204,7 @@ public class BackupControllerTests : IntegrationTestBase
                 $"last_name, birthday, street, postal_code, city, country_code, emailEncrypted, " +
                 $"emailHash, phone, bulk_mail, start_of_studies, end_of_studies, academic_degree, " +
                 $"course_of_study, task_within_the_club, iban_encrypted, iban_hash, bic_encrypted, sepa_consent, " +
-                $"entry_date, exit_date, member_category_id, contribution_plan_id, created_at, deleted_at) VALUES (" +
+                $"entry_date, exit_date, member_category_id, contribution_plan_id, created_at, deleted_at, tenant_id) VALUES (" +
                 $"'{Guid.NewGuid()}','20260622161849_{i}',{i},'MALE','Test','','Tester'," +
                 $"'Owb3gbbvXf6zYC0R9topZM3XiiOh7KiBz2NbJy0lfdU2OhFBlksspG2x0Qd/CVieybNYNu8OcJ1/ebIPlHJVtQ=='," +
                 $"'dld5g2bg5aspYWLoMkcefNPNEg852b9rD8rZAP9hDp0=','24105','Kiel',''," +
@@ -212,7 +212,7 @@ public class BackupControllerTests : IntegrationTestBase
                 $"'HyO+aMb0wYSgrBdyvcldhlgSiYmt6HqA6JQXPQvako4=','ALLOWED','2015-12-31 23:00:00.000000',NULL,NULL,''," +
                 $"'MEMBER','fPgs6UH7Y43OF+DqQsM0j7aBvjFuuMaVYYXSaBiHoOg=','R2vO7hHBHyZIPu2L4Zpl8BsxvII87pB51v/EZTTtZnk='," +
                 $"'LEpbbLyyk3jPNp+4FXx6PVKjhfgKFOBy2B/lHnnA/d4=',NULL,'2026-06-22 16:17:47.428000',NULL," +
-                $"NULL,NULL,'2026-06-22 16:18:49.414336',NULL);"));
+                $"NULL,NULL,'2026-06-22 16:18:49.414336',NULL,'{TenantEntity.DefaultId.ToString().ToUpperInvariant()}');"));
         using MultipartFormDataContent content = CreateSqlFormFile("large_backup.sql", largeSqlContent);
 
         // Act

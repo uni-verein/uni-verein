@@ -3,20 +3,34 @@ using System.Linq;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using UniVerein.DAL.Entities.Enums;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace UniVerein.Api.Services;
 
 public static class DefaultDataSeeder
 {
-    public const string DefaultAdminPassword = "admin123";
-
-    public static void Seed(AppDbContext db, string adminPassword = DefaultAdminPassword)
+    public static void EnsureDefaultTenant(AppDbContext db)
     {
-        Guid id = Guid.Parse(Program.AdminUserId);
-        if (!db.Users.IgnoreQueryFilters().Any())
+        if (db.Tenants.Any(t => t.Id == TenantEntity.DefaultId))
+            return;
+
+        db.Tenants.Add(new TenantEntity
         {
+            Id = TenantEntity.DefaultId,
+            Name = "Default",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        db.SaveChanges();
+        Log.Information("Seeding: Default tenant {TenantId} created.", TenantEntity.DefaultId);
+    }
+
+    public static void Seed(AppDbContext db, string? adminPassword = null)
+    {
+        EnsureDefaultTenant(db);
+
+        if (adminPassword != null && !db.Users.IgnoreQueryFilters(QueryFilter.SOFT_DELETE).Any())
+        {
+            Guid id = Guid.Parse(Program.AdminUserId);
             db.Users.Add(new UserEntity
             {
                 Id = id,
@@ -25,7 +39,7 @@ public static class DefaultDataSeeder
                 Role = UserRole.ADMIN
             });
             db.SaveChanges();
-            Log.Information("Seeding: Default admin user {UserId} created. Change its password after the first login.", id);
+            Log.Information("Seeding: Admin user {UserId} created.", id);
         }
 
         bool contributionPlanExists = db.ContributionPlans.Any();
@@ -44,7 +58,7 @@ public static class DefaultDataSeeder
 
         foreach ((string id, string name) category in Program.DefaultMemberCategories)
         {
-            if (!db.MemberCategories.IgnoreQueryFilters().Any(x => x.Id == Guid.Parse(category.id)))
+            if (!db.MemberCategories.IgnoreQueryFilters(QueryFilter.SOFT_DELETE).Any(x => x.Id == Guid.Parse(category.id)))
             {
                 db.MemberCategories.Add(new MemberCategoryEntity()
                 {

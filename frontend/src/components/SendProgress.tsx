@@ -42,7 +42,7 @@ const IdleView: FC = () => {
       }}
     >
       <BarChartIcon sx={{ fontSize: 64, color: 'action.disabled' }} />
-      <Typography variant="h5" fontWeight={600} color="text.primary">
+      <Typography variant="h5" color="text.primary" sx={{ fontWeight: 600 }}>
         {t('pages.mail.sendProgressPage.idle.title')}
       </Typography>
       <Typography variant="body1">{t('pages.mail.sendProgressPage.idle.subtitle')}</Typography>
@@ -61,12 +61,12 @@ const StatCard: FC<StatCardProps> = ({ label, value, color, icon }) => (
     }}
   >
     <CardContent>
-      <Stack alignItems="center" spacing={0.5}>
+      <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
         <Box sx={{ color: `${color}.main` }}>{icon}</Box>
-        <Typography variant="h4" fontWeight={700} color={`${color}.main`}>
+        <Typography variant="h4" color={`${color}.main`} sx={{ fontWeight: 700 }}>
           {value}
         </Typography>
-        <Typography variant="caption" color="text.secondary" fontWeight={500}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
           {label}
         </Typography>
       </Stack>
@@ -128,8 +128,8 @@ const SendProgress: FC<SendProgressProps> = ({
           transition: 'background-color 0.4s ease',
         }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
             {isDone ? (
               <CheckCircleIcon />
             ) : (
@@ -143,7 +143,7 @@ const SendProgress: FC<SendProgressProps> = ({
                 }}
               />
             )}
-            <Typography variant="h6" fontWeight={700}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {isDone
                 ? t('pages.mail.sendProgressPage.header.done')
                 : t('pages.mail.sendProgressPage.header.sending')}
@@ -161,11 +161,11 @@ const SendProgress: FC<SendProgressProps> = ({
 
       <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Box>
-          <Stack direction="row" justifyContent="space-between" mb={0.5}>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 0.5 }}>
             <Typography variant="body2" color="text.secondary">
               {t('pages.mail.sendProgressPage.progress.label')}
             </Typography>
-            <Typography variant="body2" fontWeight={700} color="primary.main">
+            <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>
               {progress}%
             </Typography>
           </Stack>
@@ -201,7 +201,7 @@ const SendProgress: FC<SendProgressProps> = ({
 
             {summary.failed > 0 && (
               <Alert severity="error" variant="outlined" sx={{ borderRadius: 2 }}>
-                <AlertTitle fontWeight={700}>
+                <AlertTitle sx={{ fontWeight: 700 }}>
                   {t('pages.mail.sendProgressPage.failedAlert.title', { count: summary.failed })}
                 </AlertTitle>
                 <List dense disablePadding>
@@ -214,7 +214,7 @@ const SendProgress: FC<SendProgressProps> = ({
                         </ListItemIcon>
                         <ListItemText
                           primary={
-                            <Typography variant="body2" fontWeight={600}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
                               {r.email}
                             </Typography>
                           }
@@ -231,7 +231,7 @@ const SendProgress: FC<SendProgressProps> = ({
         <Divider />
 
         <Box>
-          <Typography variant="subtitle1" fontWeight={700} mb={1}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
             {t('pages.mail.sendProgressPage.log.title')}
           </Typography>
           <Paper
@@ -274,7 +274,7 @@ const SendProgress: FC<SendProgressProps> = ({
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Typography variant="body2" fontWeight={600}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
                         {entry.email}
                       </Typography>
                     }

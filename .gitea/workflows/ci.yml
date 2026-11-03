@@ -75,6 +75,7 @@ jobs:
         env:
           JWT_KEY: ${{ secrets.JWT_KEY }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          SETUP_TOKEN: playwright-setup-token
           CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
           HMAC_KEY: ${{ secrets.HMAC_KEY }}
           DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}

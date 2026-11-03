@@ -5,7 +5,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("Members")]
-public class MemberEntity : BaseEntity
+public class MemberEntity : TenantScopedEntity
 {
     [Column("mandate_id")]
     public required string MandateId { get; set; } = string.Empty;

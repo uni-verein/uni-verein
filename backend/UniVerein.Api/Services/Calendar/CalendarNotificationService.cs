@@ -35,7 +35,7 @@ public class CalendarNotificationService
 
         string? link = await EventLinkAsync(calendarEvent.Id);
         _mailQueue.Enqueue(new CalendarMailJob(recipients, UserSettingType.CALENDAR_INVITE_EMAIL,
-            CalendarMailBuilder.BuildInvitation(calendarEvent, actor.Username, link, attachments), actor.Id));
+            CalendarMailBuilder.BuildInvitation(calendarEvent, actor.Username, link, attachments), actor.Id, _db.CurrentTenantId));
     }
 
     public async Task NotifyChangedAsync(CalendarEventEntity calendarEvent, UserEntity actor,
@@ -55,7 +55,7 @@ public class CalendarNotificationService
 
         string? link = await EventLinkAsync(calendarEvent.Id);
         _mailQueue.Enqueue(new CalendarMailJob(recipients, UserSettingType.CALENDAR_CHANGE_EMAIL,
-            CalendarMailBuilder.BuildChange(calendarEvent, actor.Username, changedFields, link), actor.Id));
+            CalendarMailBuilder.BuildChange(calendarEvent, actor.Username, changedFields, link), actor.Id, _db.CurrentTenantId));
     }
 
     public async Task NotifyDeletedAsync(CalendarEventEntity calendarEvent, UserEntity actor,
@@ -69,7 +69,7 @@ public class CalendarNotificationService
             string.Empty);
 
         _mailQueue.Enqueue(new CalendarMailJob(recipients, UserSettingType.CALENDAR_CHANGE_EMAIL,
-            CalendarMailBuilder.BuildDeletion(calendarEvent, actor.Username), actor.Id));
+            CalendarMailBuilder.BuildDeletion(calendarEvent, actor.Username), actor.Id, _db.CurrentTenantId));
     }
 
     public async Task NotifyRemindersAsync(IReadOnlyCollection<CalendarDueReminder> reminders)
@@ -85,7 +85,7 @@ public class CalendarNotificationService
         {
             _mailQueue.Enqueue(new CalendarMailJob(reminder.Recipients, UserSettingType.CALENDAR_REMINDER_EMAIL,
                 CalendarMailBuilder.BuildReminder(reminder.Event, reminder.OccurrenceStart,
-                    EventLink(baseUrl, reminder.Event.Id))));
+                    EventLink(baseUrl, reminder.Event.Id)), tenantId: _db.CurrentTenantId));
         }
     }
 

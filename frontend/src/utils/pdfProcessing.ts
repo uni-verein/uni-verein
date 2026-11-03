@@ -18,8 +18,9 @@ export function isPdfFile(file: File | Blob): boolean {
  */
 export async function renderPdfFirstPageToBlob(file: Blob, scale = 1.5): Promise<Blob> {
   const buffer = await file.arrayBuffer();
-  const pdf = await getDocument({ data: buffer, maxImageSize: PDF_RENDER_MAX_PIXELS }).promise;
+  const loadingTask = getDocument({ data: buffer, maxImageSize: PDF_RENDER_MAX_PIXELS });
   try {
+    const pdf = await loadingTask.promise;
     const page = await pdf.getPage(1);
     const pageSize = page.getViewport({ scale: 1 });
     const viewport = page.getViewport({
@@ -34,7 +35,7 @@ export async function renderPdfFirstPageToBlob(file: Blob, scale = 1.5): Promise
       throw new Error('Canvas 2D context could not be created');
     }
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    await page.render({ canvas, canvasContext: context, viewport }).promise;
 
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/jpeg', 0.85),
@@ -44,6 +45,6 @@ export async function renderPdfFirstPageToBlob(file: Blob, scale = 1.5): Promise
     }
     return blob;
   } finally {
-    await pdf.destroy();
+    await loadingTask.destroy();
   }
 }

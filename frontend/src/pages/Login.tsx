@@ -20,9 +20,6 @@ import { login, loginTwoFactor } from '../api';
 import { useTranslation } from 'react-i18next';
 import { usePageConfig } from '../hooks/usePageConfig';
 import { DemoDialog } from '../components/dialogs/DemoDialog';
-import { ForcePasswordChangeDialog } from '../components/dialogs/ForcePasswordChangeDialog';
-
-const DEFAULT_PASSWORD = 'admin123';
 
 export default function Login({
   onLogin,
@@ -40,7 +37,6 @@ export default function Login({
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [browserOnline, setBrowserOnline] = useState(navigator.onLine);
-  const [forcePasswordChange, setForcePasswordChange] = useState(false);
   const [challenge, setChallenge] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [recoveryAllowed, setRecoveryAllowed] = useState(false);
@@ -81,14 +77,6 @@ export default function Login({
     return () => clearInterval(timer);
   }, [countdown, t]);
 
-  const finishLogin = () => {
-    if (pass === DEFAULT_PASSWORD) {
-      setForcePasswordChange(true);
-    } else {
-      onLogin();
-    }
-  };
-
   const showLockout = (response: Response) => {
     response
       .json()
@@ -116,7 +104,7 @@ export default function Login({
           setChallenge(json.challenge);
           setCode('');
         } else {
-          finishLogin();
+          onLogin();
         }
       }
 
@@ -140,7 +128,7 @@ export default function Login({
       const response = await loginTwoFactor(challenge, code.trim());
 
       if (response.ok) {
-        finishLogin();
+        onLogin();
       } else if (response.status === 403) {
         showLockout(response);
       } else {
@@ -295,14 +283,16 @@ export default function Login({
                 type={showPassword ? 'text' : 'password'}
                 value={pass}
                 onChange={(e) => setPass(e.target.value)}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
               <Button
@@ -331,15 +321,6 @@ export default function Login({
           &copy; {new Date().getFullYear()} {config.pageName} {t('pages.login.clubManagement')}
         </Typography>
       </Container>
-      {forcePasswordChange && (
-        <ForcePasswordChangeDialog
-          currentPassword={pass}
-          onChanged={() => {
-            setForcePasswordChange(false);
-            onLogin();
-          }}
-        />
-      )}
     </Box>
   );
 }

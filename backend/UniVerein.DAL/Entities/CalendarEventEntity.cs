@@ -6,7 +6,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("CalendarEvents")]
-public class CalendarEventEntity : BaseEntity
+public class CalendarEventEntity : TenantScopedEntity
 {
     [Column("title")]
     public required string Title { get; set; } = string.Empty;

@@ -13,7 +13,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { useIndexedTranslation } from '../../hooks/useIndexedTranslation';
 
 export function ImportErrorDialog({
@@ -30,9 +30,9 @@ export function ImportErrorDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <ErrorOutlineIcon color="error" />
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             {ti('pages.backup.csvImport.importErrors.title')}
           </Typography>
         </Stack>
@@ -51,9 +51,7 @@ export function ImportErrorDialog({
                 </ListItemIcon>
                 <ListItemText
                   primary={ti(`pages.backup.csvImport.${error.translationKey}`, error.values)}
-                  primaryTypographyProps={{
-                    variant: 'body2',
-                  }}
+                  slotProps={{ primary: { variant: 'body2' } }}
                 />
               </ListItem>
               {index < errors.length - 1 && <Divider component="li" />}

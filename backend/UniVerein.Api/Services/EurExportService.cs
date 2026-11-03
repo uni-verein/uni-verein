@@ -192,7 +192,7 @@ public class EurExportService
         if (incomes.Count == 0)
             return new List<EurPendingLine>();
 
-        Dictionary<Guid, IncomeCategoryEntity> categories = (await _db.IncomeCategories.IgnoreQueryFilters().ToListAsync())
+        Dictionary<Guid, IncomeCategoryEntity> categories = (await _db.IncomeCategories.IgnoreQueryFilters(QueryFilter.SOFT_DELETE).ToListAsync())
             .ToDictionary(x => x.Id);
 
         List<Guid> incomeIds = incomes.Select(x => x.Id).ToList();
@@ -224,7 +224,7 @@ public class EurExportService
         if (receipts.Count == 0)
             return new List<EurPendingLine>();
 
-        Dictionary<Guid, ReceiptCategoryEntity> categories = (await _db.ReceiptCategories.IgnoreQueryFilters().ToListAsync())
+        Dictionary<Guid, ReceiptCategoryEntity> categories = (await _db.ReceiptCategories.IgnoreQueryFilters(QueryFilter.SOFT_DELETE).ToListAsync())
             .ToDictionary(x => x.Id);
         Dictionary<Guid, string> bookingNumbers = await _bookingNumberService.GetReceiptNumbersAsync(receipts.Select(x => x.Id).ToList());
 

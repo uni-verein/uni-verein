@@ -222,9 +222,9 @@ export default function Backup() {
         <Grid size={12}>
           <Card variant="outlined" sx={{ height: '100%', borderRadius: 3 }}>
             <CardContent>
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
                 <CloudDownloadIcon color="primary" />
-                <Typography variant="h6" fontWeight={600}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {ti('pages.backup.systemBackup.heading')}
                 </Typography>
               </Stack>
@@ -258,9 +258,9 @@ export default function Backup() {
         <Grid size={12}>
           <Card variant="outlined" sx={{ height: '100%', borderRadius: 3, borderStyle: 'dashed' }}>
             <CardContent>
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
                 <RestoreIcon color="error" />
-                <Typography variant="h6" fontWeight={600}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {ti('pages.backup.systemRestore.heading')}
                 </Typography>
               </Stack>
@@ -287,12 +287,12 @@ export default function Backup() {
               variant="outlined"
               sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}
             >
-              <Grid container spacing={2} alignItems="center">
+              <Grid container spacing={2} sx={{ alignItems: 'center' }}>
                 <Grid size={12}>
-                  <Stack direction="row" spacing={2} alignItems="center">
+                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                     <UploadFileIcon color="action" />
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={600}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         {ti('pages.backup.csvImport.heading')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -335,12 +335,12 @@ export default function Backup() {
               variant="outlined"
               sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: 'action.hover' }}
             >
-              <Grid container spacing={2} alignItems="center">
+              <Grid container spacing={2} sx={{ alignItems: 'center' }}>
                 <Grid size={12}>
-                  <Stack direction="row" spacing={2} alignItems="center">
+                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                     <DownloadFileIcon color="action" />
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={600}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         {ti('pages.backup.csvExport.heading')}
                       </Typography>
                     </Box>

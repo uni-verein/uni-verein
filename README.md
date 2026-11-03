@@ -93,10 +93,10 @@ Use this unless you already terminate TLS in front of this stack.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/Caddyfile
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/docker-compose-tls.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/Caddyfile
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-tls.yml
 ```
 
 2. **Create .env and secrets**
@@ -127,7 +127,8 @@ certificate is requested automatically on first start, this can take up to
 a minute, and it needs your DNS record and ports 80/443 already in place. If
 it doesn't come up, check `docker compose -f docker-compose-tls.yml logs caddy`.
 
-#### Option B: TLS already terminated in front of this stack
+<details>
+<summary><h4>Option B: TLS already terminated in front of this stack</h4></summary>
 
 > ⚠️ **Only use this if you have already set up TLS in front of this
 > stack.** This path serves plain HTTP with no encryption of its own
@@ -137,9 +138,9 @@ it doesn't come up, check `docker compose -f docker-compose-tls.yml logs caddy`.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.0/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**
@@ -210,6 +211,8 @@ docker compose -f docker-compose-prod-image.yml up -d
 
 The application will be available at `http://localhost:80` 🎉
 
+</details>
+
 ---
 
 ### Updating
@@ -223,23 +226,21 @@ docker compose -f docker-compose-update.yml run --rm update
 
 It checks GitHub for the latest release and asks you to confirm that you've created a manual backup, the update only proceeds once you type `yes`. It then downloads the matching `nginx.conf` and whichever compose file your installation uses (`docker-compose-tls.yml`, plus its `Caddyfile`, if you installed with TLS included; otherwise `docker-compose-prod-image.yml`), updates `VERSION` in your `.env`, and restarts the stack on the new version. Your existing secrets and database are left untouched. If you're on the TLS-included setup, note that `Caddyfile` is overwritten on every update just like `nginx.conf` already is, keep any local changes to it (beyond `DOMAIN`/`ACME_EMAIL`, which live in `.env`) in mind before updating.
 
-> **⚠️ Breaking change between `v1.3.1` and `v1.4.0`:** `v1.4.0` replaces MariaDB with PostgreSQL. Always update using the `docker-compose-update.yml` command above, never edit `VERSION` in `.env` by hand or swap in a newer compose file yourself, as that skips the database migration below and will break your installation.
-
-Installations still running MariaDB are updated to `v1.3.1` first (no database engine change yet) if they aren't already there. From `v1.3.1`, the next update automatically migrates the database (structure and data) to PostgreSQL and switches the whole stack `including backups` over to it. This adds some extra downtime proportional to your database size, and the old MariaDB data volume is kept (stopped, not deleted) afterward as a safety net, together with a `.mariadb-backup` copy of your previous compose file that's kept only for the duration of the update and removed automatically once the stack has restarted successfully on PostgreSQL. Once you've confirmed everything works on PostgreSQL, you can reclaim the disk space with `docker volume rm <project>_db_data` (find the exact name via `docker volume ls`).
-
-**Coming from an older version:** each run only advances one step (any version before `v1.3.1` → `v1.3.1` → `v1.4.0` → latest). So if you're updating from before `v1.3.1` all the way to the current latest release (even `v1.5.0`, `v1.6.1`, or newer) you need to run the command above repeatedly; it's safe to re-run and each run picks up exactly where the previous one left off. Check the printed "Installed version -> Target version" line each time, and keep going until it reports "Already up to date."
+> Still on `v1.3.1` or earlier (MariaDB)? Follow the [legacy update](legacy-update/README.md) first.
 
 ---
 
 ## 🛠️ Usage
 
-After starting the application, you can login with credential:
-- User account: Admin
-- User password: admin123
+A fresh installation has no user account. When you open the application for
+the first time it shows the setup page, where you create the first
+administrator (user name, email address and password, 10 to 50 characters).
 
-> ⚠️ **Change this password immediately.** It's a well-known default, so
-> logging in with it will prompt you to set a new password before you can
-> use the application any further.
+The page asks for a setup token. `docker-compose-ini.yml` prints it as the
+last lines of its output and stores it in your `.env` as `SETUP_TOKEN`. It
+only protects the first-time setup, so nobody who reaches a new server before
+you can take it over. After the first account exists, the setup page is gone
+and the token has no further use.
 
 For a detailed guide, please refer to our [Documentation](https://uni-verein.de/docs/intro).
 

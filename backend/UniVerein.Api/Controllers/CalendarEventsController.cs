@@ -382,7 +382,7 @@ public class CalendarEventsController : ControllerBase
             userIds.Add(modifiedBy);
 
         Dictionary<Guid, string> usernames = await _db.Users
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .Where(u => userIds.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.Username);
 

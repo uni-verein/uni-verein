@@ -60,6 +60,7 @@ services:
       ConnectionStrings__DbPassword: ${DB_PASSWORD}
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
+      Setup__Token: ${SETUP_TOKEN:-}
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
       Version: ${VERSION}

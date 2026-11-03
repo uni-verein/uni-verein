@@ -126,7 +126,7 @@ export function SecuritySettingsTab() {
           borderColor: 'divider',
         }}
       >
-        <Typography fontWeight={700}>{t('pages.userManagement.security.title')}</Typography>
+        <Typography sx={{ fontWeight: 700 }}>{t('pages.userManagement.security.title')}</Typography>
         {enabled !== null && (
           <Chip
             size="small"
@@ -271,7 +271,7 @@ export function SecuritySettingsTab() {
         )}
       </Box>
 
-      <Dialog open={recoveryCodes !== null} onClose={() => {}} disableEscapeKeyDown>
+      <Dialog open={recoveryCodes !== null} onClose={() => {}}>
         <DialogTitle>{t('pages.userManagement.security.recoveryTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>

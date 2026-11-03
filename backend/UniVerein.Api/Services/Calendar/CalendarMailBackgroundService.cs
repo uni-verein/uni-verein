@@ -8,12 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Models;
+using UniVerein.Api.Tenancy;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
-using UniVerein.DAL.Entities.Enums;
 
 namespace UniVerein.Api.Services.Calendar;
 
@@ -60,6 +59,21 @@ public class CalendarMailBackgroundService : BackgroundService
 
     private async Task SendAsync(List<CalendarMailJob> jobs)
     {
+        foreach (IGrouping<Guid, CalendarMailJob> tenantJobs in jobs.GroupBy(j => j.TenantId))
+        {
+            try
+            {
+                await SendTenantAsync(tenantJobs.Key, tenantJobs.ToList());
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "CalendarMailBackgroundService: Error while sending calendar mails of tenant {TenantId}.", tenantJobs.Key);
+            }
+        }
+    }
+
+    private async Task SendTenantAsync(Guid tenantId, List<CalendarMailJob> jobs)
+    {
         List<CalendarPendingMail> pending = [];
         foreach (CalendarMailJob job in jobs)
         {
@@ -78,7 +92,7 @@ public class CalendarMailBackgroundService : BackgroundService
         if (pending.Count == 0)
             return;
 
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        using IServiceScope scope = _scopeFactory.CreateTenantScope(tenantId);
         MailService mailService = scope.ServiceProvider.GetRequiredService<MailService>();
 
         List<EmailResult> results = await mailService.SendBatchAsync(
@@ -111,7 +125,7 @@ public class CalendarMailBackgroundService : BackgroundService
 
     private async Task<List<(Guid UserId, string Email)>> ResolveRecipientsAsync(CalendarMailJob job)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        using IServiceScope scope = _scopeFactory.CreateTenantScope(job.TenantId);
         AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         CryptoService crypto = scope.ServiceProvider.GetRequiredService<CryptoService>();
 

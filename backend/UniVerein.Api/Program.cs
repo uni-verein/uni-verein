@@ -52,6 +52,7 @@ try
         if (app.Environment.IsEnvironment("Testing"))
         {
             db.Database.EnsureCreated();
+            DefaultDataSeeder.EnsureDefaultTenant(db);
         }
         else
         {

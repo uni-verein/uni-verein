@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using UniVerein.Api.Tenancy;
 
 namespace UniVerein.Api.Services;
 
@@ -30,10 +31,18 @@ public class ContributionBackgroundService : BackgroundService
     {
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
-            ContributionService contributionService = scope.ServiceProvider.GetRequiredService<ContributionService>();
-
-            await contributionService.GenerateDueContributions();
+            await _scopeFactory.ForEachTenantAsync(async services =>
+            {
+                try
+                {
+                    await services.GetRequiredService<ContributionService>().GenerateDueContributions();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "ContributionBackgroundService: Error on contribution run of tenant {TenantId}",
+                        services.GetRequiredService<TenantContext>().TenantId);
+                }
+            });
             Log.Debug("ContributionBackgroundService: Contribution run finished.");
         }
         catch (Exception ex)

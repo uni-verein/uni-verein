@@ -1,7 +1,7 @@
 # Backend
 
-ASP.NET Core API (`UniVerein.Api`) with the EF Core data layer (`UniVerein.DAL`), the database
-migrator (`UniVerein.DbMigrator`) and the integration tests (`UniVerein.IntegrationTests`).
+ASP.NET Core API (`UniVerein.Api`) with the EF Core data layer (`UniVerein.DAL`) and the integration
+tests (`UniVerein.IntegrationTests`).
 For the full dev setup (`.env`, Docker stack, checks before a PR) see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Fake SMTP server (Papercut)

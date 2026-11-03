@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("CreditorConfigs")]
-public class CreditorConfigEntity : BaseEntity
+public class CreditorConfigEntity : TenantScopedEntity
 {
     [Column("name")]
     public required string Name { get; set; }

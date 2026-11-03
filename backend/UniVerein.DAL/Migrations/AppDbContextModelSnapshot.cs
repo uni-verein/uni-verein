@@ -17,7 +17,7 @@ namespace UniVerein.DAL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.21")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -52,11 +52,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("entity");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
 
@@ -99,6 +105,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("sequence");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer")
                         .HasColumnName("year");
@@ -114,7 +124,9 @@ namespace UniVerein.DAL.Migrations
                     b.HasIndex("ReceiptId")
                         .IsUnique();
 
-                    b.HasIndex("Year", "Kind", "Sequence")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Year", "Kind", "Sequence")
                         .IsUnique();
 
                     b.ToTable("BookingNumbers");
@@ -149,7 +161,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CalendarCategories");
                 });
@@ -234,6 +252,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_at");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasColumnType("text")
@@ -263,6 +285,8 @@ namespace UniVerein.DAL.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("StartAt", "SeriesEndAt");
 
@@ -298,11 +322,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("rsvp_status");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
 
@@ -330,11 +360,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("event_id");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
 
@@ -362,6 +398,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_used_at");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasColumnType("text")
@@ -372,6 +412,8 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
@@ -404,7 +446,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("occurrence_start");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EventId", "OccurrenceStart")
                         .IsUnique();
@@ -440,7 +488,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("public_calendar_title");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CalendarSettings");
                 });
@@ -484,9 +538,15 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("payment_date");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MemberId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Contributions");
                 });
@@ -520,7 +580,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ContributionPlans");
                 });
@@ -582,7 +648,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("tax_number");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CreditorConfigs");
                 });
@@ -688,7 +760,13 @@ namespace UniVerein.DAL.Migrations
                         .HasDefaultValue("NON_PROFIT")
                         .HasColumnName("tax_area");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("IncomeCategories");
                 });
@@ -737,9 +815,15 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("payment_date");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Incomes");
                 });
@@ -774,7 +858,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LinkSettings");
                 });
@@ -831,12 +921,18 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("smtp_server");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("MailSettings");
                 });
@@ -866,7 +962,13 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("MemberCategories");
                 });
@@ -1020,11 +1122,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("task_within_the_club");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ContributionPlanId");
 
                     b.HasIndex("MemberCategoryId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Members");
                 });
@@ -1071,6 +1179,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("read_at");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1081,6 +1193,8 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId", "ReadAt");
 
@@ -1145,6 +1259,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("sequence");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer")
                         .HasColumnName("year");
@@ -1157,7 +1275,9 @@ namespace UniVerein.DAL.Migrations
                     b.HasIndex("IncomeId")
                         .IsUnique();
 
-                    b.HasIndex("Year", "Sequence")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Year", "Sequence")
                         .IsUnique();
 
                     b.ToTable("PaymentAcknowledgements");
@@ -1311,11 +1431,17 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("submitted_ip");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ContributionPlanId");
 
                     b.HasIndex("MemberCategoryId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PendingSelfEnrollments");
                 });
@@ -1347,7 +1473,13 @@ namespace UniVerein.DAL.Migrations
                         .HasDefaultValue("NON_PROFIT")
                         .HasColumnName("tax_area");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ReceiptCategories");
                 });
@@ -1395,6 +1527,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("receipt_date");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
@@ -1406,6 +1542,8 @@ namespace UniVerein.DAL.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
 
@@ -1440,9 +1578,15 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("receipt_id");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ReceiptId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ReceiptFiles");
                 });
@@ -1475,9 +1619,84 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("TenantId");
+
                     b.ToTable("SepaExport");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.TenantEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tenants");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.UserDeviceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "UserId", "TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("UserDevices");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.UserEntity", b =>
@@ -1526,6 +1745,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("session_version");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<bool>("TotpEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("totp_enabled");
@@ -1545,6 +1768,8 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Users");
                 });
@@ -1569,6 +1794,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("used_at");
@@ -1578,6 +1807,8 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId", "CodeHash");
 
@@ -1603,6 +1834,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("enabled");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1613,6 +1848,8 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId", "Type")
                         .IsUnique();
@@ -1653,13 +1890,25 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("self_enrollment_enabled");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("web_page_config");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.AuditLogEntity", b =>
                 {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1667,6 +1916,24 @@ namespace UniVerein.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.BookingNumberEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.CalendarCategoryEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.CalendarEventEntity", b =>
@@ -1682,6 +1949,12 @@ namespace UniVerein.DAL.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Category");
 
                     b.Navigation("Owner");
@@ -1693,6 +1966,12 @@ namespace UniVerein.DAL.Migrations
                         .WithMany("Participants")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
@@ -1714,6 +1993,12 @@ namespace UniVerein.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1727,6 +2012,12 @@ namespace UniVerein.DAL.Migrations
 
             modelBuilder.Entity("UniVerein.DAL.Entities.CalendarFeedTokenEntity", b =>
                 {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1734,6 +2025,24 @@ namespace UniVerein.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.CalendarReminderLogEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.CalendarSettingsEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.ContributionEntity", b =>
@@ -1744,7 +2053,31 @@ namespace UniVerein.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("MemberEntity");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.ContributionPlanEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.CreditorConfigEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionNotificationEntity", b =>
@@ -1766,13 +2099,55 @@ namespace UniVerein.DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("UniVerein.DAL.Entities.IncomeCategoryEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("UniVerein.DAL.Entities.IncomeEntity", b =>
                 {
                     b.HasOne("UniVerein.DAL.Entities.IncomeCategoryEntity", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId");
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.LinkSettingsEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.MailSettingsEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.MemberCategoryEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.MemberEntity", b =>
@@ -1785,6 +2160,12 @@ namespace UniVerein.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("MemberCategoryId");
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("ContributionPlan");
 
                     b.Navigation("MemberCategory");
@@ -1792,6 +2173,12 @@ namespace UniVerein.DAL.Migrations
 
             modelBuilder.Entity("UniVerein.DAL.Entities.NotificationEntity", b =>
                 {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1799,6 +2186,15 @@ namespace UniVerein.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.PaymentAcknowledgementEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.PendingSelfEnrollmentEntity", b =>
@@ -1813,9 +2209,24 @@ namespace UniVerein.DAL.Migrations
                         .HasForeignKey("MemberCategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("ContributionPlan");
 
                     b.Navigation("MemberCategory");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.ReceiptCategoryEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.ReceiptEntity", b =>
@@ -1823,6 +2234,12 @@ namespace UniVerein.DAL.Migrations
                     b.HasOne("UniVerein.DAL.Entities.ReceiptCategoryEntity", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId");
+
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
@@ -1841,11 +2258,58 @@ namespace UniVerein.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Receipt");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.SepaExportEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.UserDeviceEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.UserEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.UserRecoveryCodeEntity", b =>
                 {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1857,6 +2321,12 @@ namespace UniVerein.DAL.Migrations
 
             modelBuilder.Entity("UniVerein.DAL.Entities.UserSettingEntity", b =>
                 {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("UniVerein.DAL.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1864,6 +2334,15 @@ namespace UniVerein.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.WebPageConfigEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.CalendarEventEntity", b =>

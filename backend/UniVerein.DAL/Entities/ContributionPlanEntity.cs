@@ -4,7 +4,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("ContributionPlans")]
-public class ContributionPlanEntity : BaseEntity
+public class ContributionPlanEntity : TenantScopedEntity
 {
     [Column("name")]
     public string Name { get; set; } = "";

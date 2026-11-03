@@ -48,7 +48,7 @@ public class CalendarCategoriesController : ControllerBase
 
         string name = request.Name.Trim();
         CalendarCategoryEntity? existingCategory = await _db.CalendarCategories
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .FirstOrDefaultAsync(c => c.Name == name);
 
         if (existingCategory != null)
@@ -108,7 +108,7 @@ public class CalendarCategoriesController : ControllerBase
 
         // Events keep existing without a category instead of blocking the deletion.
         List<CalendarEventEntity> events = await _db.CalendarEvents
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .Where(e => e.CategoryId == id)
             .ToListAsync();
         foreach (CalendarEventEntity calendarEvent in events)
