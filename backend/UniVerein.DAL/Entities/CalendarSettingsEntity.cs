@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("CalendarSettings")]
-public class CalendarSettingsEntity : BaseEntity
+public class CalendarSettingsEntity : TenantScopedEntity
 {
     [Column("public_calendar_enabled")]
     public bool PublicCalendarEnabled { get; set; }

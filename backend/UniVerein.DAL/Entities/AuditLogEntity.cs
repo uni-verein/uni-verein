@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("AuditLogs")]
-public class AuditLogEntity : BaseEntity
+public class AuditLogEntity : TenantScopedEntity
 {
     [Column("user_id")]
     public Guid UserId { get; set; }

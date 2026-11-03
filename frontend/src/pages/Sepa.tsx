@@ -292,7 +292,7 @@ export default function Sepa() {
         </TableContainer>
       )}
 
-      <Grid size={12} mt={3}>
+      <Grid size={12} sx={{ mt: 3 }}>
         <Alert
           severity="warning"
           icon={<WarningAmberIcon />}

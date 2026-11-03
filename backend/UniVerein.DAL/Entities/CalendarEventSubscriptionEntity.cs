@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("CalendarEventSubscriptions")]
-public class CalendarEventSubscriptionEntity : BaseEntity
+public class CalendarEventSubscriptionEntity : TenantScopedEntity
 {
     [Column("event_id")]
     public Guid EventId { get; set; }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using UniVerein.Api.Tenancy;
 
 namespace UniVerein.Api.Services.Firmware
 {
@@ -31,8 +32,18 @@ namespace UniVerein.Api.Services.Firmware
         {
             try
             {
-                FirmwareService firmwareService = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<FirmwareService>();
-                await firmwareService.CheckLatestFirmwareAsync(cancellationToken);
+                await _scopeFactory.ForEachTenantAsync(async services =>
+                {
+                    try
+                    {
+                        await services.GetRequiredService<FirmwareService>().CheckLatestFirmwareAsync(cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "FirmwareCheckBackgroundService: Error while firmware check of tenant {TenantId}.",
+                            services.GetRequiredService<TenantContext>().TenantId);
+                    }
+                }, cancellationToken);
             }
             catch (Exception ex)
             {

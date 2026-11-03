@@ -35,7 +35,7 @@ public static class AuthCookie
         return request.Headers.ContainsKey(CsrfHeader);
     }
 
-    private static CookieOptions CreateOptions(HttpRequest request, DateTimeOffset? expires)
+    internal static CookieOptions CreateOptions(HttpRequest request, DateTimeOffset? expires)
     {
         return new CookieOptions
         {

@@ -31,6 +31,7 @@ services:
       ConnectionStrings__DbPassword: ${DB_PASSWORD}
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
+      Setup__Token: ${SETUP_TOKEN:-}
       CRYPTO_KEY: ${CRYPTO_KEY}
       HMAC_KEY: ${HMAC_KEY}
       Version: ${VERSION}
@@ -43,6 +44,7 @@ services:
       RateLimiting__SelfEnrollment__ReadPermitLimit: "200"
       RateLimiting__SelfEnrollment__ConfirmPermitLimit: "50"
       RateLimiting__AuthLogin__PermitLimit: "1000"
+      RateLimiting__SetupStatus__PermitLimit: "100000"
     volumes:
       - ./receipts:/app/receipts
     cap_drop:

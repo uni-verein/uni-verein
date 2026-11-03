@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("LinkSettings")]
-public class LinkSettingsEntity : BaseEntity
+public class LinkSettingsEntity : TenantScopedEntity
 {
     [Column("link")]
     public string Link { get; set; } = string.Empty;

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("MemberCategories")]
-public class MemberCategoryEntity : BaseEntity
+public class MemberCategoryEntity : TenantScopedEntity
 {
     [Column("category")]
     public required string Category { get; set; }

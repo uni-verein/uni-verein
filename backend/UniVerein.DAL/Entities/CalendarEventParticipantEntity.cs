@@ -5,7 +5,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("CalendarEventParticipants")]
-public class CalendarEventParticipantEntity : BaseEntity
+public class CalendarEventParticipantEntity : TenantScopedEntity
 {
     [Column("event_id")]
     public Guid EventId { get; set; }

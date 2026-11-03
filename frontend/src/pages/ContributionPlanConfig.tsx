@@ -113,7 +113,7 @@ export default function ContributionPlanConfig() {
       <Box
         sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 3 }}
       >
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
           {t('pages.contributionPlanConfig.title')}
         </Typography>
         <Button variant="contained" startIcon={<AddchartIcon />} onClick={() => handleOpen()}>

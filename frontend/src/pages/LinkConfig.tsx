@@ -120,7 +120,7 @@ export default function LinkConfig() {
         }}
       >
         <Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             {t('pages.linkConfig.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">

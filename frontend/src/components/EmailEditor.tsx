@@ -32,7 +32,7 @@ import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import CloseIcon from '@mui/icons-material/Close';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import MailOutlineIcon from '@mui/icons-material/MailOutlined';
 import { EmailEditorProps } from '../types';
 import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '../hooks/useSnackbar';
@@ -187,7 +187,7 @@ export default function EmailEditor({
           {information}
         </Alert>
       )}
-      <Box mb={2}>
+      <Box sx={{ mb: 2 }}>
         <TextField
           fullWidth
           label={t('pages.mail.editorPage.subjectLabel')}
@@ -252,7 +252,7 @@ export default function EmailEditor({
               onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
               sx={toolbarBtnSx(editor.isActive('heading', { level: 1 }))}
             >
-              <Typography variant="caption" fontWeight="bold">
+              <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
                 H1
               </Typography>
             </IconButton>
@@ -263,7 +263,7 @@ export default function EmailEditor({
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               sx={toolbarBtnSx(editor.isActive('heading', { level: 2 }))}
             >
-              <Typography variant="caption" fontWeight="bold">
+              <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
                 H2
               </Typography>
             </IconButton>
@@ -392,11 +392,11 @@ export default function EmailEditor({
       </Paper>
 
       {attachments.length > 0 && (
-        <Box mb={2}>
+        <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" gutterBottom>
             {t('pages.mail.editorPage.attachments.sectionTitle')}
           </Typography>
-          <Stack direction="row" flexWrap="wrap" gap={1}>
+          <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
             {attachments.map((att, i) => (
               <Chip
                 key={i}
@@ -422,14 +422,16 @@ export default function EmailEditor({
       <Divider sx={{ mb: 2 }} />
 
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        flexWrap="wrap"
-        gap={2}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
+        }}
       >
         <Stack direction="column" spacing={0.5}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <MailOutlineIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">
               {t('pages.mail.editorPage.recipients.selected', { count: recipientCount })}

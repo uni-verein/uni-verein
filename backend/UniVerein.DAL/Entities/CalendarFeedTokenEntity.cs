@@ -6,7 +6,7 @@ namespace UniVerein.DAL.Entities;
 // Secret token of a user's personal iCal feed. Only the SHA-256 hash is stored, the token itself is shown to
 // the user once when it is created.
 [Table("CalendarFeedTokens")]
-public class CalendarFeedTokenEntity : BaseEntity
+public class CalendarFeedTokenEntity : TenantScopedEntity
 {
     [Column("user_id")]
     public Guid UserId { get; set; }

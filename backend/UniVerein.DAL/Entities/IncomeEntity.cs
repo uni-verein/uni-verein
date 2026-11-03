@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("Incomes")]
-public class IncomeEntity : BaseEntity
+public class IncomeEntity : TenantScopedEntity
 {
     [Column("category_id")]
     public Guid? CategoryId { get; set; }

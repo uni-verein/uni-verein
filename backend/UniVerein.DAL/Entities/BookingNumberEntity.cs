@@ -5,7 +5,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("BookingNumbers")]
-public class BookingNumberEntity : BaseEntity
+public class BookingNumberEntity : TenantScopedEntity
 {
     [Column("year")]
     public int Year { get; set; }

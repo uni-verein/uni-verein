@@ -6,7 +6,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("Users")]
-public class UserEntity : BaseEntity
+public class UserEntity : TenantScopedEntity
 {
     [MaxLength(50)]
     [Column("username")]

@@ -174,7 +174,7 @@ public class IncomeService
             .Select(x => (x.CategoryId, x.Amount))
             .ToList();
         Dictionary<Guid, string> categoryNames = await _db.IncomeCategories
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .ToDictionaryAsync(x => x.Id, x => x.Name);
 
         List<IncomeBreakdownResult> breakdown = new();

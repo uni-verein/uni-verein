@@ -1154,6 +1154,34 @@
       "errorTitle": "Link invalid or expired",
       "errorMessage": "This confirmation link is invalid, expired, or was already used. Please register again."
     },
+    "setup": {
+      "title": "First-time setup",
+      "hint": "Create the first administrator account with user name, email address and password. You can find the setup token at the end of the docker-compose-ini.yml output and in the .env file (SETUP_TOKEN).",
+      "token": "Setup token",
+      "username": "User name",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Complete setup",
+      "submitting": "Setting up...",
+      "validation": {
+        "tokenEmpty": "Please enter the setup token.",
+        "usernameEmpty": "User name must not be empty.",
+        "usernameTooLong": "User name must not exceed 50 characters.",
+        "emailEmpty": "Email address must not be empty.",
+        "emailTooLong": "Email address must not exceed 50 characters.",
+        "emailInvalid": "Please enter a valid email address.",
+        "passwordTooShort": "Password must be at least 10 characters long.",
+        "passwordTooLong": "Password must not exceed 50 characters.",
+        "mismatch": "Passwords do not match."
+      },
+      "errors": {
+        "invalidToken": "The setup token is invalid.",
+        "alreadySetUp": "The system is already set up. Please log in.",
+        "generic": "Setup failed. Please try again.",
+        "tooManyRequests": "Too many attempts. Please wait a moment and try again."
+      }
+    },
     "login": {
       "login": "Login",
       "loading": "Being logged in...",
@@ -1172,21 +1200,6 @@
         "verify": "Verify",
         "back": "Back",
         "error": "The code is incorrect or has expired."
-      },
-      "forcePasswordChange": {
-        "title": "Change your password",
-        "description": "You're using the default password. For security reasons, please set a new password before continuing.",
-        "newPassword": "New password",
-        "confirmPassword": "Confirm new password",
-        "save": "Set password",
-        "validation": {
-          "empty": "Password must not be empty.",
-          "tooShort": "Password must be at least 11 characters long.",
-          "tooLong": "Password must not exceed 50 characters.",
-          "isDefault": "Please choose a password other than \"admin123\".",
-          "mismatch": "Passwords do not match."
-        },
-        "error": "Could not set the new password. Please try again."
       },
       "demo": {
         "header": "Demo version",

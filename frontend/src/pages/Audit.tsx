@@ -56,12 +56,12 @@ export default function Audit() {
 
   return (
     <Box sx={{ p: { xs: 0, sm: 3 } }}>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
+      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
         {t('pages.audit.title')}
       </Typography>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" mt={6}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
           <CircularProgress />
         </Box>
       ) : isMobile ? (

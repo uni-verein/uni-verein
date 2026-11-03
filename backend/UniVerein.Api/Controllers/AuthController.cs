@@ -10,6 +10,7 @@ using UniVerein.Api.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniVerein.Api.Services;
+using UniVerein.Api.Services.LoginNotification;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using Microsoft.AspNetCore.Cors;
@@ -31,15 +32,22 @@ public class AuthController : ControllerBase
     private readonly LoginAttemptTracker _loginAttempts;
     private readonly TwoFactorService _twoFactor;
     private readonly AccountLockoutTracker _accountLockout;
+    private readonly DeviceTrackingService _devices;
+    private readonly LoginNotificationQueue _loginNotifications;
+    private readonly TimeProvider _timeProvider;
 
     public AuthController(AppDbContext db, JwtService jwt, LoginAttemptTracker loginAttempts, TwoFactorService twoFactor,
-        AccountLockoutTracker accountLockout)
+        AccountLockoutTracker accountLockout, DeviceTrackingService devices, LoginNotificationQueue loginNotifications,
+        TimeProvider timeProvider)
     {
         _db = db;
         _jwt = jwt;
         _loginAttempts = loginAttempts;
         _twoFactor = twoFactor;
         _accountLockout = accountLockout;
+        _devices = devices;
+        _loginNotifications = loginNotifications;
+        _timeProvider = timeProvider;
     }
 
     [AllowAnonymous]
@@ -48,8 +56,9 @@ public class AuthController : ControllerBase
     public async Task<ActionResult> LoginAsync([FromBody] LoginRequest request)
     {
         string clientIp = HttpContext.GetClientIpAddress();
+        string loginSubject = $"{_db.CurrentTenantId}|{request.Username}";
 
-        TimeSpan? remaining = _loginAttempts.GetRemainingLockout(request.Username, clientIp);
+        TimeSpan? remaining = _loginAttempts.GetRemainingLockout(loginSubject, clientIp);
         if (remaining.HasValue)
         {
             Log.Warning("AuthController: LoginAsync -> Login blocked by lockout, {RemainingSeconds} seconds remaining.",
@@ -75,7 +84,7 @@ public class AuthController : ControllerBase
                 // ignored: only used to equalize timing
             }
 
-            _loginAttempts.RegisterFailure(request.Username, clientIp);
+            _loginAttempts.RegisterFailure(loginSubject, clientIp);
             Log.Warning("AuthController: Login failed, user not found.");
             return Unauthorized();
         }
@@ -84,7 +93,7 @@ public class AuthController : ControllerBase
         {
             if (!CryptoService.VerifyPassword(request.Password, user.PasswordHash))
             {
-                _loginAttempts.RegisterFailure(request.Username, clientIp);
+                _loginAttempts.RegisterFailure(loginSubject, clientIp);
                 Log.Warning("AuthController: LoginAsync -> Wrong password for user {UserId}.", user.Id);
                 return Unauthorized();
             }
@@ -96,7 +105,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        _loginAttempts.Reset(request.Username, clientIp);
+        _loginAttempts.Reset(loginSubject, clientIp);
         user.FailedAttempts = 0;
         user.LastFailedLoginAttempt = null;
         user.BlockingLoginTimeout = null;
@@ -104,13 +113,15 @@ public class AuthController : ControllerBase
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
 
+        await NotifyIfNewDeviceAsync(user, clientIp);
+
         if (user.TotpEnabled)
         {
             Log.Information("AuthController: LoginAsync -> User {UserId} passed the password check, two-factor code required.", user.Id);
             return Ok(new LoginTwoFactorRequiredApiResult { Challenge = _twoFactor.CreateChallenge(user) });
         }
 
-        return CompleteLogin(user);
+        return await CompleteLoginAsync(user);
     }
 
     [AllowAnonymous]
@@ -171,7 +182,7 @@ public class AuthController : ControllerBase
         _accountLockout.Reset(user.Id);
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
-        return CompleteLogin(user);
+        return await CompleteLoginAsync(user);
     }
 
     private ObjectResult TwoFactorBlocked(TimeSpan remaining, bool recoveryCodeAllowed)
@@ -186,9 +197,35 @@ public class AuthController : ControllerBase
         });
     }
 
-    private ActionResult CompleteLogin(UserEntity user)
+    private async Task NotifyIfNewDeviceAsync(UserEntity user, string clientIp)
+    {
+        try
+        {
+            if (!await _devices.IsNewDeviceAsync(user.Id, HttpContext))
+                return;
+
+            string userAgent = Request.Headers.UserAgent.ToString();
+            _loginNotifications.Enqueue(new LoginNotificationJob(user.Id, NormalizeIp(clientIp),
+                string.IsNullOrWhiteSpace(userAgent) ? null : userAgent[..Math.Min(userAgent.Length, 512)],
+                _timeProvider.GetUtcNow(), user.TotpEnabled, _db.CurrentTenantId));
+        }
+        catch (Exception ex)
+        {
+            Log.Error("AuthController: NotifyIfNewDeviceAsync -> User {UserId} threw {ExceptionType}.", user.Id, ex.GetType().Name);
+        }
+    }
+
+    private static string NormalizeIp(string ip)
+    {
+        return IPAddress.TryParse(ip, out IPAddress? address) && address.IsIPv4MappedToIPv6
+            ? address.MapToIPv4().ToString()
+            : ip;
+    }
+
+    private async Task<ActionResult> CompleteLoginAsync(UserEntity user)
     {
         Log.Information("AuthController: LoginAsync -> User {UserId} logged in with role {Role}.", user.Id, user.Role);
+        await _devices.RegisterAsync(user.Id, HttpContext);
         string token = _jwt.IssueSession(HttpContext, user);
 
         return Ok(new LoginApiResult

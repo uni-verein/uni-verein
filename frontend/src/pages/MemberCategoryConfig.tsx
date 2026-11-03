@@ -114,7 +114,7 @@ export default function MemberCategoryConfig() {
       <Box
         sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 3 }}
       >
-        <Typography variant="h5" fontWeight={700}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
           {t('pages.memberCategoryConfig.title')}
         </Typography>
         <Button variant="contained" startIcon={<GroupAddIcon />} onClick={() => handleOpen()}>

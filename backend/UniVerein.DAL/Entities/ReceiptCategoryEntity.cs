@@ -4,7 +4,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("ReceiptCategories")]
-public class ReceiptCategoryEntity : BaseEntity
+public class ReceiptCategoryEntity : TenantScopedEntity
 {
     [Column("name")]
     public required string Name { get; set; } = string.Empty;

@@ -58,7 +58,7 @@ public class ReceiptCategoriesController : ControllerBase
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Unknown tax area."));
 
         ReceiptCategoryEntity? existingCategory = await _db.ReceiptCategories
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .FirstOrDefaultAsync(c => c.Name == request.Name);
 
         if (existingCategory != null)

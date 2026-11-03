@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { authenticate, BackendClient, APP_BASE } from './BackendClient';
+import { authenticate, BackendClient, APP_BASE, ADMIN_EMAIL } from './BackendClient';
 import { Role, TestUser } from '../src/types';
 
 const createdUserIds = new Set<string>();
@@ -68,10 +68,14 @@ test.describe('User management page', () => {
     await expect(page.getByRole('cell', { name: 'Admin' }).nth(3)).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Admin' }).nth(1)).toBeVisible();
     await expect(
-      page.getByRole('row', { name: 'Admin ADMIN Bearbeiten Löschen' }).getByLabel('Bearbeiten'),
+      page
+        .getByRole('row', { name: `Admin ${ADMIN_EMAIL} ADMIN Bearbeiten Löschen` })
+        .getByLabel('Bearbeiten'),
     ).toBeVisible();
     await expect(
-      page.getByRole('row', { name: 'Admin ADMIN Bearbeiten Löschen' }).getByLabel('Löschen'),
+      page
+        .getByRole('row', { name: `Admin ${ADMIN_EMAIL} ADMIN Bearbeiten Löschen` })
+        .getByLabel('Löschen'),
     ).toBeVisible();
   });
 

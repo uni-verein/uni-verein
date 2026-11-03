@@ -47,6 +47,7 @@ services:
 
         check_and_set JWT_KEY           "$$(openssl rand -hex 32)"
         check_and_set JWT_ISSUER        uni-verein
+        check_and_set SETUP_TOKEN       "$$(openssl rand -hex 16)"
         check_and_set HMAC_KEY          "$$(openssl rand -base64 32)"
         check_and_set CRYPTO_KEY        "$$(openssl rand -base64 32)"
         check_and_set DB_ROOT_PASSWORD  "$$(openssl rand -hex 24)"
@@ -67,4 +68,7 @@ services:
         echo "[INIT] Final .env keys:"
         cut -d'=' -f1 "$$ENV_FILE"
         echo "[INIT] Setup complete!"
+        echo ""
+        echo "[INIT] First-time setup token (enter it once when creating the first admin account):"
+        echo "[INIT]   $$(grep '^SETUP_TOKEN=' "$$ENV_FILE" | cut -d'=' -f2-)"
     restart: "no"

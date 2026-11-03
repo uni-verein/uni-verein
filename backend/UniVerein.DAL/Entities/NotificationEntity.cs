@@ -5,7 +5,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("Notifications")]
-public class NotificationEntity : BaseEntity
+public class NotificationEntity : TenantScopedEntity
 {
     [Column("user_id")]
     public Guid UserId { get; set; }

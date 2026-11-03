@@ -102,7 +102,7 @@ export function PublicCalendarSettings({ categories }: { categories: CalendarCat
         confirmColor={confirmDialog.confirmColor}
       />
       <Stack spacing={2}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {t('pages.calendarCategoryConfig.publicCalendar.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">

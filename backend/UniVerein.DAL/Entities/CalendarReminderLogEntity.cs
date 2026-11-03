@@ -5,7 +5,7 @@ namespace UniVerein.DAL.Entities;
 
 // Marks that the reminder for one occurrence of an event was sent, so it is not sent again.
 [Table("CalendarReminderLogs")]
-public class CalendarReminderLogEntity : BaseEntity
+public class CalendarReminderLogEntity : TenantScopedEntity
 {
     [Column("event_id")]
     public Guid EventId { get; set; }

@@ -61,7 +61,7 @@ public class IncomeCategoriesController : ControllerBase
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Unknown tax area."));
 
         IncomeCategoryEntity? existingCategory = await _db.IncomeCategories
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .FirstOrDefaultAsync(c => c.Name == name);
 
         if (existingCategory != null)

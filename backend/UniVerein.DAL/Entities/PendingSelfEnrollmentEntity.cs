@@ -5,7 +5,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("PendingSelfEnrollments")]
-public class PendingSelfEnrollmentEntity : BaseEntity
+public class PendingSelfEnrollmentEntity : TenantScopedEntity
 {
     [Column("status")]
     public PendingSelfEnrollmentStatus Status { get; set; } = PendingSelfEnrollmentStatus.AWAITING_EMAIL_CONFIRMATION;

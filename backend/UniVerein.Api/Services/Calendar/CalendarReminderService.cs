@@ -118,10 +118,10 @@ public class CalendarReminderService
         DateTimeOffset notificationCutoff = now - NotificationRetention;
         DateTimeOffset logCutoff = now - ReminderLogRetention;
 
-        int notificationCount = await _db.Notifications.IgnoreQueryFilters()
+        int notificationCount = await _db.Notifications.IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .Where(n => n.CreatedAt < notificationCutoff)
             .ExecuteDeleteAsync();
-        int reminderLogCount = await _db.CalendarReminderLogs.IgnoreQueryFilters()
+        int reminderLogCount = await _db.CalendarReminderLogs.IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .Where(l => l.OccurrenceStart < logCutoff)
             .ExecuteDeleteAsync();
 

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using UniVerein.Api.Tenancy;
 
 namespace UniVerein.Api.Services.Calendar;
 
@@ -26,14 +27,25 @@ public class CalendarReminderBackgroundService : BackgroundService
         {
             try
             {
-                using IServiceScope scope = _scopeFactory.CreateScope();
-                CalendarReminderService reminderService =
-                    scope.ServiceProvider.GetRequiredService<CalendarReminderService>();
-                await reminderService.SendDueRemindersAsync();
+                bool cleanup = ticks++ % 1440 == 0;
 
-                // Old notifications and reminder logs are cleaned up about once a day.
-                if (ticks++ % 1440 == 0)
-                    await reminderService.CleanupAsync();
+                await _scopeFactory.ForEachTenantAsync(async services =>
+                {
+                    try
+                    {
+                        CalendarReminderService reminderService = services.GetRequiredService<CalendarReminderService>();
+                        await reminderService.SendDueRemindersAsync();
+
+                        // Old notifications and reminder logs are cleaned up about once a day.
+                        if (cleanup)
+                            await reminderService.CleanupAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "CalendarReminderBackgroundService: Error while sending calendar reminders of tenant {TenantId}.",
+                            services.GetRequiredService<TenantContext>().TenantId);
+                    }
+                }, cancellationToken);
             }
             catch (Exception ex)
             {

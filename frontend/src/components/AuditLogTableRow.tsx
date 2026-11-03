@@ -81,7 +81,7 @@ export function AuditLogTableRow({ l, index }: { l: AuditLog; index: number }) {
                 borderColor: 'primary.main',
               }}
             >
-              <Typography variant="caption" color="text.secondary" fontWeight="bold">
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
                 {t('pages.audit.dataLabel')}
               </Typography>
               <Typography

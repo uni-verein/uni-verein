@@ -31,7 +31,7 @@ public class AuditController : ControllerBase
             return BadRequest(new ApiResults.ErrorResults.BadRequestResult(moreInfo: "Offset and/or Limit must be greater than or equal to 1."));
 
         IQueryable<AuditLogResult> logs = _db.AuditLogs
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilter.SOFT_DELETE)
             .OrderByDescending(a => a.CreatedAt)
             .Select(x => new AuditLogResult()
             {

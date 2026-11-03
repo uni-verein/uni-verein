@@ -1154,6 +1154,34 @@
       "errorTitle": "Link ungültig oder abgelaufen",
       "errorMessage": "Dieser Bestätigungslink ist ungültig, abgelaufen oder wurde bereits verwendet. Bitte registriere dich erneut."
     },
+    "setup": {
+      "title": "Ersteinrichtung",
+      "hint": "Lege den ersten Administrator-Zugang mit Benutzername, E-Mail-Adresse und Passwort an. Das Einrichtungs-Token findest du am Ende der Ausgabe von docker-compose-ini.yml und in der Datei .env (SETUP_TOKEN).",
+      "token": "Einrichtungs-Token",
+      "username": "Benutzername",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "submit": "Einrichtung abschließen",
+      "submitting": "Wird eingerichtet...",
+      "validation": {
+        "tokenEmpty": "Bitte gib das Einrichtungs-Token ein.",
+        "usernameEmpty": "Der Benutzername darf nicht leer sein.",
+        "usernameTooLong": "Der Benutzername darf höchstens 50 Zeichen lang sein.",
+        "emailEmpty": "Die E-Mail-Adresse darf nicht leer sein.",
+        "emailTooLong": "Die E-Mail-Adresse darf höchstens 50 Zeichen lang sein.",
+        "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+        "passwordTooShort": "Das Passwort muss mindestens 10 Zeichen lang sein.",
+        "passwordTooLong": "Das Passwort darf höchstens 50 Zeichen lang sein.",
+        "mismatch": "Die Passwörter stimmen nicht überein."
+      },
+      "errors": {
+        "invalidToken": "Das Einrichtungs-Token ist ungültig.",
+        "alreadySetUp": "Das System ist bereits eingerichtet. Bitte melde dich an.",
+        "generic": "Die Einrichtung ist fehlgeschlagen. Bitte versuche es erneut.",
+        "tooManyRequests": "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut."
+      }
+    },
     "login": {
       "login": "Anmelden",
       "loading": "Wird angemeldet...",
@@ -1172,21 +1200,6 @@
         "verify": "Bestätigen",
         "back": "Zurück",
         "error": "Der Code ist falsch oder abgelaufen."
-      },
-      "forcePasswordChange": {
-        "title": "Passwort ändern",
-        "description": "Du verwendest das Standardpasswort. Bitte lege aus Sicherheitsgründen ein neues Passwort fest, bevor du fortfährst.",
-        "newPassword": "Neues Passwort",
-        "confirmPassword": "Neues Passwort bestätigen",
-        "save": "Passwort festlegen",
-        "validation": {
-          "empty": "Das Passwort darf nicht leer sein.",
-          "tooShort": "Das Passwort muss mindestens 11 Zeichen lang sein.",
-          "tooLong": "Das Passwort darf höchstens 50 Zeichen lang sein.",
-          "isDefault": "Bitte wähle ein anderes Passwort als \"admin123\".",
-          "mismatch": "Die Passwörter stimmen nicht überein."
-        },
-        "error": "Das neue Passwort konnte nicht gesetzt werden. Bitte versuche es erneut."
       },
       "demo": {
         "header": "Demoversion",

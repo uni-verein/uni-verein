@@ -5,7 +5,7 @@ using UniVerein.DAL.Entities.Enums;
 namespace UniVerein.DAL.Entities;
 
 [Table("UserSettings")]
-public class UserSettingEntity : BaseEntity
+public class UserSettingEntity : TenantScopedEntity
 {
     [Column("user_id")]
     public Guid UserId { get; set; }

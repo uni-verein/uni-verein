@@ -100,21 +100,17 @@ const RecipientList: FC<RecipientListProps> = ({
       >
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          flexWrap="wrap"
-          gap={1}
+          sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <PeopleAltIcon />
             <Typography>{t('pages.mail.recipientPage.recipientList')}</Typography>
           </Stack>
 
           <Stack
             direction={isMobile ? 'column' : 'row'}
-            alignItems={isMobile ? 'stretch' : 'center'}
             spacing={1.5}
-            sx={{ width: isMobile ? '100%' : 'auto' }}
+            sx={{ alignItems: isMobile ? 'stretch' : 'center', width: isMobile ? '100%' : 'auto' }}
           >
             <TextField
               placeholder={t('pages.mail.recipientPage.searchNamePlaceholder')}
@@ -123,8 +119,10 @@ const RecipientList: FC<RecipientListProps> = ({
               onChange={(e) => handleSearchChange(e.target.value)}
               size="small"
               fullWidth={isMobile}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
+              slotProps={{
+                input: {
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
+                },
               }}
               sx={{
                 minWidth: isMobile ? 'auto' : 180,
@@ -163,12 +161,12 @@ const RecipientList: FC<RecipientListProps> = ({
               select
               size="small"
               fullWidth={isMobile}
-              SelectProps={{
-                displayEmpty: true,
-              }}
-              InputLabelProps={{
-                shrink: true,
-                sx: { color: 'rgba(255,255,255,0.7)' },
+              slotProps={{
+                select: { displayEmpty: true },
+                inputLabel: {
+                  shrink: true,
+                  sx: { color: 'rgba(255,255,255,0.7)' },
+                },
               }}
               sx={{
                 minWidth: isMobile ? 'auto' : 180,
@@ -283,7 +281,7 @@ const RecipientList: FC<RecipientListProps> = ({
                       const nameLabel = (
                         <Typography
                           variant="body2"
-                          fontWeight={isSelected ? 600 : 400}
+                          sx={{ fontWeight: isSelected ? 600 : 400 }}
                           color="text.primary"
                           noWrap
                         >

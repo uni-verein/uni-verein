@@ -1,6 +1,7 @@
 using UniVerein.Api;
 using UniVerein.Api.Services;
 using UniVerein.Api.Services.Calendar;
+using UniVerein.Api.Services.LoginNotification;
 using UniVerein.Api.Security;
 using UniVerein.Api.Services.Firmware;
 using UniVerein.DAL.Data;
@@ -104,12 +105,14 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
 
         scope.ServiceProvider.GetRequiredService<LoginAttemptTracker>().Clear();
         scope.ServiceProvider.GetRequiredService<AccountLockoutTracker>().Clear();
+        scope.ServiceProvider.GetRequiredService<LoginNotificationQueue>().Clear();
 
         db.AuditLogs.RemoveRange(db.AuditLogs.IgnoreQueryFilters());
         db.Notifications.RemoveRange(db.Notifications.IgnoreQueryFilters());
         db.CalendarReminderLogs.RemoveRange(db.CalendarReminderLogs.IgnoreQueryFilters());
         db.CalendarFeedTokens.RemoveRange(db.CalendarFeedTokens.IgnoreQueryFilters());
         db.UserRecoveryCodes.RemoveRange(db.UserRecoveryCodes.IgnoreQueryFilters());
+        db.UserDevices.RemoveRange(db.UserDevices.IgnoreQueryFilters());
         db.CalendarSettings.RemoveRange(db.CalendarSettings.IgnoreQueryFilters());
         db.CalendarEventSubscriptions.RemoveRange(db.CalendarEventSubscriptions.IgnoreQueryFilters());
         db.CalendarEventParticipants.RemoveRange(db.CalendarEventParticipants.IgnoreQueryFilters());
@@ -126,6 +129,7 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
         db.SepaExports.RemoveRange(db.SepaExports.IgnoreQueryFilters());
         db.Users.RemoveRange(db.Users.IgnoreQueryFilters());
         db.WebPageConfigs.RemoveRange(db.WebPageConfigs.IgnoreQueryFilters());
+        db.Tenants.RemoveRange(db.Tenants.Where(t => t.Id != TenantEntity.DefaultId));
         await db.SaveChangesAsync();
 
         await SeedDatabaseAsync(db);
@@ -133,6 +137,8 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
 
     private static async Task SeedDatabaseAsync(AppDbContext db)
     {
+        DefaultDataSeeder.EnsureDefaultTenant(db);
+
         if (!db.Users.Any())
         {
             db.Users.Add(new UserEntity()

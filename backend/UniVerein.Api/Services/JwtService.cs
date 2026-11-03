@@ -15,6 +15,7 @@ public class JwtService
 {
     public static readonly TimeSpan Lifetime = TimeSpan.FromHours(8);
     public const string SessionVersionClaim = "session_version";
+    public const string TenantClaim = "tenant_id";
 
     private readonly IConfiguration _config;
 
@@ -36,7 +37,8 @@ public class JwtService
                 new Claim(ClaimTypes.NameIdentifier, userEntity.Id.ToString()),
                 new Claim(ClaimTypes.Name, userEntity.Username),
                 new Claim(ClaimTypes.Role, userEntity.Role.ToString()),
-                new Claim(SessionVersionClaim, userEntity.SessionVersion.ToString(), ClaimValueTypes.Integer32)
+                new Claim(SessionVersionClaim, userEntity.SessionVersion.ToString(), ClaimValueTypes.Integer32),
+                new Claim(TenantClaim, userEntity.TenantId.ToString())
             },
             expires: DateTime.UtcNow.Add(Lifetime),
             signingCredentials: creds

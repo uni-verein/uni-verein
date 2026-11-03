@@ -65,8 +65,12 @@ test.describe('Member – create new member', () => {
       await openDashboard(page, tc.get().token);
       await expect(page.getByRole('textbox', { name: 'Name suche' })).toBeVisible();
       await expect(page.getByText('Alle Aufgaben')).toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Mitgliedsstatus Alle' })).toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Mitgliederkategorie Alle' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Mitgliedsstatus' }).filter({ hasText: 'Alle' }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Mitgliederkategorie' }).filter({ hasText: 'Alle' }),
+      ).toBeVisible();
     });
 
     test('Page header show refresh button', async ({ page }) => {
@@ -104,7 +108,9 @@ test.describe('Member – create new member', () => {
         page.getByText('Geben Sie hier die Stammdaten des Vereinsmitglieds ein.', { exact: true }),
       ).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Mann' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Mann' }),
+      ).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Vorname' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Zweitname' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Nachname' })).toBeVisible();
@@ -113,7 +119,9 @@ test.describe('Member – create new member', () => {
       await expect(page.getByRole('textbox', { name: 'PLZ' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Stadt' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'E-Mail' })).toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Rundmail Erlaubt' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Rundmail' }).filter({ hasText: 'Erlaubt' }),
+      ).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Telefon-Nr.' })).toBeVisible();
       await page.getByRole('dialog').evaluate((el) => {
         el.scrollTop = el.scrollHeight;
@@ -123,9 +131,11 @@ test.describe('Member – create new member', () => {
       await expect(page.getByRole('combobox', { name: 'Akademischer Grad' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Studiengang' })).toBeVisible();
       await expect(
-        page.getByRole('combobox', { name: 'Aufgabe im Verein Mitglied' }),
+        page.getByRole('combobox', { name: 'Aufgabe im Verein' }).filter({ hasText: 'Mitglied' }),
       ).toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Mitgliedsstatus Mitglied' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Mitgliedsstatus' }).filter({ hasText: 'Mitglied' }),
+      ).toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Mitgliederkategorie' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'Eintrittsdatum' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'AustrittsDatum' })).toBeVisible();
@@ -133,7 +143,7 @@ test.describe('Member – create new member', () => {
       await expect(page.getByRole('textbox', { name: 'BIC' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'SEPA-Zustimmung' })).toBeVisible();
       await expect(
-        page.getByRole('combobox', { name: 'Beitragstarif Keinen Beitrag' }),
+        page.getByRole('combobox', { name: 'Beitragstarif' }).filter({ hasText: 'Keinen Beitrag' }),
       ).toBeVisible();
       await expect(page.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Speichern' })).toBeVisible();
@@ -148,16 +158,22 @@ test.describe('Member – create new member', () => {
         page.getByText('Geben Sie hier die Stammdaten des Vereinsmitglieds ein.', { exact: true }),
       ).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Mann' })).toBeVisible();
-      await page.getByRole('combobox', { name: 'Geschlecht Mann' }).click();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Mann' }),
+      ).toBeVisible();
+      await page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Mann' }).click();
       await expect(page.getByRole('option', { name: 'Mann' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Frau' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Diverse' })).toBeVisible();
       await page.getByRole('option', { name: 'Frau' }).click();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Frau' })).toBeVisible();
-      await page.getByRole('combobox', { name: 'Geschlecht Frau' }).click();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Frau' }),
+      ).toBeVisible();
+      await page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Frau' }).click();
       await page.getByRole('option', { name: 'Diverse' }).click();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Diverse' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Diverse' }),
+      ).toBeVisible();
       await page.getByRole('textbox', { name: 'Vorname' }).click();
       await page.getByRole('textbox', { name: 'Vorname' }).fill('Test');
       await page.getByRole('textbox', { name: 'Nachname' }).click();
@@ -183,12 +199,16 @@ test.describe('Member – create new member', () => {
       await page.getByRole('textbox', { name: 'E-Mail' }).click();
       await page.getByRole('textbox', { name: 'E-Mail' }).fill(`test_${Date.now()}@test.de`);
 
-      await expect(page.getByRole('combobox', { name: 'Rundmail Erlaubt' })).toBeVisible();
-      await page.getByRole('combobox', { name: 'Rundmail Erlaubt' }).click();
+      await expect(
+        page.getByRole('combobox', { name: 'Rundmail' }).filter({ hasText: 'Erlaubt' }),
+      ).toBeVisible();
+      await page.getByRole('combobox', { name: 'Rundmail' }).filter({ hasText: 'Erlaubt' }).click();
       await expect(page.getByRole('option', { name: 'Erlaubt', exact: true })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Nicht erlaubt' })).toBeVisible();
       await page.getByRole('option', { name: 'Nicht erlaubt' }).click();
-      await expect(page.getByRole('combobox', { name: 'Rundmail Nicht Erlaubt' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Rundmail' }).filter({ hasText: 'Nicht Erlaubt' }),
+      ).toBeVisible();
 
       await page.getByRole('group', { name: 'Studienbeginn' }).getByLabel('Choose date').click();
       await page.getByRole('radio', { name: 'März', exact: true }).click();
@@ -200,7 +220,10 @@ test.describe('Member – create new member', () => {
         .getByLabel('März 2026', { exact: true })
         .getByRole('radio', { name: '2026' })
         .click();
-      await page.getByRole('combobox', { name: 'Aufgabe im Verein Mitglied' }).click();
+      await page
+        .getByRole('combobox', { name: 'Aufgabe im Verein' })
+        .filter({ hasText: 'Mitglied' })
+        .click();
       await expect(page.getByRole('option', { name: '1. Vorstand' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Alumni-Beauftragter' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Mitglied' })).toBeVisible();
@@ -309,16 +332,22 @@ test.describe('Member – create new member', () => {
         page.getByText('Geben Sie hier die Stammdaten des Vereinsmitglieds ein.', { exact: true }),
       ).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Mitgliedsnummer' })).not.toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Mann' })).toBeVisible();
-      await page.getByRole('combobox', { name: 'Geschlecht Mann' }).click();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Mann' }),
+      ).toBeVisible();
+      await page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Mann' }).click();
       await expect(page.getByRole('option', { name: 'Mann' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Frau' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Diverse' })).toBeVisible();
       await page.getByRole('option', { name: 'Frau' }).click();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Frau' })).toBeVisible();
-      await page.getByRole('combobox', { name: 'Geschlecht Frau' }).click();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Frau' }),
+      ).toBeVisible();
+      await page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Frau' }).click();
       await page.getByRole('option', { name: 'Diverse' }).click();
-      await expect(page.getByRole('combobox', { name: 'Geschlecht Diverse' })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Geschlecht' }).filter({ hasText: 'Diverse' }),
+      ).toBeVisible();
       await page.getByRole('textbox', { name: 'Vorname' }).click();
       await page.getByRole('textbox', { name: 'Vorname' }).fill('Test');
       await page.getByRole('textbox', { name: 'Nachname' }).click();
@@ -353,7 +382,10 @@ test.describe('Member – create new member', () => {
       await page.getByRole('radio', { name: 'März', exact: true }).click();
       await page.getByRole('radio', { name: '2026', exact: true }).last().click();
 
-      await page.getByRole('combobox', { name: 'Aufgabe im Verein Mitglied' }).click();
+      await page
+        .getByRole('combobox', { name: 'Aufgabe im Verein' })
+        .filter({ hasText: 'Mitglied' })
+        .click();
       await expect(page.getByRole('option', { name: '1. Vorstand' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Alumni-Beauftragter' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Mitglied' })).toBeVisible();

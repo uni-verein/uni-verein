@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { useTranslation } from 'react-i18next';
 
 type ErrorBoundaryProps = {
@@ -63,7 +63,7 @@ function ErrorFallback({ fullScreen, onRetry }: { fullScreen?: boolean; onRetry:
         minHeight: fullScreen ? '100vh' : 240,
       }}
     >
-      <Stack spacing={2} alignItems="center" sx={{ maxWidth: 420 }}>
+      <Stack spacing={2} sx={{ alignItems: 'center', maxWidth: 420 }}>
         <ErrorOutlineIcon color="error" sx={{ fontSize: 48 }} />
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {t('components.errorBoundary.title')}

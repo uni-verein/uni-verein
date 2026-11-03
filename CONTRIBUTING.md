@@ -167,6 +167,12 @@ only proposes versions that are at least 7 days old.
    - App: [http://localhost:80](http://localhost:80)
    - Fake-SMTP inbox (Papercut): [http://localhost:8080](http://localhost:8080)
 
+   A fresh database has no user. The app shows the setup page, where you create the first
+   admin with the `SETUP_TOKEN` from your `.env` (printed at the end of the
+   `docker-compose-ini.yml` output). The Playwright suite creates its admin through the
+   same endpoint, in CI with the token `playwright-setup-token`
+   (`TEST_SETUP_TOKEN` / `TEST_ADMIN_PASS` override the defaults in `frontend/e2e/BackendClient.ts`).
+
    This is the same `docker-compose.yml` our CI pipeline uses to run the Playwright test
    suite, so if it works for you locally it should work in CI too.
 
@@ -207,7 +213,8 @@ install/update flow documented in `README.md`.
 | `docker-compose-prod-image.yml` | Production stack using pre-built images from GHCR                                                                     | ❌ No                                     |
 | `docker-compose-prod.yml` | Production stack, builds from source instead of pulling images                                                        | ❌ No                                     |
 | `docker-compose-demo.yml` | Powers the public demo site from published images (`VERSION` in `.env`), generates sample data and resets it nightly, fake-SMTP at `/mail/` | ❌ No                                     |
-| `docker-compose-update.yml` | One-shot updater that walks an existing installation through version upgrades                                         | ❌ No                                     |
+| `docker-compose-update.yml` | One-shot updater that updates an existing PostgreSQL installation to the latest release                               | ❌ No                                     |
+| `legacy-update/docker-compose-update.yml` | One-shot updater for installations still on MariaDB (`v1.3.1` or earlier), migrates them to PostgreSQL (`v1.4.0`), see `legacy-update/README.md` | ❌ No                                     |
 
 ## 🎨 Style Guides
 

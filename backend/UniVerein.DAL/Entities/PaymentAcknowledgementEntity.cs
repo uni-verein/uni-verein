@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UniVerein.DAL.Entities;
 
 [Table("PaymentAcknowledgements")]
-public class PaymentAcknowledgementEntity : BaseEntity
+public class PaymentAcknowledgementEntity : TenantScopedEntity
 {
     [Column("year")]
     public int Year { get; set; }
