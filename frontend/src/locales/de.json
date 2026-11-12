@@ -93,6 +93,9 @@
         "subtitle": "Wir haben dir einen Bestätigungslink per E-Mail geschickt. Deine Anmeldung wird erst nach der Bestätigung geprüft.",
         "confirm": "OK"
       },
+      "legal": {
+        "accept": "Ich habe die rechtlichen Hinweise gelesen und stimme ihnen zu."
+      },
       "fields": {
         "memberNumber": "Mitgliedsnummer",
         "gender": "Geschlecht",
@@ -167,6 +170,7 @@
         "motivationRequired": "Motivation darf nicht leer sein.",
         "ibanRequired": "IBAN darf nicht leer sein.",
         "bicRequired": "BIC darf nicht leer sein.",
+        "legalRequired": "Bitte stimme den rechtlichen Hinweisen zu.",
         "entryDateRequired": "Eintrittsdatum muss gesetzt werden.",
         "entryDateInvalid": "Eintrittsdatum muss in der Vergangenheit liegen.",
         "exitDateInvalid": "Austrittsdatum muss später als Eintrittsdatum sein.",
@@ -1098,6 +1102,10 @@
     },
     "generalConfig": {
       "title": "Webseiteneinstellungen",
+      "tabs": {
+        "club": "Verein",
+        "selfEnrollment": "Selbstregistrierung"
+      },
       "sectionTitle": "Vereinsnamen",
       "fields": {
         "pageName": {
@@ -1115,7 +1123,27 @@
         "toggleLabel": "Selbstregistrierung aktivieren",
         "mailRequired": "Selbstregistrierung benötigt konfigurierte E-Mail-Einstellungen, damit Bestätigungs- und Benachrichtigungsmails verschickt werden können. Bitte zuerst unter „E-Mail konfigurieren\" einrichten.",
         "linkLabel": "Öffentlicher Link",
-        "copyButton": "Link kopieren"
+        "copyButton": "Link kopieren",
+        "save": "Selbstregistrierung speichern",
+        "saving": "Wird gespeichert...",
+        "clubNameRequired": "Bitte zuerst im Tab „Verein“ einen Vereinsnamen speichern."
+      },
+      "enrollForm": {
+        "loadError": "Die Einstellungen des Anmeldeformulars konnten nicht geladen werden.",
+        "retry": "Erneut versuchen",
+        "legalTitle": "Rechtliche Hinweise",
+        "legalDescription": "Dieser Text wird im öffentlichen Formular zwischen den Feldern und dem Senden-Button angezeigt. Ist er gesetzt, müssen Antragsteller der Zustimmung per Checkbox zustimmen.",
+        "embedTitle": "Einbettung auf anderen Webseiten",
+        "embedDescription": "Mit dem Code unten kann das Formular samt Rechtstext auf einer anderen Webseite eingebunden werden. Das Einbinden ist nur auf den hier eingetragenen Domains erlaubt. Den Code dort einfügen, wo das Formular erscheinen soll. Optional am Script-Tag: data-theme (light, dark oder auto, Standard light) und data-max-width (Standard 720px, none für volle Breite).",
+        "originsLabel": "Erlaubte Domains",
+        "originsHelper": "Eine Domain pro Zeile, z. B. https://uni-verein.de. Ohne Eintrag ist das Einbetten gesperrt.",
+        "snippetLabel": "Einbettungscode",
+        "copySnippet": "Code kopieren",
+        "snackbar": {
+          "invalidOrigins": "Ungültige Eingabe. Verwende Domains wie https://uni-verein.de (höchstens 20) und halte den Rechtstext unter 50.000 Zeichen.",
+          "copySuccess": "Code kopiert.",
+          "copyError": "Code konnte nicht kopiert werden."
+        }
       },
       "buttons": {
         "save": "Konfiguration speichern",
@@ -1145,7 +1173,8 @@
     "publicEnrollment": {
       "closedTitle": "Selbstregistrierung nicht verfügbar",
       "closedMessage": "Die Selbstregistrierung ist derzeit nicht aktiv. Bitte wende dich an einen Vereinsverantwortlichen.",
-      "loadError": "Die Seite konnte nicht geladen werden. Bitte versuche es erneut."
+      "loadError": "Die Seite konnte nicht geladen werden. Bitte versuche es erneut.",
+      "retry": "Erneut versuchen"
     },
     "confirmEnrollment": {
       "loading": "Deine Anmeldung wird bestätigt...",

@@ -94,6 +94,7 @@ public class PendingSelfEnrollmentService
             IBAN_Hash = ibanHash,
             Bic_Encrypted = _crypto.Encrypt(request.Bic),
             SepaConsent = ibanGiven && !string.IsNullOrWhiteSpace(request.Bic) ? now : null,
+            LegalAcceptedAt = request.LegalAccepted ? now : null,
             ContributionPlanId = null,
             ContributionPlan = null
         };

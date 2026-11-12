@@ -93,6 +93,9 @@
         "subtitle": "We've sent you a confirmation link by email. Your registration will only be reviewed after you confirm it.",
         "confirm": "OK"
       },
+      "legal": {
+        "accept": "I have read the legal information and accept it."
+      },
       "fields": {
         "memberNumber": "Member Number",
         "gender": "Gender",
@@ -167,6 +170,7 @@
         "motivationRequired": "Motivation must not be empty.",
         "ibanRequired": "IBAN must not be empty.",
         "bicRequired": "BIC must not be empty.",
+        "legalRequired": "Please accept the legal information.",
         "entryDateRequired": "Entry date must be set.",
         "entryDateInvalid": "Entry date must be in the past.",
         "exitDateInvalid": "The exit date must be later than the entry date.",
@@ -1098,6 +1102,10 @@
     },
     "generalConfig": {
       "title": "Website settings",
+      "tabs": {
+        "club": "Club",
+        "selfEnrollment": "Self-enrollment"
+      },
       "sectionTitle": "Club name",
       "fields": {
         "pageName": {
@@ -1115,7 +1123,27 @@
         "toggleLabel": "Enable self-enrollment",
         "mailRequired": "Self-enrollment requires mail settings to be configured first, so confirmation and notification emails can be sent. Please set them up under \"Configure email\" first.",
         "linkLabel": "Public link",
-        "copyButton": "Copy link"
+        "copyButton": "Copy link",
+        "save": "Save self-enrollment",
+        "saving": "Saving...",
+        "clubNameRequired": "Please save a club name in the \"Club\" tab first."
+      },
+      "enrollForm": {
+        "loadError": "The enrollment form settings could not be loaded.",
+        "retry": "Try again",
+        "legalTitle": "Legal information",
+        "legalDescription": "This text is shown in the public form between the fields and the submit button. If it is set, applicants have to accept it with a checkbox.",
+        "embedTitle": "Embedding on other websites",
+        "embedDescription": "Use the code below to embed the form including the legal text on another website. Embedding is only allowed on the domains entered here. Place the code where the form should appear. Optional on the script tag: data-theme (light, dark or auto, default light) and data-max-width (default 720px, none for full width).",
+        "originsLabel": "Allowed domains",
+        "originsHelper": "One domain per line, e.g. https://uni-verein.de. Embedding is blocked while the list is empty.",
+        "snippetLabel": "Embed code",
+        "copySnippet": "Copy code",
+        "snackbar": {
+          "invalidOrigins": "Invalid input. Use domains like https://uni-verein.de (at most 20) and keep the legal text under 50,000 characters.",
+          "copySuccess": "Code copied.",
+          "copyError": "Could not copy the code."
+        }
       },
       "buttons": {
         "save": "Save Configuration",
@@ -1145,7 +1173,8 @@
     "publicEnrollment": {
       "closedTitle": "Self-enrollment unavailable",
       "closedMessage": "Self-enrollment is currently not active. Please contact a club administrator.",
-      "loadError": "The page could not be loaded. Please try again."
+      "loadError": "The page could not be loaded. Please try again.",
+      "retry": "Try again"
     },
     "confirmEnrollment": {
       "loading": "Confirming your registration...",

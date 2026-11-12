@@ -138,9 +138,7 @@ test.describe('Receipt notification email delivery', () => {
     await backend.deleteAllReceipts();
   });
 
-  test('Opted-in financial manager receives an email when a user submits a receipt', async ({
-    page,
-  }) => {
+  test('Opted-in financial manager receives an email when a user submits a receipt', async () => {
     const financialManager = await backend.createUser(
       Role.FINANCIAL_MANAGER,
       `fm_${Date.now()}@test.de`,
@@ -157,11 +155,10 @@ test.describe('Receipt notification email delivery', () => {
     const submitterToken = await backend.loginUser(submitter.username, submitter.password);
     await backend.createTestReceipt(submitterToken);
 
-    await page.goto('http://localhost:8080');
-    await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible({ timeout: 10000 });
+    await backend.waitForPapercutMessageCount(1);
   });
 
-  test('Financial manager submitting their own receipt notifies nobody', async ({ page }) => {
+  test('Financial manager submitting their own receipt notifies nobody', async () => {
     const financialManagerA = await backend.createUser(
       Role.FINANCIAL_MANAGER,
       `fm-a_${Date.now()}@test.de`,
@@ -180,8 +177,7 @@ test.describe('Receipt notification email delivery', () => {
 
     await backend.createTestReceipt(tokenB);
 
-    await page.goto('http://localhost:8080');
-    await expect(page.getByRole('link', { name: 'Inbox (0)' })).toBeVisible({ timeout: 10000 });
+    await backend.expectNoPapercutMessages();
   });
 });
 
@@ -205,9 +201,7 @@ test.describe('Self-enrollment notification email delivery', () => {
     await backend.deleteAllPapercutMessages();
   });
 
-  test('Opted-in user is notified only after the self-enrollment email is confirmed', async ({
-    page,
-  }) => {
+  test('Opted-in user is notified only after the self-enrollment email is confirmed', async () => {
     const subscriber = await backend.createUser(Role.USER, `subscriber_${Date.now()}@test.de`);
     createdUserIds.push(subscriber.id);
     const subscriberToken = await backend.loginUser(subscriber.username, subscriber.password);
@@ -238,8 +232,7 @@ test.describe('Self-enrollment notification email delivery', () => {
     await ctx.dispose();
 
     // Only the confirmation mail exists so far - the subscriber must not be notified yet.
-    await page.goto('http://localhost:8080');
-    await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible({ timeout: 10000 });
+    await backend.waitForPapercutMessageCount(1);
 
     const token = await backend.waitForConfirmationToken(email);
     const confirmCtx = await request.newContext({ baseURL: APP_BASE });
@@ -247,7 +240,6 @@ test.describe('Self-enrollment notification email delivery', () => {
     if (!confirmRes.ok()) throw new Error(`Confirm failed: ${confirmRes.status()}`);
     await confirmCtx.dispose();
 
-    await page.goto('http://localhost:8080');
-    await expect(page.getByRole('link', { name: 'Inbox (2)' })).toBeVisible({ timeout: 10000 });
+    await backend.waitForPapercutMessageCount(2);
   });
 });

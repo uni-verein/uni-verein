@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.11.0] UV-74
+
+### Added
+- UV-74: Legal information in the public enrollment form. Admins write a formatted text under "Website settings" → "Self-enrollment" → "Legal information". It is shown above the submit button of `/enroll` with a checkbox the applicant has to tick. As long as a text is set, `POST /self-enrollment` answers 400 without `legalAccepted: true`, and the time of the acceptance is stored in `PendingSelfEnrollments.legal_accepted_at`. The text is sanitized when it is saved and when it is served. Admin API: `GET`/`PUT /enroll-form-settings`.
+- UV-74: The enrollment form can be embedded in other websites with `<div id="uv-enroll"></div>` and `<script src="https://<host>/embed.js" data-target="#uv-enroll" async></script>` (iframe on `/embed/enroll`, its height follows the content). Optional attributes: `data-theme="light|dark|auto"` (default `light`) and `data-max-width` (default 720px, `none` for full width). Only the domains listed under "Allowed domains" may embed the form (sent as CSP `frame-ancestors`). A wildcard needs at least two labels behind it (`https://*.example.org`). `GET /self-enrollment/embed-policy` has its own rate limit (`RateLimiting__SelfEnrollment__EmbedPolicyPermitLimit`, default 300 per 15 minutes and IP). **`nginx.conf` has two new locations (`/_embed_policy` and `/embed/enroll`, using `auth_request`) and must be updated together with the backend. Setups with their own proxy rules need the same two locations.**
+
+### Changed
+- UV-74: The switch "Self-enrollment" moved from `web_page_config` to the new table `enroll_form_settings` (the migration copies existing values and adds a unique index on `tenant_id`). `PUT /enroll-form-settings` saves switch, legal text and allowed domains in one request and sets the public base URL when the switch is turned on (it needs mail settings and a saved club name, otherwise 422). `PUT /web-page-config` only takes `pageName` and `logo`, `GET /web-page-config` no longer returns `selfEnrollmentEnabled`, and resetting the web page settings still switches self-enrollment off. `GET /self-enrollment/form-data` answers with `enabled`, so `/enroll` no longer depends on the general page config, and `GET /pending-self-enrollments` returns `selfEnrollmentEnabled` for the members page.
+- UV-74: "Website settings" has two tabs: "Club" (club name, logo, save and reset) and "Self-enrollment" (the switch and, while it is on, the public link, legal text and embedding). Each tab saves only its own part, and the switch needs a saved club name.
+- UV-74: The mail editor was split into a shared toolbar and editor setup (`components/richText/`); its behavior is unchanged.
+
 ## [1.10.1] UV-69, UV-71, UV-72
 
 ### Added

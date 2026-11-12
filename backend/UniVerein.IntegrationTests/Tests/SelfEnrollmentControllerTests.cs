@@ -39,6 +39,7 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
         await WithDbContext(async db =>
         {
             db.WebPageConfigs.RemoveRange(db.WebPageConfigs.AsQueryable());
+            db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.AsQueryable());
             db.Members.RemoveRange(db.Members.AsQueryable());
             db.PendingSelfEnrollments.RemoveRange(db.PendingSelfEnrollments.AsQueryable());
             await db.ForceSaveChangesAsync();
@@ -50,6 +51,7 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
         await WithDbContext(async db =>
         {
             db.WebPageConfigs.RemoveRange(db.WebPageConfigs.AsQueryable());
+            db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.AsQueryable());
             db.Members.RemoveRange(db.Members.AsQueryable());
             db.PendingSelfEnrollments.RemoveRange(db.PendingSelfEnrollments.AsQueryable());
             await db.ForceSaveChangesAsync();
@@ -73,6 +75,7 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         result.ShouldNotBeNull();
+        result.Enabled.ShouldBeFalse();
         result.MemberCategories.ShouldBeEmpty();
         result.ContributionPlans.ShouldBeEmpty();
     }
@@ -92,6 +95,7 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         result.ShouldNotBeNull();
+        result.Enabled.ShouldBeFalse();
         result.MemberCategories.ShouldBeEmpty();
         result.ContributionPlans.ShouldBeEmpty();
     }
@@ -111,6 +115,7 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         result.ShouldNotBeNull();
+        result.Enabled.ShouldBeTrue();
         result.MemberCategories.ShouldNotBeEmpty();
         result.MemberCategories.ShouldContain(c => c.Id == Guid.Parse(Program.MemberCategoriesAlumni));
     }
@@ -162,9 +167,10 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
         // Arrange
         await WithDbContext(async db =>
         {
-            await db.WebPageConfigs.AddAsync(new WebPageConfigEntity { SelfEnrollmentEnabled = true });
+            await db.WebPageConfigs.AddAsync(new WebPageConfigEntity());
             await db.SaveChangesAsync();
         });
+        await UpsertEnrollFormSettings(x => x.SelfEnrollmentEnabled = true);
         HttpClient client = CreateClient();
 
         // Act
@@ -673,13 +679,263 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
     }
 
     // ---------------------------------------------------------------
+    // GET /self-enrollment/form-data - legal text
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task GetFormData_LegalText_NoConfig_ReturnsEmptyText()
+    {
+        // Arrange
+        await CreateEnrollFormSettingsEntity("<p>Notice</p>", null);
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/self-enrollment/form-data");
+        SelfEnrollmentFormDataResult? result = await response.Content.ReadFromJsonAsync<SelfEnrollmentFormDataResult>(_jsonSerializerOptions);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        result.ShouldNotBeNull();
+        result.LegalText.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetFormData_LegalText_Disabled_ReturnsEmptyText()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(false);
+        await CreateEnrollFormSettingsEntity("<p>Notice</p>", null);
+        HttpClient client = CreateClient();
+
+        // Act
+        SelfEnrollmentFormDataResult? result = await client.GetFromJsonAsync<SelfEnrollmentFormDataResult>("/self-enrollment/form-data", _jsonSerializerOptions);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.LegalText.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetFormData_LegalText_Enabled_ReturnsText()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity("<p>Notice <strong>important</strong></p>", null);
+        HttpClient client = CreateClient();
+
+        // Act
+        SelfEnrollmentFormDataResult? result = await client.GetFromJsonAsync<SelfEnrollmentFormDataResult>("/self-enrollment/form-data", _jsonSerializerOptions);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.LegalText.ShouldBe("<p>Notice <strong>important</strong></p>");
+    }
+
+    [Fact]
+    public async Task GetFormData_LegalText_StoredScriptIsSanitized()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity("<p>Text</p><script>alert(1)</script>", null);
+        HttpClient client = CreateClient();
+
+        // Act
+        SelfEnrollmentFormDataResult? result = await client.GetFromJsonAsync<SelfEnrollmentFormDataResult>("/self-enrollment/form-data", _jsonSerializerOptions);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.LegalText.ShouldNotContain("script");
+        result.LegalText.ShouldContain("Text");
+    }
+
+    // ---------------------------------------------------------------
+    // GET /self-enrollment/embed-policy
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task GetEmbedPolicy_Disabled_ReturnsNone()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(false);
+        await CreateEnrollFormSettingsEntity(null, "https://club.example");
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.Headers.GetValues("X-Embed-Frame-Ancestors").ShouldBe(["'none'"]);
+    }
+
+    [Fact]
+    public async Task GetEmbedPolicy_NoOrigins_ReturnsNone()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.Headers.GetValues("X-Embed-Frame-Ancestors").ShouldBe(["'none'"]);
+    }
+
+    [Fact]
+    public async Task GetEmbedPolicy_Enabled_ReturnsOriginsSeparatedBySpace()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity(null, "https://club.example\nhttps://*.verein.example");
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.Headers.GetValues("X-Embed-Frame-Ancestors")
+            .ShouldBe(["https://club.example https://*.verein.example"]);
+    }
+
+    [Fact]
+    public async Task GetEmbedPolicy_StoredOriginsInvalid_SkipsThem()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity(null,
+            "https://club.example\nhttps://evil.example; script-src *\nhttps://*.com\nhttps://club.example:99999");
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.Headers.GetValues("X-Embed-Frame-Ancestors").ShouldBe(["https://club.example"]);
+    }
+
+    [Fact]
+    public async Task GetEmbedPolicy_AllStoredOriginsInvalid_ReturnsNone()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity(null, "* 'self'");
+        HttpClient client = CreateClient();
+
+        // Act
+        HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+
+        // Assert
+        response.Headers.GetValues("X-Embed-Frame-Ancestors").ShouldBe(["'none'"]);
+    }
+
+    // ---------------------------------------------------------------
+    // POST /self-enrollment - legal information
+    // ---------------------------------------------------------------
+    [Fact]
+    public async Task PostSelfEnrollment_LegalTextSetButNotAccepted_BadRequest()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity("<p>Notice</p>", null);
+        HttpClient client = CreateClient();
+        SelfEnrollmentRequest request = CreateSelfEnrollmentRequest();
+        request.LegalAccepted = false;
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        string emailHash = _cryptoService.Hash(request.Email);
+        await WithDbContext(async db =>
+            (await db.PendingSelfEnrollments.AnyAsync(x => x.EmailHash == emailHash)).ShouldBeFalse());
+    }
+
+    [Fact]
+    public async Task PostSelfEnrollment_LegalTextSetAndAccepted_StoresAcceptanceTimestamp()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        await CreateEnrollFormSettingsEntity("<p>Notice</p>", null);
+        HttpClient client = CreateClient();
+        SelfEnrollmentRequest request = CreateSelfEnrollmentRequest();
+        request.LegalAccepted = true;
+        DateTimeOffset before = DateTimeOffset.UtcNow.AddMinutes(-1);
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        string emailHash = _cryptoService.Hash(request.Email);
+        await WithDbContext(async db =>
+        {
+            PendingSelfEnrollmentEntity? pending =
+                await db.PendingSelfEnrollments.FirstOrDefaultAsync(x => x.EmailHash == emailHash);
+            pending.ShouldNotBeNull();
+            pending.LegalAcceptedAt.ShouldNotBeNull();
+            pending.LegalAcceptedAt.Value.ShouldBeGreaterThan(before);
+        });
+    }
+
+    [Fact]
+    public async Task PostSelfEnrollment_NoLegalText_AcceptanceNotRequired()
+    {
+        // Arrange
+        await CreateSelfEnrollmentConfigEntity(true);
+        HttpClient client = CreateClient();
+        SelfEnrollmentRequest request = CreateSelfEnrollmentRequest();
+        request.LegalAccepted = false;
+
+        // Act
+        HttpResponseMessage response = await client.PostAsJsonAsync("/self-enrollment", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        string emailHash = _cryptoService.Hash(request.Email);
+        await WithDbContext(async db =>
+        {
+            PendingSelfEnrollmentEntity? pending =
+                await db.PendingSelfEnrollments.FirstOrDefaultAsync(x => x.EmailHash == emailHash);
+            pending.ShouldNotBeNull();
+            pending.LegalAcceptedAt.ShouldBeNull();
+        });
+    }
+
+    // ---------------------------------------------------------------
     // Helper functions
     // ---------------------------------------------------------------
+    private async Task UpsertEnrollFormSettings(Action<EnrollFormSettingsEntity> apply)
+    {
+        await WithDbContext(async db =>
+        {
+            EnrollFormSettingsEntity? settings = await db.EnrollFormSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new EnrollFormSettingsEntity();
+                await db.EnrollFormSettings.AddAsync(settings);
+            }
+
+            apply(settings);
+            await db.SaveChangesAsync();
+        });
+    }
+
+    private Task CreateEnrollFormSettingsEntity(string? legalText, string? embedAllowedOrigins)
+    {
+        return UpsertEnrollFormSettings(x =>
+        {
+            x.LegalText = legalText;
+            x.EmbedAllowedOrigins = embedAllowedOrigins;
+        });
+    }
+
     private async Task<WebPageConfigEntity> CreateSelfEnrollmentConfigEntity(bool enabled)
     {
         WebPageConfigEntity config = new()
         {
-            SelfEnrollmentEnabled = enabled,
             PublicBaseUrl = enabled ? "https://club.test.invalid" : null
         };
 
@@ -688,6 +944,7 @@ public class SelfEnrollmentControllerTests : IntegrationTestBase
             await db.WebPageConfigs.AddAsync(config);
             await db.SaveChangesAsync();
         });
+        await UpsertEnrollFormSettings(x => x.SelfEnrollmentEnabled = enabled);
 
         return config;
     }

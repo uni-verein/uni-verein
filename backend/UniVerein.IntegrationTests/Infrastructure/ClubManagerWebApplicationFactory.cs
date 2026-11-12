@@ -129,6 +129,7 @@ public class UniVereinWebApplicationFactory : WebApplicationFactory<Startup>, IA
         db.SepaExports.RemoveRange(db.SepaExports.IgnoreQueryFilters());
         db.Users.RemoveRange(db.Users.IgnoreQueryFilters());
         db.WebPageConfigs.RemoveRange(db.WebPageConfigs.IgnoreQueryFilters());
+        db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.IgnoreQueryFilters());
         db.Tenants.RemoveRange(db.Tenants.Where(t => t.Id != TenantEntity.DefaultId));
         await db.SaveChangesAsync();
 

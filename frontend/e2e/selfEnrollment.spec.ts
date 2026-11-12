@@ -55,6 +55,215 @@ test.afterAll(async () => {
   }
 });
 
+test.describe('Self-enrollment legal information and embedding (UV-74)', () => {
+  const legalHtml = '<h2>Datenschutzhinweis</h2><p>Wir speichern <strong>deine Daten</strong>.</p>';
+
+  test.afterEach(async () => {
+    await backend.setEnrollFormSettings('', '');
+    await backend.deleteWebPageSettings();
+    await backend.deleteAllMember();
+    await backend.deleteAllPendingSelfEnrollments();
+    await backend.deleteMailSettings();
+    await backend.deleteAllPapercutMessages();
+  });
+
+  test('Without legal text the form has no checkbox', async ({ page }) => {
+    await backend.setEnrollFormSettings('', '');
+    await backend.setSelfEnrollmentEnabled(true);
+
+    await page.goto('/enroll');
+
+    await expect(page.getByRole('textbox', { name: 'Vorname' })).toBeVisible();
+    await expect(page.getByRole('checkbox')).toHaveCount(0);
+  });
+
+  test('Legal text is shown above the submit button and has to be accepted', async ({ page }) => {
+    await backend.setSelfEnrollmentEnabled(true);
+    await backend.setEnrollFormSettings(legalHtml);
+    await page.goto('/enroll');
+
+    await expect(page.getByRole('heading', { name: 'Datenschutzhinweis' })).toBeVisible();
+    await expect(page.getByText('deine Daten', { exact: true })).toBeVisible();
+
+    const headingBox = await page
+      .getByRole('heading', { name: 'Datenschutzhinweis' })
+      .boundingBox();
+    const bicBox = await page.getByRole('textbox', { name: 'BIC' }).boundingBox();
+    const saveBox = await page.getByRole('button', { name: 'Speichern' }).boundingBox();
+    expect(headingBox!.y).toBeGreaterThan(bicBox!.y);
+    expect(headingBox!.y).toBeLessThan(saveBox!.y);
+
+    await fillPublicEnrollmentForm(page, {
+      firstName: 'Legal',
+      lastName: 'Tester',
+      email: `legal_${Date.now()}@test.de`,
+    });
+
+    await page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByText('Bitte stimme den rechtlichen Hinweisen zu.')).toBeVisible();
+    await expect(page.getByText('Bitte bestätige deine E-Mail-Adresse')).not.toBeVisible();
+
+    await page.getByRole('checkbox', { name: /rechtlichen Hinweise gelesen/ }).check();
+    await page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByText('Bitte bestätige deine E-Mail-Adresse')).toBeVisible();
+  });
+
+  test('Embedded form is shown on an allowed website and its height follows the content', async ({
+    page,
+  }) => {
+    const origin = new URL(APP_BASE).origin;
+    await backend.setSelfEnrollmentEnabled(true);
+    await backend.setEnrollFormSettings(legalHtml, origin);
+    await page.route(`${origin}/embed-host-page`, (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: `<!doctype html><html><body><h1>Unser Verein</h1><script src="${origin}/embed.js"></script></body></html>`,
+      }),
+    );
+
+    await page.goto(`${origin}/embed-host-page`);
+
+    const frame = page.frameLocator('iframe');
+    await expect(frame.getByRole('textbox', { name: 'Vorname' })).toBeVisible();
+    await expect(frame.getByRole('heading', { name: 'Datenschutzhinweis' })).toBeVisible();
+    await expect(
+      frame.getByRole('checkbox', { name: /rechtlichen Hinweise gelesen/ }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => (await page.locator('iframe').boundingBox())?.height ?? 0)
+      .toBeGreaterThan(900);
+  });
+
+  test('Embedded form is not covered by a fixed element of the host page', async ({ page }) => {
+    const origin = new URL(APP_BASE).origin;
+    await backend.setSelfEnrollmentEnabled(true);
+    await backend.setEnrollFormSettings(legalHtml, origin);
+    await page.route(`${origin}/embed-host-page`, (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: `<!doctype html><html><body><script src="${origin}/embed.js"></script><main style="position:fixed;inset:0;overflow:auto"></main></body></html>`,
+      }),
+    );
+
+    await page.goto(`${origin}/embed-host-page`);
+
+    await expect(
+      page.frameLocator('iframe').getByRole('textbox', { name: 'Vorname' }),
+    ).toBeVisible();
+    const topElement = await page.evaluate(() => {
+      const iframe = document.querySelector('iframe')!;
+      const rect = iframe.getBoundingClientRect();
+      return document.elementFromPoint(rect.left + rect.width / 2, 40)?.tagName;
+    });
+    expect(topElement).toBe('IFRAME');
+  });
+
+  test('Embedded form is light by default and dark with data-theme', async ({ browser }) => {
+    const origin = new URL(APP_BASE).origin;
+    await backend.setSelfEnrollmentEnabled(true);
+    await backend.setEnrollFormSettings(legalHtml, origin);
+
+    const backgroundOf = async (attributes: string) => {
+      const context = await browser.newContext({ colorScheme: 'dark' });
+      const page = await context.newPage();
+      await page.route(`${origin}/embed-host-page`, (route) =>
+        route.fulfill({
+          contentType: 'text/html',
+          body: `<!doctype html><html><body><script src="${origin}/embed.js" ${attributes}></script></body></html>`,
+        }),
+      );
+      await page.goto(`${origin}/embed-host-page`);
+      const frame = page.frameLocator('iframe');
+      await expect(frame.getByRole('textbox', { name: 'Vorname' })).toBeVisible();
+      const color = await frame
+        .locator('.MuiPaper-root')
+        .first()
+        .evaluate((element) => getComputedStyle(element).backgroundColor);
+      await context.close();
+      return color;
+    };
+
+    expect(await backgroundOf('')).toBe('rgb(255, 255, 255)');
+    expect(await backgroundOf('data-theme="dark"')).toBe('rgb(30, 30, 30)');
+  });
+
+  test('Embedded form is at most 720px wide unless data-max-width says otherwise', async ({
+    browser,
+  }) => {
+    const origin = new URL(APP_BASE).origin;
+    await backend.setSelfEnrollmentEnabled(true);
+    await backend.setEnrollFormSettings(legalHtml, origin);
+
+    const widthOf = async (attributes: string) => {
+      const context = await browser.newContext({ viewport: { width: 1600, height: 900 } });
+      const page = await context.newPage();
+      await page.route(`${origin}/embed-host-page`, (route) =>
+        route.fulfill({
+          contentType: 'text/html',
+          body: `<!doctype html><html><body style="margin:0"><script src="${origin}/embed.js" ${attributes}></script></body></html>`,
+        }),
+      );
+      await page.goto(`${origin}/embed-host-page`);
+      await expect(
+        page.frameLocator('iframe').getByRole('textbox', { name: 'Vorname' }),
+      ).toBeVisible();
+      const width = (await page.locator('iframe').boundingBox())!.width;
+      await context.close();
+      return width;
+    };
+
+    expect(await widthOf('')).toBeLessThanOrEqual(720);
+    expect(await widthOf('data-max-width="none"')).toBeGreaterThan(1500);
+  });
+
+  test('The same page cannot embed the form when its website is not listed', async ({ page }) => {
+    const origin = new URL(APP_BASE).origin;
+    await backend.setSelfEnrollmentEnabled(true);
+    await backend.setEnrollFormSettings(legalHtml, 'https://other.example');
+    await page.route(`${origin}/embed-host-page`, (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: `<!doctype html><html><body><h1>Unser Verein</h1><script src="${origin}/embed.js"></script></body></html>`,
+      }),
+    );
+
+    await page.goto(`${origin}/embed-host-page`);
+
+    await expect(page.locator('iframe')).toHaveCount(1);
+    await page.waitForTimeout(1500);
+    await expect(page.frameLocator('iframe').getByRole('textbox', { name: 'Vorname' })).toHaveCount(
+      0,
+    );
+  });
+
+  test('Embedding is only allowed for the listed websites', async ({ page }) => {
+    await backend.setSelfEnrollmentEnabled(true);
+
+    let response = await page.request.get(`${APP_BASE}/embed/enroll`);
+    expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+
+    await backend.setEnrollFormSettings('', 'https://one.example\nhttps://*.two.example');
+    response = await page.request.get(`${APP_BASE}/embed/enroll`);
+    expect(response.headers()['content-security-policy']).toContain(
+      'frame-ancestors https://one.example https://*.two.example',
+    );
+    expect(response.headers()['x-frame-options']).toBeUndefined();
+
+    response = await page.request.get(`${APP_BASE}/enroll`);
+    expect(response.headers()['x-frame-options']).toBe('DENY');
+    expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+  });
+
+  test('Embedding is closed when self-enrollment is disabled', async ({ page }) => {
+    await backend.setSelfEnrollmentEnabled(false);
+    await backend.setEnrollFormSettings('', 'https://one.example');
+
+    const response = await page.request.get(`${APP_BASE}/embed/enroll`);
+
+    expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+  });
+});
+
 test.describe('Self-enrollment (UV-13 / UV-21)', () => {
   test.afterEach(async () => {
     await backend.deleteWebPageSettings();

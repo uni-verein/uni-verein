@@ -28,10 +28,10 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,svg,woff2}'],
-                globIgnores: ['tesseract/**', 'pdfjs/**'],
+                globIgnores: ['tesseract/**', 'pdfjs/**', 'embed.js'],
                 maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
                 navigateFallback: '/index.html',
-                navigateFallbackDenylist: [/^\/api\//, /^\/emailProgress/],
+                navigateFallbackDenylist: [/^\/api\//, /^\/emailProgress/, /^\/embed\//],
                 skipWaiting: true,
                 clientsClaim: true,
                 cleanupOutdatedCaches: true,

@@ -75,8 +75,14 @@ export interface ReceiptApiResult {
   deletedAt: string | null;
 }
 
+export interface WebPageConfigState {
+  id?: UUIDTypes;
+  pageName: string;
+  logo: string;
+}
+
 export interface ConfigContextType {
-  config: { pageName: string; logo: string; selfEnrollmentEnabled: boolean; demo: boolean };
+  config: { pageName: string; logo: string; demo: boolean };
   loading: boolean;
   reloadConfig: () => Promise<void>;
   serverReachable: boolean;
@@ -169,6 +175,7 @@ export interface PendingSelfEnrollmentDetail {
 }
 
 export interface MemberErrors {
+  legalAccepted?: string;
   birthday?: string;
   city?: string;
   contributionPlanId?: string;

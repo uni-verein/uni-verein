@@ -336,6 +336,43 @@ export class BackendClient {
     await ctx.dispose();
   }
 
+  async getEnrollFormSettings(): Promise<{
+    selfEnrollmentEnabled: boolean;
+    legalText: string;
+    embedAllowedOrigins: string;
+  }> {
+    const ctx = await this.ctx();
+    const res = await ctx.get('/api/enroll-form-settings');
+    if (!res.ok()) {
+      throw new Error(`Failed to read enroll form settings: ${res.status()} ${await res.text()}`);
+    }
+    const result = await res.json();
+    await ctx.dispose();
+    return result;
+  }
+
+  async setEnrollFormSettings(legalText: string, embedAllowedOrigins = ''): Promise<void> {
+    const current = await this.getEnrollFormSettings();
+    await this.putEnrollFormSettings({
+      selfEnrollmentEnabled: current.selfEnrollmentEnabled,
+      legalText,
+      embedAllowedOrigins,
+    });
+  }
+
+  private async putEnrollFormSettings(data: {
+    selfEnrollmentEnabled: boolean;
+    legalText: string;
+    embedAllowedOrigins: string;
+  }): Promise<void> {
+    const ctx = await this.ctx();
+    const res = await ctx.put('/api/enroll-form-settings', { data });
+    if (!res.ok()) {
+      throw new Error(`Failed to set enroll form settings: ${res.status()} ${await res.text()}`);
+    }
+    await ctx.dispose();
+  }
+
   async updateLinkSettings(): Promise<void> {
     const ctx = await this.ctx();
     const res = await ctx.post(`/api/link`, {
@@ -393,22 +430,14 @@ export class BackendClient {
     }
 
     const ctx = await this.ctx();
-    let pageName = 'Test web page';
-    let logo = '';
     const existing = await ctx.get('/api/web-page-config');
-    if (existing.ok()) {
-      const current = await existing.json();
-      pageName = current.pageName;
-      logo = current.logo;
+    await ctx.dispose();
+    if (!existing.ok()) {
+      await this.updateWebPageSettings();
     }
 
-    const res = await ctx.put('/api/web-page-config', {
-      data: { pageName, logo, selfEnrollmentEnabled: enabled },
-    });
-    if (!res.ok()) {
-      throw new Error(`Failed to set self-enrollment config: ${res.status()} ${await res.text()}`);
-    }
-    await ctx.dispose();
+    const current = await this.getEnrollFormSettings();
+    await this.putEnrollFormSettings({ ...current, selfEnrollmentEnabled: enabled });
   }
 
   async loginUser(username: string, password: string): Promise<string> {
@@ -763,6 +792,50 @@ export class BackendClient {
     const ctx = await request.newContext({ baseURL: PAPERCUT_BASE });
     await ctx.delete('/api/messages');
     await ctx.dispose();
+  }
+
+  async getPapercutMessageCount(): Promise<number> {
+    const ctx = await request.newContext({ baseURL: PAPERCUT_BASE });
+    const res = await ctx.get('/api/messages');
+    if (!res.ok()) {
+      await ctx.dispose();
+      throw new Error(`Failed to read Papercut messages: ${res.status()}`);
+    }
+    const body = await res.json();
+    await ctx.dispose();
+    return body.totalMessageCount ?? 0;
+  }
+
+  async getPapercutBccAddresses(): Promise<string[]> {
+    const ctx = await request.newContext({ baseURL: PAPERCUT_BASE });
+    const list = await (await ctx.get('/api/messages')).json();
+    const addresses: string[] = [];
+    for (const message of list.messages ?? []) {
+      const detail = await (await ctx.get(`/api/messages/${message.id}`)).json();
+      for (const recipient of detail.bCc ?? []) addresses.push(recipient.address);
+    }
+    await ctx.dispose();
+    return addresses;
+  }
+
+  async waitForPapercutMessageCount(expected: number, timeoutMs = 10000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    let count = await this.getPapercutMessageCount();
+    while (count !== expected && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      count = await this.getPapercutMessageCount();
+    }
+    if (count !== expected) {
+      throw new Error(`Expected ${expected} Papercut message(s), found ${count}`);
+    }
+  }
+
+  async expectNoPapercutMessages(settleMs = 3000): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, settleMs));
+    const count = await this.getPapercutMessageCount();
+    if (count !== 0) {
+      throw new Error(`Expected no Papercut messages, found ${count}`);
+    }
   }
 
   async setSelfEnrollmentNotificationSetting(token: string, enabled: boolean): Promise<void> {

@@ -10,4 +10,7 @@ public class PendingSelfEnrollmentResults
 
     [JsonPropertyName("total")]
     public int Total { get; set; }
+
+    [JsonPropertyName("selfEnrollmentEnabled")]
+    public bool SelfEnrollmentEnabled { get; set; }
 }

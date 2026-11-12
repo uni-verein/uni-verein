@@ -11,6 +11,11 @@ import {
   Alert,
   MenuItem,
   Button,
+  Box,
+  Paper,
+  Checkbox,
+  FormControlLabel,
+  FormHelperText,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -52,6 +57,7 @@ import deLocale from 'i18n-iso-countries/langs/de.json';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { CustomSnackbar } from '../CustomSnackbar';
 import { PoweredBy } from '../PoweredBy';
+import RichTextView from '../richText/RichTextView';
 import { useTranslation } from 'react-i18next';
 import { usePageConfig } from '../../hooks/usePageConfig';
 countries.registerLocale(deLocale);
@@ -80,6 +86,8 @@ export default function MemberForm({
   memberCategories,
   onClose,
   mode = 'admin',
+  legalText = '',
+  embedded = false,
 }: {
   view: boolean;
   member: Member;
@@ -87,6 +95,8 @@ export default function MemberForm({
   memberCategories: MemberCategory[];
   onClose: () => void;
   mode?: 'admin' | 'public';
+  legalText?: string;
+  embedded?: boolean;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
@@ -94,6 +104,7 @@ export default function MemberForm({
   // Public-only: what the applicant does professionally/academically and why they want to join.
   // Deliberately NOT on Member/m - it has no meaning for an already-created member.
   const [motivation, setMotivation] = useState('');
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState<MemberErrors>({});
   const [editOrUpdateMember, setEditOrUpdateMember] =
@@ -200,6 +211,10 @@ export default function MemberForm({
       }
     }
 
+    if (mode === 'public' && legalText && !legalAccepted) {
+      newErrors.legalAccepted = t('components.memberForm.validation.legalRequired');
+    }
+
     if (!m.entryDate) {
       newErrors.entryDate = t('components.memberForm.validation.entryDateRequired');
     } else if (new Date(m.entryDate) > new Date()) {
@@ -233,7 +248,8 @@ export default function MemberForm({
     try {
       if (m.id === NIL_UUID) {
         const createEndpoint = mode === 'public' ? '/self-enrollment' : '/members';
-        const payload = mode === 'public' ? { ...m, entryDate: new Date(), motivation } : m;
+        const payload =
+          mode === 'public' ? { ...m, entryDate: new Date(), motivation, legalAccepted } : m;
         const response = await api(createEndpoint, {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -343,17 +359,8 @@ export default function MemberForm({
     onClose();
   };
 
-  return (
-    <Dialog
-      open={true}
-      onClose={handleDialogClose}
-      fullWidth={!isMobile}
-      fullScreen={isMobile}
-      maxWidth="sm"
-      slotProps={{
-        paper: { sx: { borderRadius: isMobile ? 0 : 3, p: 1 } },
-      }}
-    >
+  const body = (
+    <>
       {publicSuccess ? (
         <>
           <DialogContent sx={{ textAlign: 'center', py: 8 }}>
@@ -930,6 +937,32 @@ export default function MemberForm({
               )}
             </Grid>
 
+            {mode === 'public' && legalText && (
+              <Box sx={{ mt: 3 }}>
+                <Divider sx={{ mb: 2 }} />
+                <RichTextView html={legalText} />
+                <FormControlLabel
+                  sx={{ mt: 1, alignItems: 'flex-start' }}
+                  control={
+                    <Checkbox
+                      checked={legalAccepted}
+                      onChange={(e) => {
+                        setLegalAccepted(e.target.checked);
+                        setErrors({ ...errors, legalAccepted: undefined });
+                      }}
+                      sx={{ pt: 0.5 }}
+                    />
+                  }
+                  label={t('components.memberForm.legal.accept')}
+                />
+                {errors.legalAccepted && (
+                  <FormHelperText error sx={{ ml: 4 }}>
+                    {errors.legalAccepted}
+                  </FormHelperText>
+                )}
+              </Box>
+            )}
+
             {Object.keys(errors).length !== 0 &&
               Object.values(errors).some((v) => v !== undefined) && (
                 <Alert severity="error" onClose={() => setErrors({})} sx={{ mb: 2, mt: 2 }}>
@@ -980,6 +1013,29 @@ export default function MemberForm({
         message={editOrUpdateMember.message}
         onClose={() => setEditOrUpdateMember({ status: null, message: '' })}
       />
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <Paper elevation={0} sx={{ borderRadius: 3, p: 1, bgcolor: 'background.paper' }}>
+        {body}
+      </Paper>
+    );
+  }
+
+  return (
+    <Dialog
+      open={true}
+      onClose={handleDialogClose}
+      fullWidth={!isMobile}
+      fullScreen={isMobile}
+      maxWidth="sm"
+      slotProps={{
+        paper: { sx: { borderRadius: isMobile ? 0 : 3, p: 1 } },
+      }}
+    >
+      {body}
     </Dialog>
   );
 }

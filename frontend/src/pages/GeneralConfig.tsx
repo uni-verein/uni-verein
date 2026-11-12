@@ -1,31 +1,30 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  Paper,
-  CircularProgress,
   Alert,
+  Box,
   ButtonProps,
-  Avatar,
-  Switch,
-  FormControlLabel,
-  InputAdornment,
-  IconButton,
+  CircularProgress,
+  Paper,
+  Tab,
+  Tabs,
+  Typography,
 } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { api } from '../api';
 import { UUIDTypes } from 'uuid';
+import { api } from '../api';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
+import ClubSettingsTab from '../components/ClubSettingsTab';
+import SelfEnrollmentSettingsTab from '../components/SelfEnrollmentSettingsTab';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { usePageConfig } from '../hooks/usePageConfig';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import { WebPageConfigState } from '../types';
+
+const EMPTY_CONFIG: WebPageConfigState = {
+  id: undefined,
+  pageName: '',
+  logo: '',
+};
 
 export default function GeneralConfig() {
   const { reloadConfig } = usePageConfig();
@@ -36,22 +35,12 @@ export default function GeneralConfig() {
     buttonText: string;
     confirmColor: ButtonProps['color'];
   }>({ message: '', buttonText: '', confirmColor: 'error' });
-  const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const setConfigDeleteOrUpdate = useSnackbar();
-  const [errors, setErrors] = useState<{ pageName?: string }>({});
   const [apiError, setApiError] = useState<string | null>(null);
-  const [config, setConfig] = useState({
-    id: undefined,
-    pageName: '',
-    logo: '',
-    selfEnrollmentEnabled: false,
-  });
-
+  const [config, setConfig] = useState<WebPageConfigState>(EMPTY_CONFIG);
   const [mailConfigured, setMailConfigured] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const isSmall = useMediaQuery('(max-width:1000px)');
-  const enrollmentUrl = `${window.location.origin}/enroll`;
+  const [activeTab, setActiveTab] = useState<'club' | 'selfEnrollment'>('club');
 
   const loadConfig = useCallback(async () => {
     try {
@@ -60,12 +49,7 @@ export default function GeneralConfig() {
         setConfig(data);
       }
     } catch {
-      setConfig({
-        id: undefined,
-        pageName: '',
-        logo: '',
-        selfEnrollmentEnabled: false,
-      });
+      setConfig(EMPTY_CONFIG);
     } finally {
       setFetching(false);
     }
@@ -87,84 +71,10 @@ export default function GeneralConfig() {
     loadMailConfigured();
   }, [loadConfig, loadMailConfigured]);
 
-  const validate = () => {
-    const newErrors: { pageName?: string } = {};
-
-    if (!config.pageName.trim()) {
-      newErrors.pageName = t('pages.generalConfig.validation.pageNameEmpty');
-    } else if (config.pageName.length > 50) {
-      newErrors.pageName = t('pages.generalConfig.validation.pageNameTooLong');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!;
-        const MAX_SIZE = 100;
-
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const base64 = canvas.toDataURL('image/jpeg', 0.8);
-        setConfig((prev) => ({ ...prev, logo: base64 }));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    setLoading(true);
-    try {
-      await api('/web-page-config', {
-        method: 'PUT',
-        body: JSON.stringify(config),
-      });
-      setConfigDeleteOrUpdate({
-        status: 'success',
-        message: t('pages.generalConfig.snackbar.saveSuccess'),
-      });
-    } catch {
-      setApiError(t('pages.generalConfig.apiError.saveFailed'));
-      setConfigDeleteOrUpdate({
-        status: 'error',
-        message: t('pages.generalConfig.snackbar.saveError'),
-      });
-    } finally {
-      setLoading(false);
-      await loadConfig();
-      await loadMailConfigured();
-      await reloadConfig();
-    }
+  const handleSaved = async () => {
+    await loadConfig();
+    await loadMailConfigured();
+    await reloadConfig();
   };
 
   const handleReset = async (id: UUIDTypes) => {
@@ -192,28 +102,6 @@ export default function GeneralConfig() {
     }
   };
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(enrollmentUrl);
-      setConfigDeleteOrUpdate({
-        status: 'success',
-        message: t('pages.generalConfig.snackbar.copySuccess'),
-      });
-    } catch {
-      setConfigDeleteOrUpdate({
-        status: 'error',
-        message: t('pages.generalConfig.snackbar.copyError'),
-      });
-    }
-  };
-
-  const handleLogoDelete = () => {
-    setConfig((prev) => ({ ...prev, logo: '' }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   if (fetching) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
@@ -232,11 +120,24 @@ export default function GeneralConfig() {
         confirmColor={confirmDialog.confirmColor}
       />
 
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
           {t('pages.generalConfig.title')}
         </Typography>
       </Box>
+
+      <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+        >
+          <Tab value="club" label={t('pages.generalConfig.tabs.club')} />
+          <Tab value="selfEnrollment" label={t('pages.generalConfig.tabs.selfEnrollment')} />
+        </Tabs>
+      </Paper>
 
       {apiError && (
         <Alert severity="error" onClose={() => setApiError(null)} sx={{ mb: 2 }}>
@@ -244,175 +145,22 @@ export default function GeneralConfig() {
         </Alert>
       )}
 
-      <Paper variant="outlined" sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
-        <form onSubmit={handleSave}>
-          <Typography
-            variant="subtitle1"
-            sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}
-          >
-            {t('pages.generalConfig.sectionTitle')}
-          </Typography>
+      <Box sx={{ display: activeTab === 'club' ? 'block' : 'none' }}>
+        <ClubSettingsTab
+          config={config}
+          onSaved={handleSaved}
+          onReset={() => config.id !== undefined && handleReset(config.id)}
+          onError={setApiError}
+        />
+      </Box>
 
-          <Grid container spacing={2}>
-            <Grid size={isSmall ? 12 : 6}>
-              <TextField
-                label={t('pages.generalConfig.fields.pageName.label')}
-                fullWidth
-                value={config.pageName}
-                onChange={(e) => {
-                  setConfig({ ...config, pageName: e.target.value });
-                  setErrors({ ...errors, pageName: undefined });
-                }}
-                placeholder={t('pages.generalConfig.fields.pageName.placeholder')}
-                error={!!errors.pageName}
-                helperText={errors.pageName ?? `${config.pageName.length}/50`}
-              />
-            </Grid>
-
-            <Grid size={isSmall ? 12 : 6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                {config.logo !== '' ? (
-                  <Avatar
-                    src={config.logo}
-                    sx={{
-                      m: 1,
-                      bgcolor: 'transparent',
-                      width: 56,
-                      height: 56,
-                      '& img': {
-                        objectFit: 'contain',
-                      },
-                    }}
-                    variant="square"
-                  />
-                ) : (
-                  <Avatar src={config.logo} sx={{ width: 56, height: 56 }} variant="square" />
-                )}
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                />
-                <Button
-                  variant="outlined"
-                  onClick={() => fileInputRef.current?.click()}
-                  sx={{ textTransform: 'none' }}
-                >
-                  {config.logo
-                    ? t('pages.generalConfig.buttons.changeLogo')
-                    : t('pages.generalConfig.buttons.uploadLogo')}
-                </Button>
-                {config.logo && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={handleLogoDelete}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    {t('pages.generalConfig.buttons.deleteLogo')}
-                  </Button>
-                )}
-              </Box>
-            </Grid>
-
-            <Grid size={12} sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                {t('pages.generalConfig.selfEnrollment.sectionTitle')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {t('pages.generalConfig.selfEnrollment.description')}
-              </Typography>
-              {!mailConfigured && (
-                <Alert severity="warning" sx={{ mb: 1, maxWidth: 480 }}>
-                  {t('pages.generalConfig.selfEnrollment.mailRequired')}
-                </Alert>
-              )}
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={config.selfEnrollmentEnabled}
-                    disabled={!mailConfigured && !config.selfEnrollmentEnabled}
-                    onChange={(e) =>
-                      setConfig({ ...config, selfEnrollmentEnabled: e.target.checked })
-                    }
-                    slotProps={{
-                      input: {
-                        role: 'switch',
-                        'aria-label': t('pages.generalConfig.selfEnrollment.toggleLabel'),
-                      },
-                    }}
-                  />
-                }
-                label={t('pages.generalConfig.selfEnrollment.toggleLabel')}
-              />
-
-              {config.selfEnrollmentEnabled && (
-                <Box sx={{ mt: 1, maxWidth: 480 }}>
-                  <TextField
-                    label={t('pages.generalConfig.selfEnrollment.linkLabel')}
-                    fullWidth
-                    value={enrollmentUrl}
-                    slotProps={{
-                      htmlInput: {
-                        readOnly: true,
-                        onFocus: (e: React.FocusEvent<HTMLInputElement>) => e.target.select(),
-                      },
-                      input: {
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={handleCopyLink}
-                              aria-label={t('pages.generalConfig.selfEnrollment.copyButton')}
-                              edge="end"
-                            >
-                              <ContentCopyIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-            </Grid>
-
-            <Grid size={12} sx={{ mt: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  disabled={loading}
-                  startIcon={
-                    loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />
-                  }
-                  sx={{ borderRadius: 2, px: 4, textTransform: 'none' }}
-                >
-                  {loading
-                    ? t('pages.generalConfig.buttons.saving')
-                    : t('pages.generalConfig.buttons.save')}
-                </Button>
-
-                {config.id !== undefined && (
-                  <Button
-                    onClick={() => handleReset(config.id!)}
-                    variant="outlined"
-                    color="error"
-                    size="large"
-                    startIcon={<RestartAltIcon />}
-                    sx={{ borderRadius: 2, px: 3, textTransform: 'none' }}
-                  >
-                    {t('pages.generalConfig.buttons.reset')}
-                  </Button>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
-        </form>
-      </Paper>
+      <Box sx={{ display: activeTab === 'selfEnrollment' ? 'block' : 'none' }}>
+        <SelfEnrollmentSettingsTab
+          config={config}
+          mailConfigured={mailConfigured}
+          onSaved={handleSaved}
+        />
+      </Box>
     </Box>
   );
 }

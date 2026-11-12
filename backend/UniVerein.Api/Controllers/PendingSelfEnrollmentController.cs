@@ -76,7 +76,9 @@ public class PendingSelfEnrollmentController : ControllerBase
             ConfirmedAt = x.ConfirmedAt
         }).ToList();
 
-        return Ok(new PendingSelfEnrollmentResults { Items = items, Total = total });
+        bool enabled = await _db.EnrollFormSettings.AnyAsync(x => x.SelfEnrollmentEnabled);
+
+        return Ok(new PendingSelfEnrollmentResults { Items = items, Total = total, SelfEnrollmentEnabled = enabled });
     }
 
     [HttpGet("{id}")]

@@ -1,6 +1,6 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-11-03
+Generated automatically on 2026-11-12
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -18,7 +18,7 @@ Generated automatically on 2026-11-03
 | ExcelNumberFormat | 1.1.0 | MIT |
 | HtmlSanitizer | 9.2.1039 | MIT |
 | Humanizer.Core | 2.14.1 | MIT |
-| Ical.Net | 5.2.3 | MIT |
+| Ical.Net | 5.2.4 | MIT |
 | Konscious.Security.Cryptography.Argon2 | 1.3.1 | MIT |
 | Konscious.Security.Cryptography.Blake2 | 1.1.1 | MIT |
 | MailKit | 4.18.2 | MIT |
