@@ -1,0 +1,241 @@
+import React, { useRef, useState } from 'react';
+import {
+  Avatar,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTranslation } from 'react-i18next';
+import { api } from '../api';
+import { useSnackbar } from '../hooks/useSnackbar';
+import { WebPageConfigState } from '../types';
+
+export default function ClubSettingsTab({
+  config,
+  onSaved,
+  onReset,
+  onError,
+}: {
+  config: WebPageConfigState;
+  onSaved: () => Promise<void>;
+  onReset: () => void;
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const setSnackbar = useSnackbar();
+  const isSmall = useMediaQuery('(max-width:1000px)');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [draft, setDraft] = useState({ pageName: config.pageName, logo: config.logo });
+  const [synced, setSynced] = useState({ pageName: config.pageName, logo: config.logo });
+  const [errors, setErrors] = useState<{ pageName?: string }>({});
+  const [loading, setLoading] = useState(false);
+
+  if (synced.pageName !== config.pageName || synced.logo !== config.logo) {
+    setSynced({ pageName: config.pageName, logo: config.logo });
+    setDraft({ pageName: config.pageName, logo: config.logo });
+  }
+
+  const validate = () => {
+    const newErrors: { pageName?: string } = {};
+
+    if (!draft.pageName.trim()) {
+      newErrors.pageName = t('pages.generalConfig.validation.pageNameEmpty');
+    } else if (draft.pageName.length > 50) {
+      newErrors.pageName = t('pages.generalConfig.validation.pageNameTooLong');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        const MAX_SIZE = 100;
+
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        setDraft((prev) => ({ ...prev, logo: base64 }));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoDelete = () => {
+    setDraft((prev) => ({ ...prev, logo: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setLoading(true);
+    try {
+      await api('/web-page-config', {
+        method: 'PUT',
+        body: JSON.stringify({
+          pageName: draft.pageName,
+          logo: draft.logo,
+        }),
+      });
+      setSnackbar({
+        status: 'success',
+        message: t('pages.generalConfig.snackbar.saveSuccess'),
+      });
+    } catch {
+      onError(t('pages.generalConfig.apiError.saveFailed'));
+      setSnackbar({
+        status: 'error',
+        message: t('pages.generalConfig.snackbar.saveError'),
+      });
+    } finally {
+      setLoading(false);
+      await onSaved();
+    }
+  };
+
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
+      <form onSubmit={handleSave}>
+        <Typography
+          variant="subtitle1"
+          sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}
+        >
+          {t('pages.generalConfig.sectionTitle')}
+        </Typography>
+
+        <Grid container spacing={2}>
+          <Grid size={isSmall ? 12 : 6}>
+            <TextField
+              label={t('pages.generalConfig.fields.pageName.label')}
+              fullWidth
+              value={draft.pageName}
+              onChange={(e) => {
+                setDraft({ ...draft, pageName: e.target.value });
+                setErrors({ ...errors, pageName: undefined });
+              }}
+              placeholder={t('pages.generalConfig.fields.pageName.placeholder')}
+              error={!!errors.pageName}
+              helperText={errors.pageName ?? `${draft.pageName.length}/50`}
+            />
+          </Grid>
+
+          <Grid size={isSmall ? 12 : 6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {draft.logo !== '' ? (
+                <Avatar
+                  src={draft.logo}
+                  sx={{
+                    m: 1,
+                    bgcolor: 'transparent',
+                    width: 56,
+                    height: 56,
+                    '& img': {
+                      objectFit: 'contain',
+                    },
+                  }}
+                  variant="square"
+                />
+              ) : (
+                <Avatar src={draft.logo} sx={{ width: 56, height: 56 }} variant="square" />
+              )}
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+              <Button
+                variant="outlined"
+                onClick={() => fileInputRef.current?.click()}
+                sx={{ textTransform: 'none' }}
+              >
+                {draft.logo
+                  ? t('pages.generalConfig.buttons.changeLogo')
+                  : t('pages.generalConfig.buttons.uploadLogo')}
+              </Button>
+              {draft.logo && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleLogoDelete}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {t('pages.generalConfig.buttons.deleteLogo')}
+                </Button>
+              )}
+            </Box>
+          </Grid>
+
+          <Grid size={12} sx={{ mt: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                sx={{ borderRadius: 2, px: 4, textTransform: 'none' }}
+              >
+                {loading
+                  ? t('pages.generalConfig.buttons.saving')
+                  : t('pages.generalConfig.buttons.save')}
+              </Button>
+
+              {config.id !== undefined && (
+                <Button
+                  onClick={onReset}
+                  variant="outlined"
+                  color="error"
+                  size="large"
+                  startIcon={<RestartAltIcon />}
+                  sx={{ borderRadius: 2, px: 3, textTransform: 'none' }}
+                >
+                  {t('pages.generalConfig.buttons.reset')}
+                </Button>
+              )}
+            </Box>
+          </Grid>
+        </Grid>
+      </form>
+    </Paper>
+  );
+}

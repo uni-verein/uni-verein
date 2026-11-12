@@ -57,14 +57,12 @@ import { NIL as NIL_UUID, UUIDTypes } from 'uuid';
 import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../hooks/useSnackbar';
-import { usePageConfig } from '../hooks/usePageConfig';
 import { useTranslation } from 'react-i18next';
 
 export default function Members({ role }: UserRoleProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const { open, confirm, handleClose } = useConfirm();
-  const { config } = usePageConfig();
   const [confirmDialog, setConfirmDialog] = useState<{
     message: string;
     buttonText: string;
@@ -74,8 +72,8 @@ export default function Members({ role }: UserRoleProps) {
   // Independent of whether the "pending" tab is currently open, so its visibility can be decided even
   // before it's ever been mounted; null = not yet known (avoids a flash of the tab before hiding it).
   const [pendingCount, setPendingCount] = useState<number | null>(null);
-  const showPendingTab =
-    config.selfEnrollmentEnabled || (pendingCount !== null && pendingCount > 0);
+  const [enrollmentEnabled, setEnrollmentEnabled] = useState(false);
+  const showPendingTab = enrollmentEnabled || (pendingCount !== null && pendingCount > 0);
   const [members, setMembers] = useState<Member[]>([]);
   const [contributionPlans, setContributionPlans] = useState<ContributionPlans[]>([]);
   const [memberCategories, setMemberCategories] = useState<MemberCategory[]>([]);
@@ -113,6 +111,7 @@ export default function Members({ role }: UserRoleProps) {
     try {
       const response = await api('/pending-self-enrollments?limit=1');
       setPendingCount(response.total);
+      setEnrollmentEnabled(response.selfEnrollmentEnabled === true);
     } catch {
       setPendingCount(0);
     }

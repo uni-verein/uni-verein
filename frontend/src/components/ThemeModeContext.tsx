@@ -6,9 +6,23 @@ const STORAGE_KEY = 'themeMode';
 const getSystemPreference = (): ResolvedThemeMode =>
   window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
+const isEmbedded = () => window.location.pathname === '/embed/enroll';
+
+const getEmbeddedMode = (): ThemeMode => {
+  const requested = new URLSearchParams(window.location.search).get('theme');
+  if (requested === 'dark') return 'dark';
+  if (requested === 'auto') return 'system';
+  return 'light';
+};
+
 const getStoredMode = (): ThemeMode => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+  if (isEmbedded()) return getEmbeddedMode();
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+  } catch {
+    return 'system';
+  }
 };
 
 export const ThemeModeProvider = ({ children }: { children: ReactNode }) => {
@@ -24,7 +38,12 @@ export const ThemeModeProvider = ({ children }: { children: ReactNode }) => {
 
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);
-    localStorage.setItem(STORAGE_KEY, newMode);
+    if (isEmbedded()) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, newMode);
+    } catch {
+      // storage not available
+    }
   };
 
   const resolvedMode = useMemo<ResolvedThemeMode>(

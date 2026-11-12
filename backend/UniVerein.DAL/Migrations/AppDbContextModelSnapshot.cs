@@ -17,7 +17,7 @@ namespace UniVerein.DAL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -657,6 +657,45 @@ namespace UniVerein.DAL.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("CreditorConfigs");
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.EnrollFormSettingsEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("EmbedAllowedOrigins")
+                        .HasColumnType("text")
+                        .HasColumnName("embed_allowed_origins");
+
+                    b.Property<string>("LegalText")
+                        .HasColumnType("text")
+                        .HasColumnName("legal_text");
+
+                    b.Property<bool>("SelfEnrollmentEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("self_enrollment_enabled");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("enroll_form_settings");
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.FirmwareVersionEntity", b =>
@@ -1384,6 +1423,10 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("last_name");
 
+                    b.Property<DateTimeOffset?>("LegalAcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("legal_accepted_at");
+
                     b.Property<Guid?>("MemberCategoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("member_category_id");
@@ -1886,10 +1929,6 @@ namespace UniVerein.DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("public_base_url");
 
-                    b.Property<bool>("SelfEnrollmentEnabled")
-                        .HasColumnType("boolean")
-                        .HasColumnName("self_enrollment_enabled");
-
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
@@ -2072,6 +2111,15 @@ namespace UniVerein.DAL.Migrations
                 });
 
             modelBuilder.Entity("UniVerein.DAL.Entities.CreditorConfigEntity", b =>
+                {
+                    b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UniVerein.DAL.Entities.EnrollFormSettingsEntity", b =>
                 {
                     b.HasOne("UniVerein.DAL.Entities.TenantEntity", null)
                         .WithMany()

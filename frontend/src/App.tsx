@@ -144,6 +144,8 @@ export default function App() {
         <ConfirmEnrollmentPage />
       ) : window.location.pathname === '/enroll' ? (
         <PublicEnrollmentPage />
+      ) : window.location.pathname === '/embed/enroll' ? (
+        <PublicEnrollmentPage embedded />
       ) : session === undefined || needsSetup === undefined ? null : needsSetup && !session ? (
         <SetupPage onDone={handleSetupDone} />
       ) : !session ? (
@@ -156,7 +158,7 @@ export default function App() {
           logo={config.logo}
         />
       )}
-      {!isMobile && (
+      {!isMobile && window.location.pathname !== '/embed/enroll' && (
         <Typography
           variant="caption"
           sx={{

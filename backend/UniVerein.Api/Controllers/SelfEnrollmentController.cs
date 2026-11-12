@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.ApiResults;
 using UniVerein.Api.Exceptions;
 using UniVerein.Api.Extensions;
+using UniVerein.Api.Helper;
 using UniVerein.Api.Models;
 using UniVerein.Api.Models.Enums;
 using UniVerein.Api.Services;
@@ -39,11 +41,11 @@ public class SelfEnrollmentController : ControllerBase
         _referenceDataService = referenceDataService;
     }
 
-    private async Task<WebPageConfigEntity?> GetEnabledConfigAsync()
+    private async Task<EnrollFormSettingsEntity?> GetEnabledSettingsAsync()
     {
-        WebPageConfigEntity? config = await _db.WebPageConfigs.FirstOrDefaultAsync(x => x.DeletedAt == null);
+        EnrollFormSettingsEntity? settings = await _db.EnrollFormSettings.FirstOrDefaultAsync();
 
-        return config is { SelfEnrollmentEnabled: true } ? config : null;
+        return settings is { SelfEnrollmentEnabled: true } ? settings : null;
     }
 
     [EnableRateLimiting("self-enrollment-read")]
@@ -51,13 +53,35 @@ public class SelfEnrollmentController : ControllerBase
     public async Task<ActionResult<SelfEnrollmentFormDataResult>> GetFormDataAsync()
     {
         SelfEnrollmentFormDataResult result = new();
-        if (await GetEnabledConfigAsync() == null)
+        EnrollFormSettingsEntity? settings = await GetEnabledSettingsAsync();
+        if (settings == null)
             return Ok(result);
 
+        result.Enabled = true;
+        result.LegalText = EnrollLegalText.Render(settings.LegalText);
         result.MemberCategories = await _referenceDataService.GetMemberCategoriesAsync();
         result.ContributionPlans = await _referenceDataService.GetContributionPlansAsync();
 
         return Ok(result);
+    }
+
+    [EnableRateLimiting("self-enrollment-embed-policy")]
+    [HttpGet("embed-policy")]
+    public async Task<IActionResult> GetEmbedPolicyAsync()
+    {
+        string ancestors = "'none'";
+
+        EnrollFormSettingsEntity? settings = await GetEnabledSettingsAsync();
+        if (settings != null)
+        {
+            List<string> origins = EmbedOrigins.ParseValid(settings.EmbedAllowedOrigins);
+            if (origins.Count > 0)
+                ancestors = string.Join(' ', origins);
+        }
+
+        Response.Headers["X-Embed-Frame-Ancestors"] = ancestors;
+        Response.Headers.CacheControl = "no-store";
+        return NoContent();
     }
 
     [RequestSizeLimit(MaxRequestSizeBytes)]
@@ -67,8 +91,8 @@ public class SelfEnrollmentController : ControllerBase
     {
         Log.Information("SelfEnrollmentController: CreateAsync -> Received a self-enrollment submission.");
 
-        WebPageConfigEntity? config = await GetEnabledConfigAsync();
-        if (config == null)
+        EnrollFormSettingsEntity? settings = await GetEnabledSettingsAsync();
+        if (settings == null)
         {
             Log.Warning("SelfEnrollmentController: CreateAsync -> Self-enrollment is disabled");
             return StatusCode(StatusCodes.Status403Forbidden, new ApiResults.ErrorResults.ForbiddenRequestResult(
@@ -76,7 +100,8 @@ public class SelfEnrollmentController : ControllerBase
                 moreInfo: "Self-enrollment is currently not enabled for this club."));
         }
 
-        if (string.IsNullOrEmpty(config.PublicBaseUrl))
+        WebPageConfigEntity? config = await _db.WebPageConfigs.FirstOrDefaultAsync(x => x.DeletedAt == null);
+        if (string.IsNullOrEmpty(config?.PublicBaseUrl))
         {
             Log.Error(
                 "SelfEnrollmentController: CreateAsync -> Self-enrollment is enabled but no public base URL is configured. " +
@@ -84,6 +109,14 @@ public class SelfEnrollmentController : ControllerBase
             throw new BaseHttpException(ApiErrorCodes.INTERNAL_SERVER_ERROR, HttpStatusCode.InternalServerError,
                 errorMessage: "Self-enrollment is misconfigured.",
                 moreInfo: "No public base URL is configured for this club. An admin must re-save the web page settings.");
+        }
+
+        bool legalRequired = EnrollLegalText.Render(settings.LegalText).Length > 0;
+        if (legalRequired && !request.LegalAccepted)
+        {
+            Log.Warning("SelfEnrollmentController: CreateAsync -> Legal information was not accepted");
+            return BadRequest(new ApiResults.ErrorResults.BadRequestResult(
+                moreInfo: "The legal information must be accepted."));
         }
 
         string confirmBaseUrl = $"{config.PublicBaseUrl.TrimEnd('/')}/enroll/confirm";

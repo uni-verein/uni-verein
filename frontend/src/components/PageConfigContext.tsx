@@ -8,12 +8,10 @@ export const PageConfigProvider = ({ children }: { children: ReactNode }) => {
   const [config, setConfig] = useState<{
     pageName: string;
     logo: string;
-    selfEnrollmentEnabled: boolean;
     demo: boolean;
   }>({
     pageName: '',
     logo: '',
-    selfEnrollmentEnabled: false,
     demo: false,
   });
   const [loading, setLoading] = useState(true);

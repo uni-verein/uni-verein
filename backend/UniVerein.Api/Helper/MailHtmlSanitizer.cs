@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Text.RegularExpressions;
 using Ganss.Xss;
 
 namespace UniVerein.Api.Helper;
 
-public static class MailHtmlSanitizer
+public static partial class MailHtmlSanitizer
 {
     private static readonly HtmlSanitizer Sanitizer = CreateSanitizer();
 
@@ -14,6 +16,22 @@ public static class MailHtmlSanitizer
             return string.Empty;
 
         return Sanitizer.Sanitize(html);
+    }
+
+    [GeneratedRegex("<[^>]*>")]
+    private static partial Regex HtmlTagPattern();
+
+    public static bool HasVisibleContent(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+            return false;
+
+        if (html.Contains("<img", StringComparison.OrdinalIgnoreCase) ||
+            html.Contains("<hr", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string text = WebUtility.HtmlDecode(HtmlTagPattern().Replace(html, string.Empty));
+        return !string.IsNullOrWhiteSpace(text.Replace(' ', ' '));
     }
 
     private static HtmlSanitizer CreateSanitizer()

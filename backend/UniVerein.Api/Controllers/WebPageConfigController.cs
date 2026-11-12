@@ -45,7 +45,6 @@ public class WebPageConfigController : ControllerBase
             Id = webPageConfig.Id,
             PageName = webPageConfig.PageName,
             Logo = webPageConfig.Logo,
-            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled,
             Demo = DemoMode.IsEnabled(_configuration)
         };
 
@@ -56,28 +55,13 @@ public class WebPageConfigController : ControllerBase
     [HttpPut]
     public async Task<ActionResult<WebPageConfigResult>> UpdateAsync([FromBody] WebPageConfigRequest request)
     {
-        if (request.SelfEnrollmentEnabled)
-        {
-            bool mailConfigured = await _db.MailSettings.AnyAsync(x => x.DeletedAt == null);
-            if (!mailConfigured)
-                return UnprocessableEntity(new ApiResults.ErrorResults.UnprocessableEntityResult(
-                    errorCode: ApiErrorCodes.UNPROCESSABLE_ENTITY,
-                    errorMessage: "Mail settings required.",
-                    moreInfo: "Self-enrollment requires mail settings to be configured first, " +
-                              "so confirmation and notification emails can be sent."));
-        }
-
-        string? publicBaseUrl = request.SelfEnrollmentEnabled ? $"{Request.Scheme}://{Request.Host}" : null;
-
         WebPageConfigEntity? webPageConfig = await _db.WebPageConfigs.FirstOrDefaultAsync();
         if (webPageConfig == null)
         {
             webPageConfig = new()
             {
                 PageName = request.PageName,
-                Logo = request.Logo,
-                SelfEnrollmentEnabled = request.SelfEnrollmentEnabled,
-                PublicBaseUrl = publicBaseUrl
+                Logo = request.Logo
             };
             await _db.WebPageConfigs.AddAsync(webPageConfig);
         }
@@ -85,22 +69,18 @@ public class WebPageConfigController : ControllerBase
         {
             webPageConfig.PageName = request.PageName;
             webPageConfig.Logo = request.Logo;
-            webPageConfig.SelfEnrollmentEnabled = request.SelfEnrollmentEnabled;
             webPageConfig.DeletedAt = null;
-            if (publicBaseUrl != null)
-                webPageConfig.PublicBaseUrl = publicBaseUrl;
             _db.WebPageConfigs.Update(webPageConfig);
         }
 
         await _db.SaveChangesAsync();
-        Log.Information("WebPageConfigController: UpdateAsync -> Web page config {ConfigId} updated by {ActorId}, self-enrollment enabled: {SelfEnrollmentEnabled}.",
-            webPageConfig.Id, HttpContext.GetActorId(), webPageConfig.SelfEnrollmentEnabled);
+        Log.Information("WebPageConfigController: UpdateAsync -> Web page config {ConfigId} updated by {ActorId}.",
+            webPageConfig.Id, HttpContext.GetActorId());
         return Ok(new WebPageConfigResult()
         {
             Id = webPageConfig.Id,
             PageName = webPageConfig.PageName,
             Logo = webPageConfig.Logo,
-            SelfEnrollmentEnabled = webPageConfig.SelfEnrollmentEnabled,
             Demo = DemoMode.IsEnabled(_configuration)
         });
     }
@@ -114,6 +94,10 @@ public class WebPageConfigController : ControllerBase
             return NotFound(new ApiResults.ErrorResults.NotFoundResult(errorCode: ApiErrorCodes.RESOURCE_NOT_FOUND,
                 errorMessage: "Web page config not found.",
                 moreInfo: $"Web page config with ID {id} not found."));
+
+        EnrollFormSettingsEntity? enrollSettings = await _db.EnrollFormSettings.FirstOrDefaultAsync();
+        if (enrollSettings != null)
+            enrollSettings.SelfEnrollmentEnabled = false;
 
         _db.Remove(webPageConfig);
         await _db.SaveChangesAsync();

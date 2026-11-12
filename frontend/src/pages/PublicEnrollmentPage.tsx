@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Avatar,
   Box,
+  Button,
   CircularProgress,
   Container,
   Paper,
@@ -73,51 +74,117 @@ function FloatingLanguageToggle({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-export default function PublicEnrollmentPage() {
+export default function PublicEnrollmentPage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
-  const { config, loading: configLoading, reloadConfig, serverReachable } = usePageConfig();
+  const { config, loading: configLoading } = usePageConfig();
   const [memberCategories, setMemberCategories] = useState<MemberCategory[]>([]);
   const [contributionPlans, setContributionPlans] = useState<ContributionPlans[]>([]);
-  const [formDataLoading, setFormDataLoading] = useState(false);
+  const [legalText, setLegalText] = useState('');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'closed' | 'error'>('loading');
   const [formKey, setFormKey] = useState(0);
 
   const loadFormData = useCallback(async () => {
-    setFormDataLoading(true);
     try {
       const data = await api('/self-enrollment/form-data');
-      setMemberCategories(data?.memberCategories ?? []);
-      setContributionPlans(data?.contributionPlans ?? []);
+      if (!data || typeof data !== 'object') {
+        throw new Error('Form data unavailable');
+      }
+      if (data.enabled === true) {
+        setMemberCategories(data.memberCategories ?? []);
+        setContributionPlans(data.contributionPlans ?? []);
+        setLegalText(data.legalText ?? '');
+        setStatus('ready');
+      } else {
+        setStatus('closed');
+      }
     } catch {
-      setMemberCategories([]);
-      setContributionPlans([]);
-    } finally {
-      setFormDataLoading(false);
+      setStatus('error');
     }
   }, []);
 
   useEffect(() => {
-    if (config.selfEnrollmentEnabled) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadFormData();
-    }
-  }, [config.selfEnrollmentEnabled, loadFormData]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadFormData();
+  }, [loadFormData]);
+
+  const handleRetry = () => {
+    setStatus('loading');
+    loadFormData();
+  };
+
+  useEffect(() => {
+    if (!embedded || window.parent === window) return;
+    document.body.style.backgroundColor = 'transparent';
+    const report = () =>
+      window.parent.postMessage(
+        {
+          type: 'uv-enroll-height',
+          height: Math.ceil(document.body.getBoundingClientRect().height),
+        },
+        '*',
+      );
+    const observer = new ResizeObserver(report);
+    observer.observe(document.body);
+    report();
+    return () => observer.disconnect();
+  }, [embedded]);
 
   const handleClosed = () => {
     setFormKey((key) => key + 1);
-    reloadConfig().catch(() => {});
-    if (config.selfEnrollmentEnabled) {
-      loadFormData();
-    }
+    loadFormData();
   };
+
+  const unavailable = (
+    <>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+        {status === 'error'
+          ? t('pages.publicEnrollment.loadError')
+          : t('pages.publicEnrollment.closedMessage')}
+      </Typography>
+      {status === 'error' && (
+        <Button onClick={handleRetry} sx={{ mt: 1, textTransform: 'none' }}>
+          {t('pages.publicEnrollment.retry')}
+        </Button>
+      )}
+    </>
+  );
 
   const background =
     theme.palette.mode === 'dark'
       ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
       : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
 
-  if (configLoading) {
+  if (embedded) {
+    return (
+      <Box sx={{ p: 1 }}>
+        {status === 'loading' ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : status !== 'ready' ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
+            {unavailable}
+          </Box>
+        ) : (
+          <MemberForm
+            key={formKey}
+            view={false}
+            mode="public"
+            member={emptyPublicMember()}
+            contributionPlans={contributionPlans}
+            memberCategories={memberCategories}
+            legalText={legalText}
+            embedded
+            onClose={handleClosed}
+          />
+        )}
+      </Box>
+    );
+  }
+
+  if (configLoading || status === 'loading') {
     return (
       <Box
         sx={{
@@ -133,7 +200,7 @@ export default function PublicEnrollmentPage() {
     );
   }
 
-  if (!config.selfEnrollmentEnabled) {
+  if (status !== 'ready') {
     return (
       <Box
         sx={{
@@ -170,11 +237,7 @@ export default function PublicEnrollmentPage() {
             >
               {t('pages.publicEnrollment.closedTitle')}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
-              {serverReachable
-                ? t('pages.publicEnrollment.closedMessage')
-                : t('pages.publicEnrollment.loadError')}
-            </Typography>
+            {unavailable}
           </Paper>
           <PoweredBy sx={{ mt: 2 }} />
         </Container>
@@ -201,21 +264,16 @@ export default function PublicEnrollmentPage() {
         </Typography>
       </Box>
 
-      {formDataLoading && memberCategories.length === 0 ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <MemberForm
-          key={formKey}
-          view={false}
-          mode="public"
-          member={emptyPublicMember()}
-          contributionPlans={contributionPlans}
-          memberCategories={memberCategories}
-          onClose={handleClosed}
-        />
-      )}
+      <MemberForm
+        key={formKey}
+        view={false}
+        mode="public"
+        member={emptyPublicMember()}
+        contributionPlans={contributionPlans}
+        memberCategories={memberCategories}
+        legalText={legalText}
+        onClose={handleClosed}
+      />
     </Box>
   );
 }

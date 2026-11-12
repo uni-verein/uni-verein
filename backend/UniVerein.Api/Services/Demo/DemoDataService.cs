@@ -509,8 +509,7 @@ public class DemoDataService
         await _db.WebPageConfigs.AddAsync(new WebPageConfigEntity
         {
             PageName = ClubName,
-            Logo = LoadLogo(),
-            SelfEnrollmentEnabled = false
+            Logo = LoadLogo()
         });
 
         await _db.LinkSettings.AddAsync(new LinkSettingsEntity

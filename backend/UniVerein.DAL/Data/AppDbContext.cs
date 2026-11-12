@@ -37,6 +37,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
     public DbSet<CreditorConfigEntity> CreditorConfigs => Set<CreditorConfigEntity>();
     public DbSet<WebPageConfigEntity> WebPageConfigs => Set<WebPageConfigEntity>();
+    public DbSet<EnrollFormSettingsEntity> EnrollFormSettings => Set<EnrollFormSettingsEntity>();
     public DbSet<SepaExportEntity> SepaExports => Set<SepaExportEntity>();
     public DbSet<MemberCategoryEntity> MemberCategories => Set<MemberCategoryEntity>();
     public DbSet<FirmwareVersionEntity> FirmwareVersions => Set<FirmwareVersionEntity>();
@@ -386,6 +387,8 @@ public class AppDbContext : DbContext
         ConfigureTenant<UserRecoveryCodeEntity>(modelBuilder);
         ConfigureTenant<UserSettingEntity>(modelBuilder);
         ConfigureTenant<WebPageConfigEntity>(modelBuilder);
+        ConfigureTenant<EnrollFormSettingsEntity>(modelBuilder);
+        modelBuilder.Entity<EnrollFormSettingsEntity>().HasIndex(x => x.TenantId).IsUnique();
 
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
         {

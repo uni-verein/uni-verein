@@ -42,6 +42,7 @@ public class SelfEnrollmentNotificationServiceTests : IntegrationTestBase
             db.Members.RemoveRange(db.Members.AsQueryable());
             db.PendingSelfEnrollments.RemoveRange(db.PendingSelfEnrollments.AsQueryable());
             db.WebPageConfigs.RemoveRange(db.WebPageConfigs.AsQueryable());
+            db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.AsQueryable());
             await db.ForceSaveChangesAsync();
 
             MemberCategoryEntity category = new() { Category = "TEST", Name = "Test category" };
@@ -77,6 +78,7 @@ public class SelfEnrollmentNotificationServiceTests : IntegrationTestBase
             db.Members.RemoveRange(db.Members.AsQueryable());
             db.PendingSelfEnrollments.RemoveRange(db.PendingSelfEnrollments.AsQueryable());
             db.WebPageConfigs.RemoveRange(db.WebPageConfigs.AsQueryable());
+            db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.AsQueryable());
             await db.ForceSaveChangesAsync();
         });
     }
@@ -366,9 +368,9 @@ public class SelfEnrollmentNotificationServiceTests : IntegrationTestBase
         {
             await db.WebPageConfigs.AddAsync(new WebPageConfigEntity
             {
-                SelfEnrollmentEnabled = enabled,
                 PublicBaseUrl = enabled ? "https://club.test.invalid" : null
             });
+            await db.EnrollFormSettings.AddAsync(new EnrollFormSettingsEntity { SelfEnrollmentEnabled = enabled });
             await db.SaveChangesAsync();
         });
     }

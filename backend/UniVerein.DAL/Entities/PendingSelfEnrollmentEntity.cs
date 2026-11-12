@@ -88,6 +88,9 @@ public class PendingSelfEnrollmentEntity : TenantScopedEntity
     [Column("sepa_consent")]
     public DateTimeOffset? SepaConsent { get; set; }
 
+    [Column("legal_accepted_at")]
+    public DateTimeOffset? LegalAcceptedAt { get; set; }
+
     [Column("member_category_id")]
     public Guid? MemberCategoryId { get; set; }
 

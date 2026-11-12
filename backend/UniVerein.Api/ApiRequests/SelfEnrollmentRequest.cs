@@ -77,9 +77,6 @@ public class SelfEnrollmentRequest
     [JsonPropertyName("courseOfStudy")]
     public string CourseOfStudy { get; set; } = string.Empty;
 
-    // What the applicant does professionally/academically and why they want to join - replaces letting
-    // the applicant pick their own MemberCategoryId (removed below). A reviewer reads this and assigns
-    // the category themselves before approving (see PendingEnrollmentForm.tsx).
     [Required(AllowEmptyStrings = false)]
     [MaxLength(1000)]
     [JsonPropertyName("motivation")]
@@ -99,7 +96,6 @@ public class SelfEnrollmentRequest
     [JsonPropertyName("entryDate")]
     public DateTimeOffset EntryDate { get; set; }
 
-    // MemberCategoryId/ContributionPlanId are deliberately not part of this request at all (not just
-    // optional) - it doesn't make sense for a self-enrolling applicant to assign their own category or
-    // contribution tier. A reviewer assigns both via PendingEnrollmentForm.tsx before approving.
+    [JsonPropertyName("legalAccepted")]
+    public bool LegalAccepted { get; set; }
 }

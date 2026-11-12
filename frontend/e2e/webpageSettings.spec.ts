@@ -126,15 +126,18 @@ test.describe('Web page – Configure', () => {
 
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
     await expect(
       page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
     ).toBeChecked();
 
+    await page.getByRole('tab', { name: 'Verein' }).click();
     await page.getByRole('button', { name: 'Zurücksetzen' }).click();
     await page.getByRole('button', { name: 'Zurücksetzen' }).click();
     await expect(
       page.getByRole('alert').filter({ hasText: 'Zurücksetzen erfolgreich.' }),
     ).toBeVisible();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
     await expect(
       page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
     ).not.toBeChecked();
@@ -144,9 +147,11 @@ test.describe('Web page – Configure', () => {
     page,
   }) => {
     await backend.deleteMailSettings();
-    await openDashboard(page, tc.get().token);
+    const pageName = await backend.updateWebPageSettings();
+    await openDashboard(page, tc.get().token, pageName);
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
 
     const toggle = page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' });
     await expect(toggle).toBeVisible();
@@ -155,13 +160,139 @@ test.describe('Web page – Configure', () => {
 
     await backend.updateMailSettings();
     await page.reload();
-    await expect(page.getByText('Vereinsverwaltung')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText(pageName)).toBeVisible({ timeout: 8000 });
     await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
     await expect(
       page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
     ).toBeEnabled();
     await expect(page.getByText(/benötigt konfigurierte E-Mail-Einstellungen/)).not.toBeVisible();
+    await backend.deleteWebPageSettings();
+  });
+
+  test('Club tab only shows name, logo and the actions', async ({ page }) => {
+    const pageName = await backend.updateWebPageSettings();
+    await openDashboard(page, tc.get().token, pageName);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+
+    await expect(page.getByRole('tab', { name: 'Verein' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.getByRole('textbox', { name: 'Vereinsnamen' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Konfiguration speichern' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Zurücksetzen' })).toBeVisible();
+    await expect(
+      page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
+    ).not.toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Erlaubte Domains' })).not.toBeVisible();
+
+    await backend.deleteWebPageSettings();
+  });
+
+  test('Self-enrollment tab shows the form settings only while the switch is on', async ({
+    page,
+  }) => {
+    await backend.updateMailSettings();
+    const pageName = await backend.updateWebPageSettings();
+    await openDashboard(page, tc.get().token, pageName);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
+
+    const toggle = page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' });
+    await expect(toggle).not.toBeChecked();
+    await expect(page.getByRole('textbox', { name: 'Erlaubte Domains' })).not.toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Öffentlicher Link' })).not.toBeVisible();
+    await expect(page.locator('.ProseMirror')).toHaveCount(0);
+
+    await toggle.check();
+    await expect(page.getByRole('textbox', { name: 'Öffentlicher Link' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Erlaubte Domains' })).toBeVisible();
+    await expect(page.locator('.ProseMirror')).toBeVisible();
+
+    await toggle.uncheck();
+    await expect(page.getByRole('textbox', { name: 'Erlaubte Domains' })).not.toBeVisible();
+
+    await backend.deleteWebPageSettings();
+  });
+
+  test('Saving the club tab does not save an unsaved switch of the other tab', async ({ page }) => {
+    await backend.updateMailSettings();
+    const pageName = await backend.updateWebPageSettings();
+    await openDashboard(page, tc.get().token, pageName);
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
+    await page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }).check();
+
+    await page.getByRole('tab', { name: 'Verein' }).click();
+    await page.getByRole('textbox', { name: 'Vereinsnamen' }).fill('Anderer Name');
+    await page.getByRole('button', { name: 'Konfiguration speichern' }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Speichern erfolgreich.' }),
+    ).toBeVisible();
+
+    const saved = await (await page.request.get(`${APP_BASE}/api/web-page-config`)).json();
+    expect(saved.pageName).toBe('Anderer Name');
+    expect((await backend.getEnrollFormSettings()).selfEnrollmentEnabled).toBe(false);
+
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
+    await expect(
+      page.getByRole('switch', { name: 'Selbstregistrierung aktivieren' }),
+    ).toBeChecked();
+
+    await backend.deleteWebPageSettings();
+  });
+
+  test('Legal text can be edited and shows up in the public form', async ({ page, browser }) => {
+    const pageName = await backend.updateWebPageSettings();
+    await backend.setSelfEnrollmentEnabled(true);
+    await openDashboard(page, tc.get().token, pageName);
+
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
+    await expect(page.getByRole('textbox', { name: 'Einbettungscode' })).toBeVisible();
+
+    await page.locator('.ProseMirror').click();
+    await page.keyboard.type('Bitte beachte unsere Hinweise');
+    await page.getByRole('textbox', { name: 'Erlaubte Domains' }).fill('https://club.example');
+    await page.getByRole('button', { name: 'Selbstregistrierung speichern' }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Speichern erfolgreich.' }),
+    ).toBeVisible();
+
+    const publicContext = await browser.newContext();
+    const publicPage = await publicContext.newPage();
+    await publicPage.goto('/enroll');
+    await expect(publicPage.getByText('Bitte beachte unsere Hinweise')).toBeVisible();
+    await expect(publicPage.getByRole('checkbox')).toBeVisible();
+    await publicContext.close();
+
+    await backend.setEnrollFormSettings('', '');
+    await backend.deleteMailSettings();
+    await backend.deleteWebPageSettings();
+  });
+
+  test('Invalid embed domain is rejected', async ({ page }) => {
+    const pageName = await backend.updateWebPageSettings();
+    await backend.setSelfEnrollmentEnabled(true);
+    await openDashboard(page, tc.get().token, pageName);
+
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: 'Webseiteneinstellungen', exact: true }).click();
+    await page.getByRole('tab', { name: 'Selbstregistrierung' }).click();
+    await page.getByRole('textbox', { name: 'Erlaubte Domains' }).fill('club.example/path');
+    await page.getByRole('button', { name: 'Selbstregistrierung speichern' }).click();
+
+    await expect(page.getByRole('alert').filter({ hasText: 'Ungültige Eingabe' })).toBeVisible();
+
+    await backend.deleteMailSettings();
+    await backend.deleteWebPageSettings();
   });
 
   test('Show changed webpage name', async ({ page }) => {

@@ -33,6 +33,7 @@ public class WebPageConfigControllerTests : IntegrationTestBase
         await WithDbContext(async db =>
         {
             db.WebPageConfigs.RemoveRange(db.WebPageConfigs.AsQueryable());
+            db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.AsQueryable());
             db.CreditorConfigs.RemoveRange(db.CreditorConfigs.AsQueryable());
             db.MailSettings.RemoveRange(db.MailSettings.AsQueryable());
             db.LinkSettings.RemoveRange(db.LinkSettings.AsQueryable());
@@ -45,6 +46,7 @@ public class WebPageConfigControllerTests : IntegrationTestBase
         await WithDbContext(async db =>
         {
             db.WebPageConfigs.RemoveRange(db.WebPageConfigs.AsQueryable());
+            db.EnrollFormSettings.RemoveRange(db.EnrollFormSettings.AsQueryable());
             db.CreditorConfigs.RemoveRange(db.CreditorConfigs.AsQueryable());
             db.MailSettings.RemoveRange(db.MailSettings.AsQueryable());
             db.LinkSettings.RemoveRange(db.LinkSettings.AsQueryable());
@@ -180,97 +182,6 @@ public class WebPageConfigControllerTests : IntegrationTestBase
             WebPageConfigEntity? webPageConfigEntity = await db.WebPageConfigs.FirstOrDefaultAsync();
             webPageConfigEntity.ShouldNotBeNull();
             webPageConfigEntity!.PageName.ShouldBe(request.PageName);
-        });
-    }
-
-    [Fact]
-    public async Task CreateWebPageConfig_PersistsSelfEnrollmentEnabled()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        await CreateMailSettingsEntity();
-        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
-
-        // Act
-        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
-        WebPageConfigResult? results =
-            await response.Content.ReadFromJsonAsync<WebPageConfigResult>(_jsonSerializerOptions);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        results.ShouldNotBeNull();
-        results!.SelfEnrollmentEnabled.ShouldBeTrue();
-        await WithDbContext(async db =>
-        {
-            WebPageConfigEntity? webPageConfigEntity = await db.WebPageConfigs.FirstOrDefaultAsync();
-            webPageConfigEntity.ShouldNotBeNull();
-            webPageConfigEntity!.SelfEnrollmentEnabled.ShouldBeTrue();
-        });
-    }
-
-    [Fact]
-    public async Task EnableSelfEnrollment_CapturesPublicBaseUrlFromAdminRequest()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        await CreateMailSettingsEntity();
-        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
-
-        // Act
-        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        await WithDbContext(async db =>
-        {
-            WebPageConfigEntity? webPageConfigEntity = await db.WebPageConfigs.FirstOrDefaultAsync();
-            webPageConfigEntity.ShouldNotBeNull();
-            webPageConfigEntity!.PublicBaseUrl.ShouldBe($"{client.BaseAddress!.Scheme}://{client.BaseAddress.Host}");
-        });
-    }
-
-    [Fact]
-    public async Task EnableSelfEnrollment_WithoutMailSettings_UnprocessableEntity()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: true);
-
-        // Act
-        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
-        ErrorDetailsResult? result =
-            await response.Content.ReadFromJsonAsync<ErrorDetailsResult>(_jsonSerializerOptions);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
-        result.ShouldNotBeNull();
-        result!.ErrorCode.ShouldBe(ApiErrorCodes.UNPROCESSABLE_ENTITY);
-        await WithDbContext(async db =>
-        {
-            (await db.WebPageConfigs.AnyAsync(x => x.SelfEnrollmentEnabled)).ShouldBeFalse();
-        });
-    }
-
-    [Fact]
-    public async Task DisableSelfEnrollment_WithoutMailSettings_Success()
-    {
-        // Arrange
-        HttpClient client = CreateClient(UserRole.ADMIN);
-        await CreateWebPageConfigEntity(selfEnrollmentEnabled: true);
-        WebPageConfigRequest request = CreateWebPageConfigRequest(selfEnrollmentEnabled: false);
-
-        // Act
-        HttpResponseMessage response = await client.PutAsJsonAsync("/web-page-config", request);
-        WebPageConfigResult? results =
-            await response.Content.ReadFromJsonAsync<WebPageConfigResult>(_jsonSerializerOptions);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        results.ShouldNotBeNull();
-        results!.SelfEnrollmentEnabled.ShouldBeFalse();
-        await WithDbContext(async db =>
-        {
-            (await db.WebPageConfigs.AnyAsync(x => x.SelfEnrollmentEnabled)).ShouldBeFalse();
         });
     }
 
@@ -440,14 +351,13 @@ public class WebPageConfigControllerTests : IntegrationTestBase
     // Helper functions
     // ---------------------------------------------------------------
 
-    private WebPageConfigRequest CreateWebPageConfigRequest(string? name = null, bool selfEnrollmentEnabled = false)
+    private WebPageConfigRequest CreateWebPageConfigRequest(string? name = null)
     {
         return new()
         {
             PageName = name ?? Guid.NewGuid().ToString(),
             Logo =
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-            SelfEnrollmentEnabled = selfEnrollmentEnabled
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         };
     }
 
@@ -459,13 +369,17 @@ public class WebPageConfigControllerTests : IntegrationTestBase
             PageName = Guid.NewGuid().ToString(),
             Logo =
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-            DeletedAt = isDeleted ? DateTimeOffset.UtcNow : null,
-            SelfEnrollmentEnabled = selfEnrollmentEnabled
+            DeletedAt = isDeleted ? DateTimeOffset.UtcNow : null
         };
 
         await WithDbContext(async db =>
         {
             await db.WebPageConfigs.AddAsync(pageConfigEntity);
+            if (selfEnrollmentEnabled)
+                await db.EnrollFormSettings.AddAsync(new EnrollFormSettingsEntity
+                {
+                    SelfEnrollmentEnabled = true
+                });
             await db.SaveChangesAsync();
         });
 

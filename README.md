@@ -37,17 +37,9 @@
 
 ---
 
-## ✨ Features
+## 🌐 Demo
 
-- 👥 **Member Management** — Add, edit, and organize members
-- 💰 **Finance Tracking** — Keep track of membership fees, income, and expenses
-- 📄 **Document Storage** — Store and share important club documents and files
-- 📧 **Email Notifications** — Send mails for events or announcements
-- 📅 **Calendar** — Plan events together, invite members, recurring events, reminders, webcal subscriptions and a public club calendar
-- 🔐 **Role-Based Access Control** — Assign different roles (Admin, User, Finance)
-- 🌍 **Multi-language Support** — Available in multiple languages (currently DE, EN)
-
----
+- [Live Uni-Verein Demo](https://demo.uni-verein.de)
 
 ## 📸 Screenshots
 
@@ -57,9 +49,47 @@
 
 </div>
 
-## 🌐 Demo
+## ✨ Features
 
-- [Live Uni-Verein Demo](https://demo.uni-verein.de)
+### Members
+
+- 👥 **Member Management**: Members with member numbers, categories, membership status and exit date; deleted members are kept and can be restored by admins
+- 📥 **CSV Import & Export**: Import members from a CSV file (with an example file and an error report) and export them again
+- 📝 **Self-Enrollment**: Public application form with email confirmation (double opt-in), a review queue where applicants are approved or rejected, and optional legal information the applicant has to accept
+- 🌐 **Embeddable Form**: Embed the enrollment form on the club's own website with one script tag, restricted to the domains you allow
+- 🔗 **External Links**: Add links to other tools (e.g. a cloud folder) to the menu
+
+### Finance
+
+- 💰 **Membership Fees**: Contribution plans, automatically generated fees, paid/open status, payment dates and stable booking numbers
+- 🏦 **SEPA Direct Debit**: Export the fees as a `pain.008.001.08` file (EPC SDD Core), with the club's bank details and creditor ID
+- 💶 **Income**: Further income besides the fees, sorted into configurable income categories
+- 🧾 **Receipts**: Members submit receipts as photos or PDFs. Amount and date are read on the device by OCR (no upload to a third party), and financial managers review the receipts and mark them as paid. Receipt categories and notifications are configurable
+- 📄 **Payment Acknowledgements**: PDF acknowledgement with a consecutive number for every paid fee or income
+- 📊 **Finance Analytics**: Compare income and expenses by month and category
+- 📑 **EÜR Export**: Income-surplus statement as a spreadsheet with journal and tax-area checks
+
+### Communication
+
+- 📧 **Email**: Send mails to all members or to a member category with a rich text editor and watch the progress live. The SMTP/IMAP settings enforce encryption and offer a test mail
+- 📅 **Calendar**: Plan events together, invite members, repeat events, set reminders, subscribe via webcal and publish a public club calendar
+- 🔔 **Notifications**: In-app bell and email for calendar events, new self-enrollments, new receipts and new versions (every user chooses what they get)
+
+### Security & Administration
+
+- 🔐 **Role-Based Access Control**: Roles Admin, Financial Manager and User
+- 🛡️ **Two-Factor Authentication**: TOTP with QR code and recovery codes, login lockout, rate limits and a mail when someone logs in from a new device
+- 🗒️ **Audit Log**: Traceable changes to users, finances, settings and backups
+- 💾 **Backup & Restore**: Download a full backup (database and receipt files) and restore it from the web interface
+- 🚀 **First-Time Setup**: Guided creation of the first administrator, protected by a setup token
+- 🔄 **Update Hints**: The app checks for new releases and notifies admins
+
+### Usability
+
+- 📱 **Installable App**: Progressive web app with a mobile layout, bottom navigation and offline-capable app shell
+- 🌙 **Dark Mode**: Follows the system or can be switched manually
+- 🌍 **Multi-language Support**: Available in multiple languages (currently DE, EN)
+- 🧪 **Demo Mode**: Resets itself with sample data, as used by the [live demo](https://demo.uni-verein.de)
 
 ---
 
@@ -93,10 +123,10 @@ Use this unless you already terminate TLS in front of this stack.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/Caddyfile
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-tls.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/Caddyfile
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-tls.yml
 ```
 
 2. **Create .env and secrets**
@@ -138,9 +168,9 @@ it doesn't come up, check `docker compose -f docker-compose-tls.yml logs caddy`.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.10.1/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**
@@ -261,21 +291,9 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of co
 
 ## 🗺️ Roadmap
 
-- [x] Member management
-- [x] Mail management
-- [x] Contribution management
-- [x] Sepa exports
-- [x] Mobile web app (iOS & Android)
-- [x] Receipt management
-- [x] Receipt notification
-- [x] Member self registration (Trade fair & permanent)
-- [x] Event planning (calendar)
-- [x] German EÜR export
-- [x] Revenue Analysis
-- [x] Financial evaluation
-- [x] Multi-factor-authentication (MFA)
 - [ ] File management
 - [ ] Chat system
+- [ ] Multi-Tenant-Support
 
 ---
 

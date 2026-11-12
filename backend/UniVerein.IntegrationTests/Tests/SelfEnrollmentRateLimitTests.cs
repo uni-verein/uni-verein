@@ -63,6 +63,44 @@ public class SelfEnrollmentRateLimitTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task GetEmbedPolicy_IsNotLimitedByReadLimit()
+    {
+        // Arrange
+        HttpClient client = CreateClientWithRateLimit(readPermitLimit: 1);
+
+        // Act
+        List<HttpStatusCode> statuses = new();
+        for (int i = 0; i < 3; i++)
+        {
+            HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+            statuses.Add(response.StatusCode);
+        }
+
+        // Assert
+        statuses.ShouldAllBe(x => x == HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task GetEmbedPolicy_ExceedsConfiguredEmbedPolicyLimit_ReturnsTooManyRequests()
+    {
+        // Arrange
+        HttpClient client = CreateClientWithRateLimit(embedPolicyPermitLimit: 2);
+
+        // Act
+        List<HttpStatusCode> statuses = new();
+        for (int i = 0; i < 3; i++)
+        {
+            HttpResponseMessage response = await client.GetAsync("/self-enrollment/embed-policy");
+            statuses.Add(response.StatusCode);
+        }
+
+        // Assert
+        statuses[0].ShouldBe(HttpStatusCode.NoContent);
+        statuses[1].ShouldBe(HttpStatusCode.NoContent);
+        statuses[2].ShouldBe(HttpStatusCode.TooManyRequests);
+    }
+
+    [Fact]
     public async Task ConfirmSelfEnrollment_ExceedsConfiguredConfirmLimit_ReturnsTooManyRequests()
     {
         // Arrange
@@ -87,7 +125,7 @@ public class SelfEnrollmentRateLimitTests : IntegrationTestBase
     // Helper functions
     // ---------------------------------------------------------------
     private HttpClient CreateClientWithRateLimit(int? permitLimit = null, int? readPermitLimit = null,
-        int? confirmPermitLimit = null)
+        int? confirmPermitLimit = null, int? embedPolicyPermitLimit = null)
     {
         WebApplicationFactory<UniVerein.Api.Startup> limitedFactory = Factory.WithWebHostBuilder(builder =>
         {
@@ -98,6 +136,8 @@ public class SelfEnrollmentRateLimitTests : IntegrationTestBase
                     overrides["RateLimiting:SelfEnrollment:PermitLimit"] = permitLimit.Value.ToString();
                 if (readPermitLimit != null)
                     overrides["RateLimiting:SelfEnrollment:ReadPermitLimit"] = readPermitLimit.Value.ToString();
+                if (embedPolicyPermitLimit != null)
+                    overrides["RateLimiting:SelfEnrollment:EmbedPolicyPermitLimit"] = embedPolicyPermitLimit.Value.ToString();
                 if (confirmPermitLimit != null)
                     overrides["RateLimiting:SelfEnrollment:ConfirmPermitLimit"] = confirmPermitLimit.Value.ToString();
 

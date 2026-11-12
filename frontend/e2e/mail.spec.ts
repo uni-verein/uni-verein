@@ -131,12 +131,14 @@ test.describe('E-Mail – Configure and send e-mail', () => {
         page.getByRole('alert').filter({ hasText: 'Testmail erfolgreich versendet' }),
       ).toBeVisible();
 
+      await backend.waitForPapercutMessageCount(1);
       await page.goto('http://localhost:8080');
-      await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible({ timeout: 10000 });
-      await page.getByText('Test mail from noreply@test.de a few seconds ago').click();
-      await expect(page.getByText('Test mail from noreply@test.de', { exact: true })).toBeVisible();
+      await page.getByText('Test mail from noreply@test.de', { exact: true }).first().click();
       await expect(
-        page.locator('#preview-html').contentFrame().getByText('Email successfully configured'),
+        page.getByText('Test mail from noreply@test.de', { exact: true }).first(),
+      ).toBeVisible();
+      await expect(
+        page.locator('iframe').contentFrame().getByText('Email successfully configured'),
       ).toBeVisible();
       await fetch('http://localhost:8080/api/messages', { method: 'DELETE' });
       await backend.deleteMailSettings();
@@ -278,18 +280,13 @@ test.describe('E-Mail – Configure and send e-mail', () => {
       ).toBeVisible();
       await expect(page.getByRole('button', { name: 'Neue E-Mail erstellen' })).toBeVisible();
 
+      await backend.waitForPapercutMessageCount(1);
       await page.goto('http://localhost:8080');
-      await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible();
-      await page.getByText('Mitteilung a few seconds ago').click();
-      await expect(page.getByText('Mitteilung', { exact: true })).toBeVisible();
+      await page.getByText('Mitteilung', { exact: true }).first().click();
+      await expect(page.getByText('Mitteilung', { exact: true }).first()).toBeVisible();
+      await expect(page.locator('iframe').contentFrame().getByText('Hallo Test,')).toBeVisible();
       await expect(
-        page.locator('#preview-html').contentFrame().getByText('Hallo Test,'),
-      ).toBeVisible();
-      await expect(
-        page
-          .locator('#preview-html')
-          .contentFrame()
-          .getByText('hier ist deine Nachricht...Test text'),
+        page.locator('iframe').contentFrame().getByText('hier ist deine Nachricht...Test text'),
       ).toBeVisible();
       await fetch('http://localhost:8080/api/messages', { method: 'DELETE' });
       await backend.deleteAllMember();
@@ -395,18 +392,16 @@ test.describe('E-Mail – Configure and send e-mail', () => {
       await expect(page.getByText('Fortschritt')).toBeVisible();
       await expect(page.getByText('100%')).toBeVisible();
 
+      await backend.waitForPapercutMessageCount(1);
       await page.goto('http://localhost:8080');
-      await expect(page.getByRole('link', { name: 'Inbox (1)' })).toBeVisible();
-      await page.getByText('Mitteilung a few seconds ago').click();
-      await expect(page.getByText('Mitteilung', { exact: true })).toBeVisible();
+      await page.getByText('Mitteilung', { exact: true }).first().click();
+      await expect(page.getByText('Mitteilung', { exact: true }).first()).toBeVisible();
+      const bccAddresses = await backend.getPapercutBccAddresses();
+      expect(bccAddresses).toHaveLength(151);
       for (let i = 0; i < 151; i++) {
-        await expect(
-          page.getByText(`${i}_test_1774694157026@test.de`, { exact: true }),
-        ).toBeVisible();
+        expect(bccAddresses).toContain(`${i}_test_1774694157026@test.de`);
       }
-      await expect(
-        page.locator('#preview-html').contentFrame().getByText('Test text'),
-      ).toBeVisible();
+      await expect(page.locator('iframe').contentFrame().getByText('Test text')).toBeVisible();
       await fetch('http://localhost:8080/api/messages', { method: 'DELETE' });
       await backend.deleteAllMember();
       await backend.deleteMailSettings();

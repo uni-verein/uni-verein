@@ -228,6 +228,7 @@ namespace UniVerein.Api
 
                 AddIpRateLimitPolicy(options, "self-enrollment", "RateLimiting:SelfEnrollment:PermitLimit", 5);
                 AddIpRateLimitPolicy(options, "self-enrollment-read", "RateLimiting:SelfEnrollment:ReadPermitLimit", 20);
+                AddIpRateLimitPolicy(options, "self-enrollment-embed-policy", "RateLimiting:SelfEnrollment:EmbedPolicyPermitLimit", 300);
                 AddIpRateLimitPolicy(options, "self-enrollment-confirm", "RateLimiting:SelfEnrollment:ConfirmPermitLimit", 10);
                 AddIpRateLimitPolicy(options, "auth-login", "RateLimiting:AuthLogin:PermitLimit", 20);
                 AddIpRateLimitPolicy(options, "setup", "RateLimiting:Setup:PermitLimit", 20);
