@@ -1,6 +1,6 @@
 # Third-Party Notices (Frontend)
 
-Generated automatically on 2026-11-12
+Generated automatically on 2026-11-15
 
 | Package | Version | License |
 |---------|---------|---------|
@@ -170,7 +170,7 @@ Generated automatically on 2026-11-12
 | @napi-rs/lzma-linux-x64-gnu@1.5.1 | - | MIT |
 | @oxc-project/types@0.156.0 | - | MIT |
 | @pkgr/core@0.3.6 | - | MIT |
-| @playwright/test@1.64.1 | - | Apache-2.0 |
+| @playwright/test@1.65.0 | - | Apache-2.0 |
 | @popperjs/core@2.11.8 | - | MIT |
 | @quansync/fs@1.1.0 | - | MIT |
 | @rolldown/binding-linux-x64-gnu@1.2.16 | - | MIT |
@@ -183,38 +183,38 @@ Generated automatically on 2026-11-12
 | @rollup/pluginutils@5.5.1 | - | MIT |
 | @rollup/rollup-linux-x64-gnu@4.67.2 | - | MIT |
 | @rollup/rollup-linux-x64-musl@4.67.2 | - | MIT |
-| @tiptap/core@3.32.2 | - | MIT |
-| @tiptap/extension-blockquote@3.32.2 | - | MIT |
-| @tiptap/extension-bold@3.32.2 | - | MIT |
-| @tiptap/extension-bubble-menu@3.32.2 | - | MIT |
-| @tiptap/extension-bullet-list@3.32.2 | - | MIT |
-| @tiptap/extension-code-block@3.32.2 | - | MIT |
-| @tiptap/extension-code@3.32.2 | - | MIT |
-| @tiptap/extension-color@3.32.2 | - | MIT |
-| @tiptap/extension-document@3.32.2 | - | MIT |
-| @tiptap/extension-dropcursor@3.32.2 | - | MIT |
-| @tiptap/extension-floating-menu@3.32.2 | - | MIT |
-| @tiptap/extension-gapcursor@3.32.2 | - | MIT |
-| @tiptap/extension-hard-break@3.32.2 | - | MIT |
-| @tiptap/extension-heading@3.32.2 | - | MIT |
-| @tiptap/extension-horizontal-rule@3.32.2 | - | MIT |
-| @tiptap/extension-image@3.32.2 | - | MIT |
-| @tiptap/extension-italic@3.32.2 | - | MIT |
-| @tiptap/extension-link@3.32.2 | - | MIT |
-| @tiptap/extension-list-item@3.32.2 | - | MIT |
-| @tiptap/extension-list-keymap@3.32.2 | - | MIT |
-| @tiptap/extension-list@3.32.2 | - | MIT |
-| @tiptap/extension-ordered-list@3.32.2 | - | MIT |
-| @tiptap/extension-paragraph@3.32.2 | - | MIT |
-| @tiptap/extension-strike@3.32.2 | - | MIT |
-| @tiptap/extension-text-align@3.32.2 | - | MIT |
-| @tiptap/extension-text-style@3.32.2 | - | MIT |
-| @tiptap/extension-text@3.32.2 | - | MIT |
-| @tiptap/extension-underline@3.32.2 | - | MIT |
-| @tiptap/extensions@3.32.2 | - | MIT |
-| @tiptap/pm@3.32.2 | - | MIT |
-| @tiptap/react@3.32.2 | - | MIT |
-| @tiptap/starter-kit@3.32.2 | - | MIT |
+| @tiptap/core@3.33.0 | - | MIT |
+| @tiptap/extension-blockquote@3.33.0 | - | MIT |
+| @tiptap/extension-bold@3.33.0 | - | MIT |
+| @tiptap/extension-bubble-menu@3.33.0 | - | MIT |
+| @tiptap/extension-bullet-list@3.33.0 | - | MIT |
+| @tiptap/extension-code-block@3.33.0 | - | MIT |
+| @tiptap/extension-code@3.33.0 | - | MIT |
+| @tiptap/extension-color@3.33.0 | - | MIT |
+| @tiptap/extension-document@3.33.0 | - | MIT |
+| @tiptap/extension-dropcursor@3.33.0 | - | MIT |
+| @tiptap/extension-floating-menu@3.33.0 | - | MIT |
+| @tiptap/extension-gapcursor@3.33.0 | - | MIT |
+| @tiptap/extension-hard-break@3.33.0 | - | MIT |
+| @tiptap/extension-heading@3.33.0 | - | MIT |
+| @tiptap/extension-horizontal-rule@3.33.0 | - | MIT |
+| @tiptap/extension-image@3.33.0 | - | MIT |
+| @tiptap/extension-italic@3.33.0 | - | MIT |
+| @tiptap/extension-link@3.33.0 | - | MIT |
+| @tiptap/extension-list-item@3.33.0 | - | MIT |
+| @tiptap/extension-list-keymap@3.33.0 | - | MIT |
+| @tiptap/extension-list@3.33.0 | - | MIT |
+| @tiptap/extension-ordered-list@3.33.0 | - | MIT |
+| @tiptap/extension-paragraph@3.33.0 | - | MIT |
+| @tiptap/extension-strike@3.33.0 | - | MIT |
+| @tiptap/extension-text-align@3.33.0 | - | MIT |
+| @tiptap/extension-text-style@3.33.0 | - | MIT |
+| @tiptap/extension-text@3.33.0 | - | MIT |
+| @tiptap/extension-underline@3.33.0 | - | MIT |
+| @tiptap/extensions@3.33.0 | - | MIT |
+| @tiptap/pm@3.33.0 | - | MIT |
+| @tiptap/react@3.33.0 | - | MIT |
+| @tiptap/starter-kit@3.33.0 | - | MIT |
 | @trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1 | - | Apache-2.0 |
 | @types/d3-array@3.2.2 | - | MIT |
 | @types/d3-color@3.1.3 | - | MIT |
@@ -253,7 +253,7 @@ Generated automatically on 2026-11-12
 | @typescript-eslint/utils@8.72.1 | - | MIT |
 | @typescript-eslint/visitor-keys@8.72.1 | - | MIT |
 | @vite-pwa/assets-generator@2.0.0 | - | MIT |
-| @vitejs/plugin-react@6.1.2 | - | MIT |
+| @vitejs/plugin-react@6.2.1 | - | MIT |
 | abort-controller@3.0.0 | - | MIT |
 | acorn-jsx@5.3.2 | - | MIT |
 | acorn@8.19.0 | - | MIT |
@@ -378,7 +378,7 @@ Generated automatically on 2026-11-12
 | get-symbol-description@1.1.0 | - | MIT |
 | glob-parent@6.0.2 | - | ISC |
 | glob@14.0.3 | - | BlueOak-1.0.0 |
-| globals@17.13.0 | - | MIT |
+| globals@17.14.0 | - | MIT |
 | globalthis@1.0.4 | - | MIT |
 | gopd@1.2.0 | - | MIT |
 | graceful-fs@4.2.11 | - | ISC |
@@ -396,8 +396,8 @@ Generated automatically on 2026-11-12
 | hookified@2.2.0 | - | MIT |
 | html-parse-stringify@4.0.1 | - | MIT |
 | i18n-iso-countries@7.14.0 | - | MIT |
-| i18next-browser-languagedetector@8.2.4 | - | MIT |
-| i18next@26.5.12 | - | MIT |
+| i18next-browser-languagedetector@8.3.0 | - | MIT |
+| i18next@26.7.2 | - | MIT |
 | ico-endec@0.1.6 | - | MPL-2.0 |
 | idb-keyval@6.3.0 | - | Apache-2.0 |
 | idb@7.1.1 | - | ISC |
@@ -490,11 +490,11 @@ Generated automatically on 2026-11-12
 | path-parse@1.0.7 | - | MIT |
 | path-scurry@3.0.0 | - | BlueOak-1.0.0 |
 | path-type@4.0.0 | - | MIT |
-| pdfjs-dist@6.4.299 | - | Apache-2.0 |
+| pdfjs-dist@6.5.438 | - | Apache-2.0 |
 | picocolors@1.1.1 | - | ISC |
 | picomatch@4.0.7 | - | MIT |
-| playwright-core@1.64.1 | - | Apache-2.0 |
-| playwright@1.64.1 | - | Apache-2.0 |
+| playwright-core@1.65.0 | - | Apache-2.0 |
+| playwright@1.65.0 | - | Apache-2.0 |
 | possible-typed-array-names@1.1.0 | - | MIT |
 | postcss@8.5.32 | - | MIT |
 | preact@10.12.1 | - | MIT |
@@ -524,7 +524,7 @@ Generated automatically on 2026-11-12
 | quansync@1.0.0 | - | MIT |
 | querystringify@2.2.0 | - | MIT |
 | react-dom@19.3.1 | - | MIT |
-| react-i18next@17.1.9 | - | MIT |
+| react-i18next@17.1.13 | - | MIT |
 | react-is@16.13.1 | - | MIT |
 | react-is@19.3.1 | - | MIT |
 | react-transition-group@4.4.5 | - | BSD-3-Clause |
@@ -617,7 +617,7 @@ Generated automatically on 2026-11-12
 | use-sync-external-store@1.7.0 | - | MIT |
 | uuid@14.0.3 | - | MIT |
 | vite-plugin-pwa@2.0.0 | - | MIT |
-| vite@8.3.5 | - | MIT |
+| vite@8.3.6 | - | MIT |
 | w3c-keyname@2.2.8 | - | MIT |
 | wasm-feature-detect@1.9.0 | - | Apache-2.0 |
 | webidl-conversions@3.0.1 | - | BSD-2-Clause |
