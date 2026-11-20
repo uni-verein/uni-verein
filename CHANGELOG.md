@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.11.1] UV-75, UV-76, UV-77, UV-78
+
 ### Changed
 - Dependency update of backend and frontend. Frontend: MUI X 9.18, TipTap 3.35, i18next 27 and react-i18next 18, Vite 8.3.8, ESLint 10.15, Prettier 3.10, Playwright 1.65.1 (the Playwright image in the CI uses `v1.65.1-noble`) and patch updates. Backend: MailKit 5.0 (the check for SMTP authentication uses `SmtpClient.Capabilities.Contains(SmtpCapability.Authentication)`), HtmlSanitizer 11, Serilog.AspNetCore 11, QuestPDF 2026.9.2 and test tooling updates.
 - **Not updated on purpose:** `CsvHelper` 33.1.0 (34 is a rewrite), `@fullcalendar/*` 6.1.22 (7 has no plugin releases), `typescript` 6.0.3 (7 is not supported by `typescript-eslint`), and everything that moved to major version 11 together with .NET 11 (`Microsoft.*` / `System.Security.Cryptography.Pkcs` 10.0.14, `Microsoft.Extensions.TimeProvider.Testing` 10.11.0, `@microsoft/signalr` 10.0.11, which belongs to the SignalR server of ASP.NET Core 10).
