@@ -22,6 +22,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Theme,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -58,6 +59,16 @@ import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useSnackbar } from '../hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
+
+const stickyActionsCellSx = {
+  position: 'sticky',
+  right: 0,
+  zIndex: 1,
+  bgcolor: 'background.paper',
+  boxShadow: (theme: Theme) => `-1px 0 0 ${theme.palette.divider}`,
+} as const;
+
+const overlay = (color: string) => `linear-gradient(${color}, ${color})`;
 
 export default function Members({ role }: UserRoleProps) {
   const theme = useTheme();
@@ -591,7 +602,15 @@ export default function Members({ role }: UserRoleProps) {
                     <TableCell sx={{ fontWeight: 'bold' }}>
                       {t('pages.members.table.colMemberCategory')}
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', minWidth: '130px' }}>
+                    <TableCell
+                      align="right"
+                      sx={(theme) => ({
+                        ...stickyActionsCellSx,
+                        fontWeight: 'bold',
+                        minWidth: '130px',
+                        backgroundImage: overlay(theme.palette.action.hover),
+                      })}
+                    >
                       {t('pages.members.table.colActions')}
                     </TableCell>
                   </TableRow>
@@ -644,7 +663,15 @@ export default function Members({ role }: UserRoleProps) {
                               )
                             : ''}
                         </TableCell>
-                        <TableCell align="right">
+                        <TableCell
+                          align="right"
+                          sx={(theme) => ({
+                            ...stickyActionsCellSx,
+                            'tr:hover &': {
+                              backgroundImage: overlay(theme.palette.action.hover),
+                            },
+                          })}
+                        >
                           {m.deletedAt !== null && (
                             <Tooltip title={t('pages.members.actions.restore')}>
                               <IconButton

@@ -170,6 +170,53 @@ public class PendingSelfEnrollmentControllerTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Approve_Twice_SecondCallNotFoundAndOnlyOneMemberExists()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        string email = $"twice_{Guid.NewGuid()}@test.de";
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(
+            PendingSelfEnrollmentStatus.PENDING, email: email);
+
+        // Act
+        HttpResponseMessage first = await client.PostAsync($"/pending-self-enrollments/{pending.Id}/approve", null);
+        HttpResponseMessage second = await client.PostAsync($"/pending-self-enrollments/{pending.Id}/approve", null);
+
+        // Assert
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
+        second.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await WithDbContext(async db =>
+        {
+            string emailHash = _cryptoService.Hash(email);
+            (await db.Members.CountAsync(m => m.EmailHash == emailHash)).ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public async Task Approve_ConcurrentCalls_CreatesExactlyOneMember()
+    {
+        // Arrange
+        HttpClient client = CreateAdminClient();
+        string email = $"parallel_{Guid.NewGuid()}@test.de";
+        PendingSelfEnrollmentEntity pending = await CreatePendingSelfEnrollmentEntity(
+            PendingSelfEnrollmentStatus.PENDING, email: email);
+
+        // Act
+        HttpResponseMessage[] responses = await Task.WhenAll(
+            Enumerable.Range(0, 4).Select(_ => client.PostAsync($"/pending-self-enrollments/{pending.Id}/approve", null)));
+
+        // Assert
+        responses.Count(r => r.StatusCode == HttpStatusCode.Created).ShouldBe(1);
+        responses.Count(r => r.StatusCode == HttpStatusCode.NotFound).ShouldBe(3);
+        await WithDbContext(async db =>
+        {
+            string emailHash = _cryptoService.Hash(email);
+            (await db.Members.CountAsync(m => m.EmailHash == emailHash)).ShouldBe(1);
+            (await db.PendingSelfEnrollments.AnyAsync(x => x.Id == pending.Id)).ShouldBeFalse();
+        });
+    }
+
+    [Fact]
     public async Task Approve_DuplicateEmailAgainstExistingMember_ConflictAndRowStaysPending()
     {
         // Arrange

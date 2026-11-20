@@ -1,12 +1,11 @@
 # Third-Party Notices (Backend)
 
-Generated automatically on 2026-11-15
+Generated automatically on 2026-11-20
 
 | Package | Version | License |
 |---------|---------|---------|
-| AngleSharp | 1.7.2 | MIT |
-| AngleSharp.Css | 1.0.2 | MIT |
-| BouncyCastle.Cryptography | 2.7.0 | MIT |
+| AngleSharp | 1.10.0 | MIT |
+| AngleSharp.Css | 1.4.0 | MIT |
 | Castle.Core | 5.2.1 | Apache-2.0 |
 | ClosedXML | 0.105.1 | MIT |
 | ClosedXML.Parser | 2.0.0 | MIT |
@@ -16,21 +15,21 @@ Generated automatically on 2026-11-15
 | DocumentFormat.OpenXml.Framework | 3.1.1 | MIT |
 | EmptyFiles | 4.4.0 | MIT |
 | ExcelNumberFormat | 1.1.0 | MIT |
-| HtmlSanitizer | 9.2.1039 | MIT |
+| HtmlSanitizer | 11.0.26 | MIT |
 | Humanizer.Core | 2.14.1 | MIT |
 | Ical.Net | 5.2.4 | MIT |
 | Konscious.Security.Cryptography.Argon2 | 1.3.1 | MIT |
 | Konscious.Security.Cryptography.Blake2 | 1.1.1 | MIT |
-| MailKit | 4.18.2 | MIT |
+| MailKit | 5.0.0 | MIT |
 | Markdig | 1.6.0 | BSD-2-Clause |
 | Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.14 | MIT |
 | Microsoft.AspNetCore.Connections.Abstractions | 10.0.14 | MIT |
-| Microsoft.AspNetCore.Hosting.Abstractions | 2.3.0 |  |
-| Microsoft.AspNetCore.Hosting.Server.Abstractions | 2.3.0 |  |
-| Microsoft.AspNetCore.Http.Abstractions | 2.3.0 |  |
+| Microsoft.AspNetCore.Hosting.Abstractions | 2.3.14 |  |
+| Microsoft.AspNetCore.Hosting.Server.Abstractions | 2.3.13 |  |
+| Microsoft.AspNetCore.Http.Abstractions | 2.3.13 |  |
 | Microsoft.AspNetCore.Http.Connections.Client | 10.0.14 | MIT |
 | Microsoft.AspNetCore.Http.Connections.Common | 10.0.14 | MIT |
-| Microsoft.AspNetCore.Http.Features | 2.3.0 |  |
+| Microsoft.AspNetCore.Http.Features | 2.3.12 |  |
 | Microsoft.AspNetCore.Mvc.Testing | 10.0.14 | MIT |
 | Microsoft.AspNetCore.SignalR.Client | 10.0.14 | MIT |
 | Microsoft.AspNetCore.SignalR.Client.Core | 10.0.14 | MIT |
@@ -38,7 +37,7 @@ Generated automatically on 2026-11-15
 | Microsoft.AspNetCore.SignalR.Protocols.Json | 10.0.14 | MIT |
 | Microsoft.AspNetCore.TestHost | 10.0.14 | MIT |
 | Microsoft.Bcl.AsyncInterfaces | 8.0.0 | MIT |
-| Microsoft.Bcl.Cryptography | 10.0.13 | MIT |
+| Microsoft.Bcl.Cryptography | 10.0.2 | MIT |
 | Microsoft.Bcl.HashCode | 1.1.1 | MIT |
 | Microsoft.Bcl.TimeProvider | 8.0.1 | MIT |
 | Microsoft.Build.Framework | 18.0.2 | MIT |
@@ -49,7 +48,7 @@ Generated automatically on 2026-11-15
 | Microsoft.CodeAnalysis.Common | 5.0.0 | MIT |
 | Microsoft.CodeAnalysis.Workspaces.Common | 5.0.0 | MIT |
 | Microsoft.CodeAnalysis.Workspaces.MSBuild | 5.0.0 | MIT |
-| Microsoft.CodeCoverage | 18.11.0 | MIT |
+| Microsoft.CodeCoverage | 18.12.0 | MIT |
 | Microsoft.Data.Sqlite.Core | 10.0.14 | MIT |
 | Microsoft.EntityFrameworkCore | 10.0.14 | MIT |
 | Microsoft.EntityFrameworkCore.Abstractions | 10.0.14 | MIT |
@@ -60,9 +59,9 @@ Generated automatically on 2026-11-15
 | Microsoft.EntityFrameworkCore.Sqlite.Core | 10.0.14 | MIT |
 | Microsoft.Extensions.Caching.Abstractions | 10.0.14 | MIT |
 | Microsoft.Extensions.Caching.Memory | 10.0.14 | MIT |
-| Microsoft.Extensions.Configuration | 10.0.0 | MIT |
+| Microsoft.Extensions.Configuration | 11.0.0 | MIT |
 | Microsoft.Extensions.Configuration.Abstractions | 10.0.14 | MIT |
-| Microsoft.Extensions.Configuration.Binder | 10.0.0 | MIT |
+| Microsoft.Extensions.Configuration.Binder | 11.0.0 | MIT |
 | Microsoft.Extensions.Configuration.CommandLine | 10.0.14 | MIT |
 | Microsoft.Extensions.Configuration.EnvironmentVariables | 10.0.14 | MIT |
 | Microsoft.Extensions.Configuration.FileExtensions | 10.0.14 | MIT |
@@ -72,13 +71,13 @@ Generated automatically on 2026-11-15
 | Microsoft.Extensions.DependencyInjection.Abstractions | 8.0.0 | MIT |
 | Microsoft.Extensions.DependencyModel | 10.0.14 | MIT |
 | Microsoft.Extensions.Diagnostics | 10.0.14 | MIT |
-| Microsoft.Extensions.Diagnostics.Abstractions | 8.0.1 | MIT |
+| Microsoft.Extensions.Diagnostics.Abstractions | 11.0.0 | MIT |
 | Microsoft.Extensions.Features | 10.0.14 | MIT |
-| Microsoft.Extensions.FileProviders.Abstractions | 8.0.0 | MIT |
+| Microsoft.Extensions.FileProviders.Abstractions | 11.0.0 | MIT |
 | Microsoft.Extensions.FileProviders.Physical | 10.0.14 | MIT |
 | Microsoft.Extensions.FileSystemGlobbing | 10.0.14 | MIT |
 | Microsoft.Extensions.Hosting | 10.0.14 | MIT |
-| Microsoft.Extensions.Hosting.Abstractions | 8.0.1 | MIT |
+| Microsoft.Extensions.Hosting.Abstractions | 11.0.0 | MIT |
 | Microsoft.Extensions.Logging | 10.0.14 | MIT |
 | Microsoft.Extensions.Logging.Abstractions | 8.0.0 | MIT |
 | Microsoft.Extensions.Logging.Configuration | 10.0.14 | MIT |
@@ -97,15 +96,15 @@ Generated automatically on 2026-11-15
 | Microsoft.IdentityModel.Protocols | 8.19.2 | MIT |
 | Microsoft.IdentityModel.Protocols.OpenIdConnect | 8.19.2 | MIT |
 | Microsoft.IdentityModel.Tokens | 8.19.2 | MIT |
-| Microsoft.NET.Test.Sdk | 18.11.0 | MIT |
+| Microsoft.NET.Test.Sdk | 18.12.0 | MIT |
 | Microsoft.NETCore.Platforms | 1.1.0 | MS-EULA |
 | Microsoft.NETCore.Targets | 1.1.0 | MS-EULA |
-| Microsoft.TestPlatform.ObjectModel | 18.11.0 | MIT |
-| Microsoft.TestPlatform.TestHost | 18.11.0 | MIT |
+| Microsoft.TestPlatform.ObjectModel | 18.12.0 | MIT |
+| Microsoft.TestPlatform.TestHost | 18.12.0 | MIT |
 | Microsoft.VisualStudio.SolutionPersistence | 1.0.52 | MIT |
 | Microsoft.Win32.Primitives | 4.3.0 | MS-EULA |
 | Microsoft.Win32.Registry | 5.0.0 | MIT |
-| MimeKit | 4.18.2 | MIT |
+| MimeKit.Core | 5.0.0 | MIT |
 | Mono.TextTemplating | 3.0.0 | MIT |
 | Moq | 4.21.0 | BSD-3-Clause |
 | NETStandard.Library | 1.6.1 | MS-EULA |
@@ -115,7 +114,7 @@ Generated automatically on 2026-11-15
 | Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.3 | PostgreSQL |
 | Otp.NET | 1.4.1 | LICENSE.txt |
 | Portable.System.DateTimeOnly | 9.0.0 | MIT |
-| QuestPDF | 2026.9.1 | LICENSE.md |
+| QuestPDF | 2026.9.2 | LICENSE.md |
 | RBush.Signed | 4.0.0 | MIT |
 | SQLite | 3.53.4 | LICENSE.txt |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.13 | Apache-2.0 |
@@ -128,13 +127,13 @@ Generated automatically on 2026-11-15
 | SQLitePCLRaw.provider.dynamic_cdecl | 2.1.13 | Apache-2.0 |
 | SQLitePCLRaw.provider.e_sqlite3 | 2.1.13 | Apache-2.0 |
 | SQLitePCLRaw.provider.internal | 2.1.13 | Apache-2.0 |
-| Serilog | 4.3.0 | Apache-2.0 |
-| Serilog.AspNetCore | 10.0.0 | Apache-2.0 |
+| Serilog | 4.4.0 | Apache-2.0 |
+| Serilog.AspNetCore | 11.0.0 | Apache-2.0 |
 | Serilog.Enrichers.Environment | 3.0.1 | Apache-2.0 |
-| Serilog.Extensions.Hosting | 10.0.0 | Apache-2.0 |
-| Serilog.Extensions.Logging | 10.0.0 | Apache-2.0 |
+| Serilog.Extensions.Hosting | 11.0.0 | Apache-2.0 |
+| Serilog.Extensions.Logging | 11.0.0 | Apache-2.0 |
 | Serilog.Formatting.Compact | 3.0.0 | Apache-2.0 |
-| Serilog.Settings.Configuration | 10.0.0 | Apache-2.0 |
+| Serilog.Settings.Configuration | 11.0.0 | Apache-2.0 |
 | Serilog.Sinks.Console | 6.1.1 | Apache-2.0 |
 | Serilog.Sinks.Debug | 3.0.0 | Apache-2.0 |
 | Serilog.Sinks.File | 7.0.0 | Apache-2.0 |
@@ -147,7 +146,7 @@ Generated automatically on 2026-11-15
 | System.CodeDom | 6.0.0 | MIT |
 | System.Collections | 4.3.0 | MS-EULA |
 | System.Collections.Concurrent | 4.3.0 | MS-EULA |
-| System.Collections.Immutable | 10.0.11 | MIT |
+| System.Collections.Immutable | 10.0.14 | MIT |
 | System.Collections.NonGeneric | 4.3.0 | MS-EULA |
 | System.Collections.Specialized | 4.3.0 | MS-EULA |
 | System.ComponentModel | 4.3.0 | MS-EULA |
@@ -161,7 +160,6 @@ Generated automatically on 2026-11-15
 | System.Composition.Runtime | 9.0.0 | MIT |
 | System.Composition.TypedParts | 9.0.0 | MIT |
 | System.Console | 4.3.0 | MS-EULA |
-| System.Data.DataSetExtensions | 4.5.0 | MIT |
 | System.Diagnostics.Contracts | 4.3.0 | MS-EULA |
 | System.Diagnostics.Debug | 4.3.0 | MS-EULA |
 | System.Diagnostics.DiagnosticSource | 4.3.0 | MS-EULA |
@@ -169,7 +167,7 @@ Generated automatically on 2026-11-15
 | System.Diagnostics.Tools | 4.3.0 | MS-EULA |
 | System.Diagnostics.Tracing | 4.3.0 | MS-EULA |
 | System.Dynamic.Runtime | 4.3.0 | MS-EULA |
-| System.Formats.Asn1 | 10.0.13 | MIT |
+| System.Formats.Asn1 | 10.0.0 | MIT |
 | System.Globalization | 4.3.0 | MS-EULA |
 | System.Globalization.Calendars | 4.3.0 | MS-EULA |
 | System.Globalization.Extensions | 4.3.0 | MS-EULA |
@@ -219,7 +217,7 @@ Generated automatically on 2026-11-15
 | System.Security.Cryptography.Csp | 4.3.0 | MS-EULA |
 | System.Security.Cryptography.Encoding | 4.3.0 | MS-EULA |
 | System.Security.Cryptography.OpenSsl | 4.3.0 | MS-EULA |
-| System.Security.Cryptography.Pkcs | 10.0.13 | MIT |
+| System.Security.Cryptography.Pkcs | 10.0.14 | MIT |
 | System.Security.Cryptography.Primitives | 4.3.0 | MS-EULA |
 | System.Security.Cryptography.X509Certificates | 4.3.0 | MS-EULA |
 | System.Security.Principal | 4.3.0 | MS-EULA |
@@ -240,7 +238,7 @@ Generated automatically on 2026-11-15
 | System.Xml.ReaderWriter | 4.3.0 | MS-EULA |
 | System.Xml.XDocument | 4.3.0 | MS-EULA |
 | System.Xml.XmlDocument | 4.3.0 | MS-EULA |
-| coverlet.collector | 10.1.0 | MIT |
+| coverlet.collector | 10.1.1 | MIT |
 | runtime.native.System | 4.3.0 | MS-EULA |
 | runtime.native.System.IO.Compression | 4.3.0 | MS-EULA |
 | runtime.native.System.Net.Http | 4.3.0 | MS-EULA |

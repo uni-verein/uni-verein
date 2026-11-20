@@ -5,6 +5,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Serilog;
 using UniVerein.Api.ApiRequests;
 using UniVerein.Api.Models;
@@ -45,6 +46,9 @@ public class PendingSelfEnrollmentService
     public async Task<PendingSelfEnrollmentSubmitResult> SubmitAsync(SelfEnrollmentRequest request, string submittedIp,
         string confirmBaseUrl)
     {
+        await using IDbContextTransaction transaction = await _db.Database.BeginTransactionAsync();
+        await _db.AcquireMemberRegistryLockAsync();
+
         string emailHash = _crypto.Hash(request.Email);
         string ibanHash = _crypto.Hash(request.IBAN);
         bool ibanGiven = !string.IsNullOrWhiteSpace(request.IBAN);
@@ -101,6 +105,7 @@ public class PendingSelfEnrollmentService
 
         await _db.PendingSelfEnrollments.AddAsync(pending);
         await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         Log.Information("PendingSelfEnrollmentService: SubmitAsync -> Pending self-enrollment {PendingId} created, awaiting email confirmation.",
             pending.Id);
@@ -151,6 +156,16 @@ public class PendingSelfEnrollmentService
         if (pending.MemberCategoryId == null)
             return new PendingSelfEnrollmentApprovalResult(PendingSelfEnrollmentActionStatus.MEMBER_CATEGORY_NOT_SET);
 
+        await using IDbContextTransaction transaction = await _db.Database.BeginTransactionAsync();
+
+        int claimed = await _db.PendingSelfEnrollments
+            .Where(x => x.Id == id && x.Status == PendingSelfEnrollmentStatus.PENDING)
+            .ExecuteDeleteAsync();
+        if (claimed == 0)
+            return new PendingSelfEnrollmentApprovalResult(PendingSelfEnrollmentActionStatus.NOT_FOUND);
+
+        _db.Entry(pending).State = EntityState.Detached;
+
         MemberCreationResult result = await _memberService.CreateMemberAsync(new MemberCreationInput
         {
             Gender = pending.Gender,
@@ -189,8 +204,7 @@ public class PendingSelfEnrollmentService
                 return new PendingSelfEnrollmentApprovalResult(PendingSelfEnrollmentActionStatus.MEMBER_CATEGORY_NOT_FOUND);
         }
 
-        _db.PendingSelfEnrollments.Remove(pending);
-        await _db.ForceSaveChangesAsync();
+        await transaction.CommitAsync();
 
         await SendAcceptanceMailAsync(pending);
 

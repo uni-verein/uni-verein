@@ -123,10 +123,10 @@ Use this unless you already terminate TLS in front of this stack.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/Caddyfile
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-tls.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/Caddyfile
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/docker-compose-tls.yml
 ```
 
 2. **Create .env and secrets**
@@ -168,9 +168,9 @@ it doesn't come up, check `docker compose -f docker-compose-tls.yml logs caddy`.
 1. **Download config & installation files**
 
 ```bash
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/nginx.conf
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-ini.yml
-curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.0/docker-compose-prod-image.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/nginx.conf
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/docker-compose-ini.yml
+curl -O https://raw.githubusercontent.com/uni-verein/uni-verein/refs/tags/1.11.1/docker-compose-prod-image.yml
 ```
 
 2. **Create .env and secrets**

@@ -13,6 +13,7 @@ using UniVerein.Api.Helper;
 using UniVerein.Api.Interfaces;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
+using MailKit;
 using MailKit.Net.Smtp;
 using Microsoft.EntityFrameworkCore;
 using MailKit.Security;
@@ -357,7 +358,7 @@ public class MailService
 
             await client.ConnectAsync(settings.SmtpServer, settings.Port, SmtpSocketOptions(settings));
 
-            if (client.Capabilities.HasFlag(SmtpCapabilities.Authentication) &&
+            if (client.Capabilities.Contains(SmtpCapability.Authentication) &&
                 !string.IsNullOrWhiteSpace(settings.Username))
                 await client.AuthenticateAsync(settings.Username, _crypto.Decrypt(settings.Password) ?? string.Empty);
         }
@@ -385,7 +386,7 @@ public class MailService
         {
             await client.ConnectAsync(settings.SmtpServer, settings.Port, SmtpSocketOptions(settings));
 
-            if (client.Capabilities.HasFlag(SmtpCapabilities.Authentication) &&
+            if (client.Capabilities.Contains(SmtpCapability.Authentication) &&
                 !string.IsNullOrWhiteSpace(settings.Username))
                 await client.AuthenticateAsync(settings.Username, _crypto.Decrypt(settings.Password) ?? string.Empty);
 
