@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Dependency update of backend and frontend. Frontend: MUI X 9.18, TipTap 3.35, i18next 27 and react-i18next 18, Vite 8.3.8, ESLint 10.15, Prettier 3.10, Playwright 1.65.1 (the Playwright image in the CI uses `v1.65.1-noble`) and patch updates. Backend: MailKit 5.0 (the check for SMTP authentication uses `SmtpClient.Capabilities.Contains(SmtpCapability.Authentication)`), HtmlSanitizer 11, Serilog.AspNetCore 11, QuestPDF 2026.9.2 and test tooling updates.
+- **Not updated on purpose:** `CsvHelper` 33.1.0 (34 is a rewrite), `@fullcalendar/*` 6.1.22 (7 has no plugin releases), `typescript` 6.0.3 (7 is not supported by `typescript-eslint`), and everything that moved to major version 11 together with .NET 11 (`Microsoft.*` / `System.Security.Cryptography.Pkcs` 10.0.14, `Microsoft.Extensions.TimeProvider.Testing` 10.11.0, `@microsoft/signalr` 10.0.11, which belongs to the SignalR server of ASP.NET Core 10).
+
+### Fixed
+- UV-75: In the members table the action icons (view, edit, delete) moved out of the visible area when more rows were shown, because the table became wider than its container and had to be scrolled horizontally. The actions column is now pinned to the right edge of the table and always stays visible.
+- UV-78: On iPhones the date picker of the embedded enrollment form opened as a modal dialog centered in the whole iframe. The iframe is as tall as the form, so the dialog usually landed outside the visible area. In the embedded form the date pickers now always use the desktop mode, so the calendar opens right at the date field.
+- UV-76: In the member view dialog the calendar button of the date fields (birthday, start and end of studies, entry date, exit date, SEPA consent) could still be clicked and opened the date selection. `disabled` was only set on the text field of the date picker, now it is set on the picker itself. The country dropdown had no `disabled` in view mode at all and could still be opened, it is now disabled as well.
+- UV-77: A member was created twice when the save button of a submission was clicked more than once. Two parallel `POST /pending-self-enrollments/{id}/approve` calls both created a member (with the same member number) and the second one failed with a 500 when deleting the already deleted submission. The approval now claims the submission first inside a transaction, so a second call answers 404 and creates nothing. Creating a member and submitting the public form take a per-tenant PostgreSQL advisory lock, so parallel requests can no longer pass the duplicate check together or hand out the same member number. The save buttons of the member form and of the submission form are disabled while a request is running. **Duplicates that already exist have to be deleted by hand.**
+
 ## [1.11.0] UV-74
 
 ### Added

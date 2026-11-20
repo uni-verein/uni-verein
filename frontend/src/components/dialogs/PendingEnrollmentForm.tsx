@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -87,6 +87,8 @@ export default function PendingEnrollmentForm({
   const [detail, setDetail] = useState<PendingSelfEnrollmentDetail | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState<MemberErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,8 +225,10 @@ export default function PendingEnrollmentForm({
 
   const save = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!detail || !validate()) return;
+    if (!detail || submittingRef.current || !validate()) return;
 
+    submittingRef.current = true;
+    setSubmitting(true);
     try {
       const payload = isMaskedIBAN(detail.iban) ? { ...detail, iban: undefined } : detail;
       const patchResponse = await api(`/pending-self-enrollments/${id}`, {
@@ -252,6 +256,9 @@ export default function PendingEnrollmentForm({
       onClose();
     } catch {
       setApiError(t('components.memberForm.alerts.saveFailed'));
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -752,6 +759,7 @@ export default function PendingEnrollmentForm({
               type="submit"
               variant="contained"
               color="primary"
+              disabled={submitting}
               startIcon={<SaveIcon />}
               sx={{ textTransform: 'none', borderRadius: 2, px: 3 }}
             >

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -110,9 +110,12 @@ export default function MemberForm({
   const [editOrUpdateMember, setEditOrUpdateMember] =
     useState<SnackbarState>(SNACKBAR_INITIAL_STATE);
   const [publicSuccess, setPublicSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const setSuccessMember = useSnackbar();
   const { t } = useTranslation();
   const { config } = usePageConfig();
+  const datePickerModeProps = embedded ? { desktopModeMediaQuery: '@media (min-width: 0px)' } : {};
 
   const validate = () => {
     const newErrors: MemberErrors = {};
@@ -243,8 +246,10 @@ export default function MemberForm({
 
   const save = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (submittingRef.current || !validate()) return;
 
+    submittingRef.current = true;
+    setSubmitting(true);
     try {
       if (m.id === NIL_UUID) {
         const createEndpoint = mode === 'public' ? '/self-enrollment' : '/members';
@@ -302,6 +307,9 @@ export default function MemberForm({
         status: 'error',
         message: t('components.memberForm.alerts.saveFailed'),
       });
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -489,6 +497,8 @@ export default function MemberForm({
               <Grid size={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                   <DatePicker
+                    {...datePickerModeProps}
+                    disabled={view}
                     label={t('components.memberForm.fields.birthday')}
                     views={['day', 'month', 'year']}
                     format="DD.MM.YYYY"
@@ -502,7 +512,6 @@ export default function MemberForm({
                         fullWidth: true,
                         variant: 'outlined',
                         required: true,
-                        disabled: view,
                         error: !!errors.birthday,
                         helperText: errors.birthday,
                       },
@@ -559,6 +568,7 @@ export default function MemberForm({
                 <TextField
                   label={t('components.memberForm.fields.countryCode')}
                   fullWidth
+                  disabled={view}
                   required
                   value={m.countryCode ?? ''}
                   onChange={handleChange('countryCode')}
@@ -624,6 +634,8 @@ export default function MemberForm({
               <Grid size={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                   <DatePicker
+                    {...datePickerModeProps}
+                    disabled={view}
                     label={t('components.memberForm.fields.startOfStudies')}
                     views={['month', 'year']}
                     value={m.startOfStudies ? dayjs(m.startOfStudies) : null}
@@ -636,7 +648,6 @@ export default function MemberForm({
                         fullWidth: true,
                         variant: 'outlined',
                         required: true,
-                        disabled: view,
                         error: !!errors.startOfStudies,
                         helperText: errors.startOfStudies,
                       },
@@ -647,6 +658,8 @@ export default function MemberForm({
               <Grid size={6}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                   <DatePicker
+                    {...datePickerModeProps}
+                    disabled={view}
                     label={t('components.memberForm.fields.endOfStudies')}
                     views={['month', 'year']}
                     value={m.endOfStudies ? dayjs(m.endOfStudies) : null}
@@ -658,7 +671,6 @@ export default function MemberForm({
                       textField: {
                         fullWidth: true,
                         variant: 'outlined',
-                        disabled: view,
                         error: !!errors.endOfStudies,
                         helperText: errors.endOfStudies,
                       },
@@ -802,6 +814,8 @@ export default function MemberForm({
                 <Grid size={6}>
                   <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                     <DatePicker
+                      {...datePickerModeProps}
+                      disabled={view}
                       label={t('components.memberForm.fields.entryDate')}
                       views={['day', 'month', 'year']}
                       format="DD.MM.YYYY"
@@ -815,7 +829,6 @@ export default function MemberForm({
                           fullWidth: true,
                           variant: 'outlined',
                           required: true,
-                          disabled: view,
                         },
                       }}
                     />
@@ -826,6 +839,8 @@ export default function MemberForm({
                 <Grid size={6}>
                   <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                     <DatePicker
+                      {...datePickerModeProps}
+                      disabled={view}
                       label={t('components.memberForm.fields.exitDate')}
                       views={['day', 'month', 'year']}
                       format="DD.MM.YYYY"
@@ -838,7 +853,6 @@ export default function MemberForm({
                         textField: {
                           fullWidth: true,
                           variant: 'outlined',
-                          disabled: view,
                           error: !!errors.exitDate,
                           helperText: errors.exitDate,
                         },
@@ -885,6 +899,8 @@ export default function MemberForm({
                 <Grid size={6}>
                   <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                     <DatePicker
+                      {...datePickerModeProps}
+                      disabled={view}
                       label={t('components.memberForm.fields.sepaConsent')}
                       views={['day', 'month', 'year']}
                       format="DD.MM.YYYY"
@@ -897,7 +913,6 @@ export default function MemberForm({
                         textField: {
                           fullWidth: true,
                           variant: 'outlined',
-                          disabled: view,
                           error: !!errors.sepaConsent,
                           helperText: errors.sepaConsent,
                         },
@@ -993,6 +1008,7 @@ export default function MemberForm({
                 type="submit"
                 variant="contained"
                 color="primary"
+                disabled={submitting}
                 startIcon={<SaveIcon />}
                 sx={{
                   textTransform: 'none',

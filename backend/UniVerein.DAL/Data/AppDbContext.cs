@@ -483,6 +483,15 @@ public class AppDbContext : DbContext
         return await base.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task AcquireMemberRegistryLockAsync()
+    {
+        if (!Database.IsNpgsql())
+            return;
+
+        string key = $"member-registry:{CurrentTenantId}";
+        await Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtext({key}))");
+    }
+
     public async Task<int> ForceSaveChangesAsync()
     {
         StampTenant();

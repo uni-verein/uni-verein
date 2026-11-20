@@ -6,6 +6,7 @@ using UniVerein.Api.Models.MemberAudit;
 using UniVerein.DAL.Data;
 using UniVerein.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using UniVerein.Api.Models;
 
 namespace UniVerein.Api.Services;
@@ -25,6 +26,11 @@ public class MemberService
 
     public async Task<MemberCreationResult> CreateMemberAsync(MemberCreationInput input)
     {
+        await using IDbContextTransaction? ownTransaction = _db.Database.CurrentTransaction == null
+            ? await _db.Database.BeginTransactionAsync()
+            : null;
+        await _db.AcquireMemberRegistryLockAsync();
+
         string iban = _crypto.Hash(input.IBAN);
         string email = _crypto.Hash(input.Email);
         bool ibanGiven = !string.IsNullOrWhiteSpace(input.IBAN);
@@ -107,6 +113,9 @@ public class MemberService
             HasBic = !string.IsNullOrWhiteSpace(input.Bic),
             HasSepaConsent = member.SepaConsent.HasValue
         });
+
+        if (ownTransaction != null)
+            await ownTransaction.CommitAsync();
 
         return MemberCreationResult.Success(member);
     }

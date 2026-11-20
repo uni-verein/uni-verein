@@ -46,6 +46,7 @@ services:
       RateLimiting__AuthLogin__PermitLimit: "1000"
       RateLimiting__SetupStatus__PermitLimit: "100000"
     volumes:
+      - ./logs:/app/logs
       - ./receipts:/app/receipts
     cap_drop:
       - ALL
